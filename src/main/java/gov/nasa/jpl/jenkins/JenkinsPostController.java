@@ -14,7 +14,11 @@ public class JenkinsPostController {
     @RequestMapping("/jenkinsPost")
     public String post() {
         String configFile = "config.txt";
-        //config/alfresco/mms.properties
+        String buildAgent = "Analysis01-UAT";
+        String documentID = "_18_0_6_40a019f_1487977632857_843643_14194";
+        String mmsServer = "https://cae-ems-uat-origin.jpl.nasa.gov";
+        String teamworkProject = "PROJECT-ID_2_24_17_3_05_44_PM__4fbf6b8b_15a55999900__6e6f_cae_tw_uat_jpl_nasa_gov_128_149_18_101";
+        String jobID = "MMS_1488993038923_ab2dc7f9-f902-47a0-a22d-86268d48d814";
 
         List<String> lines = new ArrayList();
         try {
@@ -28,7 +32,12 @@ public class JenkinsPostController {
         }
 
         JenkinsBuildConfig jbc = new JenkinsBuildConfig();
-        System.out.println(jbc.generateBaseConfigXML());
+        jbc.setBuildAgent(buildAgent);
+        jbc.setDocumentID(documentID);
+        jbc.setMmsServer(mmsServer);
+        jbc.setTeamworkProject(teamworkProject);
+        jbc.setJobID(jobID);
+        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
         JenkinsEngine je = new JenkinsEngine();
         je.setUsername(lines.get(0));
         je.setPassword(lines.get(1));
@@ -36,7 +45,6 @@ public class JenkinsPostController {
         je.login();
         Boolean returnStatus = je.postConfigXml(jbc, "testJob", true);
         System.out.println("Status: "+returnStatus);
-        return lines.toString();
     }
 
 }

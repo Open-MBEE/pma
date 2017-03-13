@@ -252,7 +252,7 @@ public class JenkinsEngine implements ExecutionEngine {
     /**
      * This method will set the job url
      *
-     * @param url
+     * @param job
      */
     public void setURL( String url ) {
         this.url = url;
@@ -353,7 +353,8 @@ public class JenkinsEngine implements ExecutionEngine {
      * <li>unstable
      * </ul>
      *
-     * @param jobName,  detailName
+     * @param String
+     *            jobName, String detailName
      * @return Event details in a string form
      * @Override
      */
@@ -404,6 +405,7 @@ public class JenkinsEngine implements ExecutionEngine {
      * <li>LAST_BUILD
      * </ul>
      *
+     * @param jobUrl
      * @param property
      */
     public void constructJobUrl( detail property ) {

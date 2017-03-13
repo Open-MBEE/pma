@@ -25,8 +25,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -573,6 +571,10 @@ public class JenkinsBuildConfig {
 
 	public String getJobID() {
 		return this.jobID;
+	}
+
+	public void setJobID(String jobID) {
+		this.jobID = jobID;
 	}
 
 	public void setBuildAgent(String buildAgent) {
