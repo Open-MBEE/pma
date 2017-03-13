@@ -1,12 +1,13 @@
-package gov.nasa.jpl.jenkins; /**
+package gov.nasa.jpl.jenkins;
+/**
  * JenkinsEngine ----
- * 
+ *
  * Implements the ExecutionEngine as a way to execute jobs (events) on the
  * Jenkins server.
  *
  * @author Dan Karlsson (dank)
  * @date 2/04/16
- * 
+ *
  */
 
 
@@ -64,17 +65,17 @@ import org.xml.sax.SAXException;
  * <li>
  * https://some-jenkins-server.someorganization.com/api/json?tree=jobs[name,description,color,url,lastCompletedBuild[duration,timestamp,estimatedDuration]]&pretty=true
  * </ul>
- * 
+ *
  */
 public class JenkinsEngine implements ExecutionEngine {
 
 
     private String username = ""; // User name to be used to connect to jenkins
-    
+
     private String passwordOrToken = ""; // Token or password
                                                         // that is associated
                                                         // with the user name
-    
+
     private String url = ""; // URL of the
                                                              // Jenkins server
                                                              // to execute the
@@ -106,13 +107,13 @@ public class JenkinsEngine implements ExecutionEngine {
     private boolean DEBUG = false;
 
     /**
-     * This is the main constructor for using the JenkinsEngine interface. 
+     * This is the main constructor for using the JenkinsEngine interface.
      */
     public JenkinsEngine() {
 
-    	
+
     }
-    
+
     /**
      * This method will create the initial connection to the server that is
      * specified before calling 'new' on JenkinsEngine. It is required that the
@@ -120,9 +121,9 @@ public class JenkinsEngine implements ExecutionEngine {
      * the Jenkins server because Jenkins will require any calls made to be
      * authenticated before completing.
      */
-    
+
     public void login(){
-       
+
 
         // Credentials
         String username = this.username;
@@ -177,7 +178,7 @@ public class JenkinsEngine implements ExecutionEngine {
             }
         }
     }
-    
+
     /**
      * Preemptive authentication intercepter
      *
@@ -222,7 +223,7 @@ public class JenkinsEngine implements ExecutionEngine {
 
     /**
      * Sets the username to be used with the connection on Jenkins
-     * 
+     *
      * @param name
      */
     public void setUsername( String name ) {
@@ -232,7 +233,7 @@ public class JenkinsEngine implements ExecutionEngine {
     /**
      * Sets the password that is associated with the username that will be
      * connected with Jenkins
-     * 
+     *
      * @param pass
      */
     public void setPassword( String pass ) {
@@ -241,17 +242,17 @@ public class JenkinsEngine implements ExecutionEngine {
 
     /**
      * This method will set the job name
-     * 
+     *
      * @param job
      */
     public void setJobName( String job ) {
         this.jobName = job;
     }
-    
+
     /**
      * This method will set the job url
-     * 
-     * @param job
+     *
+     * @param url
      */
     public void setURL( String url ) {
         this.url = url;
@@ -260,7 +261,7 @@ public class JenkinsEngine implements ExecutionEngine {
     /**
      * This method is used to set the token that is required when attempting to
      * execute a build on the jenkins server.
-     * 
+     *
      * @param token
      */
     public void setJobToken( String token ) {
@@ -292,13 +293,13 @@ public class JenkinsEngine implements ExecutionEngine {
             // be manipulated into a string.
             HttpEntity entity = response.getEntity();
             entityString = EntityUtils.toString( entity );
-           
-            // this means there is no proper response... comes in as HTML? 
+
+            // this means there is no proper response... comes in as HTML?
             // returning will prevent json errors
             if(entityString.contains( "<html>" )) {
                 return;
             }
-            
+
             // Converts the HttpEntity String from the response of the GET
             // call into a JSON object then consumes the entity to close the
             // connection.
@@ -314,15 +315,15 @@ public class JenkinsEngine implements ExecutionEngine {
             e.printStackTrace();
         }
     }
-    
+
     public void build() {
         // This sets the URL to an Object specifically for making GET calls
         HttpPost post = new HttpPost( this.executeUrl );
-        
+
         try {
-            HttpResponse response = 
+            HttpResponse response =
                     this.jenkinsClient.execute( post, this.context );
-            
+
             EntityUtils.consume( response.getEntity() );
             // Will throw an error if the execution fails from either incorrect
             // setup or if the jenkinsClient has not been instantiated.
@@ -330,10 +331,10 @@ public class JenkinsEngine implements ExecutionEngine {
             e.printStackTrace();
         }
     }
-    
+
     // calling this will close the current HTTP connection
     // if it is closed, you would need to start up authentication again
-    // or you would need to create a new JenkinsEngine instance 
+    // or you would need to create a new JenkinsEngine instance
     public void closeConn( HttpEntity entity) throws IOException {
         EntityUtils.consume( entity );
     }
@@ -351,9 +352,8 @@ public class JenkinsEngine implements ExecutionEngine {
      * <li>stable
      * <li>unstable
      * </ul>
-     * 
-     * @param String
-     *            jobName, String detailName
+     *
+     * @param jobName,  detailName
      * @return Event details in a string form
      * @Override
      */
@@ -362,7 +362,7 @@ public class JenkinsEngine implements ExecutionEngine {
 
         if ( !detailName.isEmpty() && jsonResponse != null ) {
             try {
-                
+
             } catch ( Exception e ) {
 
             }
@@ -370,7 +370,7 @@ public class JenkinsEngine implements ExecutionEngine {
 
         return returnString;
     }
-    
+
     public String getMagicDrawLogFromJob( String jobId ) {
         String url;
 
@@ -383,14 +383,14 @@ public class JenkinsEngine implements ExecutionEngine {
             url = url + "/";
         }
 
-        url = this.url + url + "lastBuild/artifact/MDNotificationWindowText.html"; 
+        url = this.url + url + "lastBuild/artifact/MDNotificationWindowText.html";
         return url;
     }
-    
-    
+
+
     /**
      * Private method for constructing urls to be executed on Jenkins.
-     * 
+     *
      * Allowed Arguments for Detail Property:
      * <ul>
      * <li>NAME
@@ -400,11 +400,10 @@ public class JenkinsEngine implements ExecutionEngine {
      * <li>LAST_FAILED_BUILD
      * <li>LAST_SUCCESSFULL_BUILD
      * <li>LAST_UNSUCCESFULL_BUILD
-     * <li>DESCRIPTION 
+     * <li>DESCRIPTION
      * <li>LAST_BUILD
      * </ul>
-     * 
-     * @param jobUrl
+     *
      * @param property
      */
     public void constructJobUrl( detail property ) {
@@ -489,11 +488,11 @@ public class JenkinsEngine implements ExecutionEngine {
         System.out.println( "Execution url is " + this.executeUrl );
     }
 
-    public void constructAllJobs() {        
+    public void constructAllJobs() {
         String url = this.url + "/view/DocWeb%20(cae-ems-uat)/api/json?tree=jobs[name,color]";
-        
-        
-        
+
+
+
         System.out.println( "Current constuction url is " + url );
         this.executeUrl = url;
         System.out.println( "Execution url is " + this.executeUrl );
@@ -503,34 +502,34 @@ public class JenkinsEngine implements ExecutionEngine {
         String getUrl = jobUrl + "config.xml";
 
         JSONObject o = new JSONObject();
-        
+
         HttpGet get = new HttpGet( getUrl );
-           
+
         try {
             HttpResponse response =
                     this.jenkinsClient.execute( get, this.context );
             HttpEntity entity = response.getEntity();
             String xml = EntityUtils.toString( entity );
-            
+
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();           
+            DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse( new InputSource( new StringReader( xml )) );
-            
+
             // get the first element
             Element element = doc.getDocumentElement();
-            
-            // if there is a schedule for the job, add the property 
-            if( element.getElementsByTagName( "spec" ).getLength() > 0) 
-                o.put( "schedule", 
+
+            // if there is a schedule for the job, add the property
+            if( element.getElementsByTagName( "spec" ).getLength() > 0)
+                o.put( "schedule",
                        element.getElementsByTagName( "spec" )
                        .item( 0 )
                        .getTextContent()
-                       .replaceAll( "\\n", " " ) );           
-            else 
+                       .replaceAll( "\\n", " " ) );
+            else
                 o.put( "schedule", JSONObject.NULL );
-              
+
             // NOTE: THIS WILL LEAVE THE CONNECTION OPEN, WE MIGHT NOT WANT THIS.
-            //EntityUtils.consume( entity );           
+            //EntityUtils.consume( entity );
         } catch ( IOException e ) {
             e.printStackTrace();
         }
@@ -539,9 +538,9 @@ public class JenkinsEngine implements ExecutionEngine {
         } catch ( ParserConfigurationException e ) {
             e.printStackTrace();
         }
-        return o; 
+        return o;
     }
-    
+
     // This should be called when you change the name, status, schedule of a job
     public boolean postConfigXml( JenkinsBuildConfig config,String jobName, boolean newConfig ) {
         String postUrl = null;
@@ -551,18 +550,18 @@ public class JenkinsEngine implements ExecutionEngine {
         else {
             postUrl = this.url + "/job/" + jobName + "/config.xml";
         }
-        
+
         String configFile = generateConfigXML( config );
-        
+
         if( configFile == null ) {
         	System.out.println(
                 "FAILED TO CREATE JOB: " + jobName);
             return false;
         }
-        
+
         try {
             HttpEntity xmlEntity = (HttpEntity)new  StringEntity(configFile);
-            
+
             HttpPost post = new HttpPost( postUrl );
             post.setHeader( "Content-Type", "application/xml" );
             post.setEntity( xmlEntity );
@@ -575,7 +574,7 @@ public class JenkinsEngine implements ExecutionEngine {
         }
         return true;
     }
-    
+
     public JSONObject getJob( String jobName ) {
         JSONObject json = null;
         JSONObject allJobs = getAllJobs();
@@ -593,21 +592,21 @@ public class JenkinsEngine implements ExecutionEngine {
         }
         return json;
     }
-  
+
     public JSONObject getAllJobs() {
         constructAllJobs();
         execute();
         return jsonResponse;
     }
-    
+
     public String generateConfigXML( JenkinsBuildConfig config ){
         String xml = config.generateBaseConfigXML();
-        
+
         if( xml != null ) return xml;
-        
+
         return null;
     }
-    
+
     public void executeJob(String jobName){
         try{
             this.setJobToken( "build" );
@@ -617,10 +616,10 @@ public class JenkinsEngine implements ExecutionEngine {
             e.printStackTrace();
         }
     }
-    
+
     public void deleteJob(String jobName){
         try{
-            
+
             this.executeUrl = this.url + "/job/" +jobName + "/doDelete";
             this.build();
         }catch(Exception e){
@@ -635,23 +634,23 @@ public class JenkinsEngine implements ExecutionEngine {
         }catch(Exception e){
             e.printStackTrace();
         }
-        
+
         String sysmlid = jenkinsJobJson.optString( "name" );
-        
+
         // items are the jobs that are in the queue of Jenkins
         if( this.jsonResponse != null ) {
             JSONArray jobs = this.jsonResponse.optJSONArray( "items" );
-            
+
             if( jobs != null ) {
                 for(int i = 0; i < jobs.length(); i++) {
                     JSONObject job = jobs.optJSONObject( i );
-                    
+
                     if( job != null ) {
-                        // append jobs into this queue 
+                        // append jobs into this queue
                         jenkinsQueue.add( i, job );
-                        
+
                         String jenkinsJobName = job.optJSONObject( "task" ).optString( "name" );
-                        
+
                         // found the job, so return it
                         if( jenkinsJobName.equals( sysmlid )) {
                             return job;
@@ -660,10 +659,10 @@ public class JenkinsEngine implements ExecutionEngine {
                 }
             }
         }
-        
+
         return null;
     }
-    
+
     public boolean isJobInQueue( String jobName ) {
         try{
             this.executeUrl = this.url + "/queue/api/json";
@@ -671,21 +670,21 @@ public class JenkinsEngine implements ExecutionEngine {
         }catch(Exception e){
             e.printStackTrace();
         }
-        
+
         // items are the jobs that are in the queue of Jenkins
         if( this.jsonResponse != null ) {
             JSONArray jobs = this.jsonResponse.optJSONArray( "items" );
-            
+
             if( jobs != null ) {
                 for(int i = 0; i < jobs.length(); i++) {
                     JSONObject job = jobs.optJSONObject( i );
-                    
+
                     if( job != null ) {
-                        // append jobs into this queue 
+                        // append jobs into this queue
                         jenkinsQueue.add( i, job );
-                        
+
                         String jenkinsJobName = job.optJSONObject( "task" ).optString( "name" );
-                        
+
                         // found the job, so return it
                         if( jenkinsJobName.equals( jobName )) {
                             return true;
@@ -694,15 +693,15 @@ public class JenkinsEngine implements ExecutionEngine {
                 }
             }
         }
-        
+
         return false;
     }
 
     public int numberInQueue( JSONObject jobInQueue ) {
         String sysmlid = jobInQueue.optString( "name" );
-        
+
         int position = -1;
-        
+
         if( sysmlid != null ) {
             position = this.jenkinsQueue.indexOf( jobInQueue );
         }
@@ -710,21 +709,21 @@ public class JenkinsEngine implements ExecutionEngine {
     }
 
     public void cancelJob(String jobName, String cancelId, boolean isInQueue){
-        try{            
-            if(!isInQueue) {    // If job is running; Stop it                
+        try{
+            if(!isInQueue) {    // If job is running; Stop it
                 this.executeUrl = this.url + "/job/" +jobName + "/" + cancelId + "/stop";
-                
+
                 // this has to be a GET
                 this.execute();
-            } 
+            }
             else {              // If job has not yet start; Cancel it
-                
+
                 // TODO --
-                // jobName is not what we want. we want the 'id' from the queue which will have to be 
-                // handled in a different function (similar to isJobInQueue( jenkinsJob ) ) 
-                
+                // jobName is not what we want. we want the 'id' from the queue which will have to be
+                // handled in a different function (similar to isJobInQueue( jenkinsJob ) )
+
                 this.executeUrl = this.url + "/queue/cancelItem?id=" + cancelId;
-                
+
                 // this has to be a POST
                 this.build();
             }
@@ -732,18 +731,18 @@ public class JenkinsEngine implements ExecutionEngine {
             e.printStackTrace();
         }
     }
-    
+
     public String getBuildNumber(String jobName) {
         try{
             this.executeUrl = this.url + "/job/" + jobName + "/api/json?tree=builds[number]";
             execute();
-            
+
             if( this.jsonResponse != null ) {
                 JSONArray builds = this.jsonResponse.optJSONArray( "builds" );
-                
+
                 if( builds != null && builds.length() > 0 ) {
                     JSONObject build = builds.optJSONObject( 0 );
-                    
+
                     if(build != null) {
                         String buildNumber = build.optString( "number" );
                         return buildNumber;
@@ -753,34 +752,34 @@ public class JenkinsEngine implements ExecutionEngine {
         }catch(Exception e){
             e.printStackTrace();
         }
-        
+
         return null;
     }
-    
+
     public String getQueueId(String jobName) {
-        
+
         try{
             this.executeUrl = this.url + "/queue/api/json";
             execute();
         }catch(Exception e){
             e.printStackTrace();
         }
-        
+
         // items are the jobs that are in the queue of Jenkins
         if( this.jsonResponse != null ) {
             JSONArray jobs = this.jsonResponse.optJSONArray( "items" );
-            
+
             if( jobs != null ) {
                 for(int i = 0; i < jobs.length(); i++) {
                     JSONObject job = jobs.optJSONObject( i );
-                    
-                    if( job != null ) {                    
+
+                    if( job != null ) {
                         String jenkinsJobName = job.optJSONObject( "task" ).optString( "name" );
-                        
+
                         // found the job, so return it
                         if( jenkinsJobName.equals( jobName )) {
                             String queueId = job.optString( "id" );
-                            
+
                             if( queueId != null ) {
                                 return queueId;
                             }
@@ -789,43 +788,43 @@ public class JenkinsEngine implements ExecutionEngine {
                 }
             }
         }
-        
+
         return null;
     }
-    
+
     public int getTotalNumberOfJobsInQueue() {
         int total = 0;
-        
+
         try{
             this.executeUrl = this.url + "/queue/api/json";
             execute();
         }catch(Exception e){
             e.printStackTrace();
         }
-        
+
         // items are the jobs that are in the queue of Jenkins
         if( this.jsonResponse != null ) {
             JSONArray jobs = this.jsonResponse.optJSONArray( "items" );
-            
+
             if( jobs != null ) {
                 total = jobs.length();
                 return total;
             }
         }
-        
+
         return total;
     }
-    
+
     /* Don't see much use in these functions at the moment
      * may be subject to be removed from the interface so the code
      * isn't cluttered in the JenkinsEngine */
-    
+
     public JSONArray getJobUrls() {
         constructJobUrl( detail.URL );
         execute();
         return jsonResponse.getJSONArray( "jobs" );
     }
-    
+
     public JSONArray getJobNames() {
         constructJobUrl( detail.NAME );
         execute();
@@ -903,10 +902,10 @@ public class JenkinsEngine implements ExecutionEngine {
         execute();
         return jsonResponse.getJSONArray( "jobs" );
     }
-    
+
     /**
      * DO NOT USE --- Exception Handling Not Implemented!
-     * 
+     *
      * @param detailName
      * @return
      */
@@ -950,5 +949,5 @@ public class JenkinsEngine implements ExecutionEngine {
     public long getExecutionTime() {
         return executionTime;
     }
-    
+
 }
