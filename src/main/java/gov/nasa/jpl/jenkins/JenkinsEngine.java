@@ -45,7 +45,9 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
@@ -175,7 +177,10 @@ public class JenkinsEngine implements ExecutionEngine {
                 EntityUtils.consume( entity );
             } catch ( IOException e ) {
                 e.printStackTrace();
-            }
+            } catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
     }
 
@@ -539,7 +544,13 @@ public class JenkinsEngine implements ExecutionEngine {
             e.printStackTrace();
         } catch ( ParserConfigurationException e ) {
             e.printStackTrace();
-        }
+        } catch (DOMException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         return o;
     }
 
@@ -824,85 +835,169 @@ public class JenkinsEngine implements ExecutionEngine {
     public JSONArray getJobUrls() {
         constructJobUrl( detail.URL );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getJobNames() {
         constructJobUrl( detail.NAME );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getJobColor() {
         constructJobUrl( detail.COLOR );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getLastSuccessfullBuild() {
         constructJobUrl( detail.LAST_SUCCESSFULL_BUILD );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getLastUnsuccesfullBuild() {
         constructJobUrl( detail.LAST_UNSUCCESFULL_BUILD );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getLastBuild() {
         constructJobUrl( detail.LAST_BUILD );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getLastFailedBuild() {
         constructJobUrl( detail.LAST_FAILED_BUILD );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getLastCompletedBuild() {
         constructJobUrl( detail.LAST_COMPLETED_BUILD );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getJobDescription() {
         constructJobUrl( detail.DESCRIPTION );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getBuildName( String jobConfigUrl ) {
         constructBuildUrl( jobConfigUrl, detail.NAME );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getBuildDuration( String jobConfigUrl ) {
         constructBuildUrl( jobConfigUrl, detail.DURATION );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getBuildEstimatedDuration( String jobConfigUrl ) {
         constructBuildUrl( jobConfigUrl, detail.EST_DURATION );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getBuildTimestamp( String jobConfigUrl ) {
         constructBuildUrl( jobConfigUrl, detail.TIMESTAMP );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     public JSONArray getBuildDescription( String jobConfigUrl ) {
         constructBuildUrl( jobConfigUrl, detail.DESCRIPTION );
         execute();
-        return jsonResponse.getJSONArray( "jobs" );
+        try {
+			return jsonResponse.getJSONArray( "jobs" );
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
     /**
