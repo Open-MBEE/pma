@@ -1,4 +1,4 @@
-package repository;
+package test;
 
 
 import model.Job;
