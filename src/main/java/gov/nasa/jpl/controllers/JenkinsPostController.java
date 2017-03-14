@@ -1,4 +1,4 @@
-package controllers;
+package gov.nasa.jpl.controllers;
 
 
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +18,6 @@ public class JenkinsPostController {
 
     @RequestMapping("/jenkinsPost")
     public String post() {
-        System.out.println("NEW POST");
 
         String buildAgent = "Analysis01-UAT";
         String documentID = "_18_0_6_40a019f_1487977632857_843643_14194";
