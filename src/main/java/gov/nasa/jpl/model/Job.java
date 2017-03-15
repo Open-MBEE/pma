@@ -1,4 +1,4 @@
-package test;
+package gov.nasa.jpl.model;
 
 import java.io.Serializable;
 
