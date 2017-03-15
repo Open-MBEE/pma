@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import gov.nasa.jpl.jenkins.JenkinsBuildConfig;
 import gov.nasa.jpl.jenkins.JenkinsEngine;
-import model.Job;
+import test.Job;
 
 import java.util.*;
 import java.io.*;

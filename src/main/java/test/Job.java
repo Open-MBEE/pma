@@ -1,4 +1,4 @@
-package model;
+package test;
 
 import java.io.Serializable;
 
@@ -14,7 +14,6 @@ public class Job implements Serializable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
 
-	
 	private String buildAgent;
 	private String documentID;
 	private String mmsServer;
@@ -22,15 +21,7 @@ public class Job implements Serializable {
 	private String jobID;
 	private String jobName;
 
-	public Job(Job input) {
-		this.buildAgent = input.getBuildAgent();
-		this.documentID = input.getDocumentID() ;
-		this.mmsServer = input.getMmsServer();
-		this.teamworkProject = input.getTeamworkProject();
-		this.jobID = input.getJobID();
-		this.jobName = input.getJobName();
-	}
-	
+
 	public String getBuildAgent() {
 		return buildAgent;
 	}
