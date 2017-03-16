@@ -14,7 +14,7 @@ public class Job implements Serializable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
 
-	private String buildAgent;
+	private String analysisServer;
 	private String documentID;
 	private String mmsServer;
 	private String teamworkProject;
@@ -22,13 +22,14 @@ public class Job implements Serializable {
 	private String jobName;
 
 
-	public String getBuildAgent() {
-		return buildAgent;
+	public String getAnalysisServer() {
+		return analysisServer;
 	}
 
-	public void setBuildAgent(String buildAgent) {
-		this.buildAgent = buildAgent;
+	public void setAnalysisServer(String analysisServer) {
+		this.analysisServer = analysisServer;
 	}
+	
 	public String getDocumentID() {
 		return documentID;
 	}

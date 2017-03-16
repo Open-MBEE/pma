@@ -15,7 +15,6 @@ public class JobController {
     @RequestMapping(method = RequestMethod.POST, value = "job")
     @ResponseBody
     public Job math(@RequestBody final Job request) {
-        System.out.println(request.getBuildAgent());
         return request;
     }
 

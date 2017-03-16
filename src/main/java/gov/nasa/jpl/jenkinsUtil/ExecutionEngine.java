@@ -1,4 +1,4 @@
-package gov.nasa.jpl.jenkins;
+package gov.nasa.jpl.jenkinsUtil;
 
 import java.util.List;
 import java.util.Map;
