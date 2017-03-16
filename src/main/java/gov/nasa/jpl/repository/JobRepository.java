@@ -1,4 +1,4 @@
-package test;
+package gov.nasa.jpl.repository;
 
 
 import org.springframework.data.repository.CrudRepository;
