@@ -151,13 +151,13 @@ public class MMSUtil {
 	 * @param on Jackson json object node. Should contain element(s) to send
 	 * @return Response message from the post.
 	 */
-	public String post(String server,String project,String token,ObjectNode on){
+	public String post(String server,String project,String refID,ObjectNode on){
 		
 		server = server.replace("https://", ""); 
 		server = server.replace("/", "");
 		HttpClient httpClient = HttpClientBuilder.create().build();
 		try {
-		    HttpPost request = new HttpPost("https://"+server+"/alfresco/service/projects/"+project+"/refs/master/elements?alf_ticket="+token);
+		    HttpPost request = new HttpPost("https://"+server+"/alfresco/service/projects/"+project+"/refs/"+refID+"/elements?alf_ticket="+alfrescoToken);
 		    StringEntity params = new StringEntity(on.toString());
 		    request.addHeader("content-type", "application/json");
 		    request.setEntity(params);
@@ -178,16 +178,18 @@ public class MMSUtil {
 		String sysmlID = "PMA_"+timestamp.getTime();
 		String ownerID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c_pm";
 		String token = "TICKET_98936cf233fbd6884ec876d4ba272394c0639f50";
-		MMSUtil mmsUtil = new MMSUtil(token);
 		String server = "opencae-uat.jpl.nasa.gov";
 		String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
-		ObjectNode on = mmsUtil.buildPackageJSON(sysmlID,ownerID);
+		String refID = "master";
+		MMSUtil mmsUtil = new MMSUtil(token);
+
+//		ObjectNode on = mmsUtil.buildPackageJSON(sysmlID,ownerID);
 //		System.out.println(on.toString());
 //		mmsUtil.post(server, projectID, token, on);
 		
 		ObjectNode on2 = mmsUtil.buildJobElementJSON("PMA_"+timestamp.getTime(),ownerID,"tempJob");
 		System.out.println(on2.toString());
-		mmsUtil.post(server, projectID, token, on2);
+		mmsUtil.post(server, projectID,refID, on2);
 		
 	}
 }

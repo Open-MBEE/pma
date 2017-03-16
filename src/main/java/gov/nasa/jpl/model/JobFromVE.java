@@ -70,6 +70,15 @@ public class JobFromVE implements Serializable {
 	public void setMmsServer(String mmsServer) {
 		this.mmsServer = mmsServer;
 	}
+	
+	public String getAlfrescoToken() {
+		return alfrescoToken;
+	}
+
+	public void setAlfrescoToken(String alfrescoToken) {
+		this.alfrescoToken = alfrescoToken;
+	}
+
 
 
 
