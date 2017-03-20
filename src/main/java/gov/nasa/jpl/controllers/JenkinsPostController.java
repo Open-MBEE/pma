@@ -39,9 +39,9 @@ public class JenkinsPostController {
         
         JenkinsEngine je = login();
 
-        Boolean returnStatus = je.postConfigXml(jbc, jobName, true);
+        String returnStatus = je.postConfigXml(jbc, jobName, true);
         System.out.println("Status: "+returnStatus);
-        return "posted";
+        return returnStatus;
     }
 
 

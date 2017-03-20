@@ -5,7 +5,7 @@ package gov.nasa.jpl.jenkinsUtil;
  * Implements the ExecutionEngine as a way to execute jobs (events) on the
  * Jenkins server.
  *
- * @author Dan Karlsson (dank)
+ * @author Dan Karlsson (dank), Tommy Hang (hang)
  * @date 2/04/16
  *
  */
@@ -555,7 +555,7 @@ public class JenkinsEngine implements ExecutionEngine {
     }
 
     // This should be called when you change the name, status, schedule of a job
-    public boolean postConfigXml( JenkinsBuildConfig config,String jobName, boolean newConfig ) {
+    public String postConfigXml( JenkinsBuildConfig config,String jobName, boolean newConfig ) {
         String postUrl = null;
         if( newConfig ) {
             postUrl = this.url + "/view/DocWeb%20(cae-ems-uat)/createItem?name=" + jobName;
@@ -569,7 +569,7 @@ public class JenkinsEngine implements ExecutionEngine {
         if( configFile == null ) {
         	System.out.println(
                 "FAILED TO CREATE JOB: " + jobName);
-            return false;
+            return "Failed to create job. Config file is null";
         }
 
         try {
@@ -578,14 +578,14 @@ public class JenkinsEngine implements ExecutionEngine {
             HttpPost post = new HttpPost( postUrl );
             post.setHeader( "Content-Type", "application/xml" );
             post.setEntity( xmlEntity );
-            HttpResponse response =
-                    this.jenkinsClient.execute( post, this.context );
+            HttpResponse response = this.jenkinsClient.execute( post, this.context );
             System.out.println("Response: "+response);
             EntityUtils.consume( response.getEntity() );
+            return response.toString();
         } catch( Exception e ) {
             e.printStackTrace();
         }
-        return true;
+        return "Failed to create job";
     }
 
     public JSONObject getJob( String jobName ) {

@@ -5,7 +5,7 @@ package gov.nasa.jpl.jenkinsUtil;
  *
  * Builds xml to send to jenkins
  *
- * @author Dan Karlsson (dank)
+ * @author Dan Karlsson (dank) , Tommy Hang (hang)
  * @date 2/04/16
  *
  */

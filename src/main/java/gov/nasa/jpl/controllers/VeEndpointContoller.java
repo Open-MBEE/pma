@@ -1,6 +1,11 @@
 package gov.nasa.jpl.controllers;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +18,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
+import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 import gov.nasa.jpl.model.Job;
 import gov.nasa.jpl.model.JobFromVE;
@@ -28,12 +35,14 @@ public class VeEndpointContoller {
 
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID) {
+	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID,
+			@PathVariable String jobSysmlID) {
 		return "job instance" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID;
 	}
 
 	/**
 	 * Creates job element on mms and job on Jenkins.
+	 * 
 	 * @param projectID
 	 * @param refID
 	 * @param jobjobFromVE
@@ -41,27 +50,46 @@ public class VeEndpointContoller {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.POST)
 	@ResponseBody
-	public String createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromVE jobFromVE) {
+	public String createJob(@PathVariable String projectID, @PathVariable String refID,
+			@RequestBody final JobFromVE jobFromVE) {
 		ObjectMapper mapper = new ObjectMapper();
+		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		
 		String alfrescoToken = jobFromVE.getAlfrescoToken();
-		String mmsServer = jobFromVE.getMmsServer(); 
+		String mmsServer = jobFromVE.getMmsServer();
 		String associatedElementID = jobFromVE.getAssociatedElementID();
+		String jobElementID = "PMA_" + timestamp.getTime();
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-		ObjectNode on2 = mmsUtil.buildJobElementJSON("PMA_"+timestamp.getTime(),associatedElementID,"tempJob");
-		System.out.println(on2.toString());
-		String response = mmsUtil.post(mmsServer, projectID,refID, on2);
+		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, "tempJob");
 		
-		try {
-			return "Response: "+response+"\n"+mapper.writeValueAsString(jobFromVE);
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		String response = mmsUtil.post(mmsServer, projectID, refID, on);
+
+		if (response.equals("HTTP/1.1 200 OK"))
+		{
+			System.out.println("Element Created");
+			
+			//Post to jenkins using jobElementID as the job name
+	        String buildAgent = "Analysis01-UAT";
+	        String teamworkProject = "PROJECT-ID_2_24_17_3_05_44_PM__4fbf6b8b_15a55999900__6e6f_cae_tw_uat_jpl_nasa_gov_128_149_18_101";
+	        
+	        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
+	        jbc.setBuildAgent(buildAgent);
+	        jbc.setDocumentID(associatedElementID);
+	        jbc.setMmsServer(mmsServer);
+	        jbc.setTeamworkProject(teamworkProject);
+	        jbc.setJobID(jobElementID);
+	        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
+	        
+	        JenkinsEngine je = login();
+
+	        String jobCreationStatus = je.postConfigXml(jbc, jobElementID, true);
+	        System.out.println("Status: "+jobCreationStatus);
+	        return jobCreationStatus;
 		}
-		return "Error";
+		else {
+			return response;
+		}
 	}
 
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/instances", method = RequestMethod.POST)
@@ -73,9 +101,31 @@ public class VeEndpointContoller {
 
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE)
 	@ResponseBody
-	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID) {
+	public String deleteJob(@PathVariable String projectID, @PathVariable String refID,
+			@PathVariable String jobSysmlID) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
 		return "job deleted" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID;
 	}
+	
+    public JenkinsEngine login()
+    {
+    	String configFile = "config.txt";
+        List<String> lines = new ArrayList();
+        try {
+            Scanner sc = new Scanner(new File(configFile));
+
+            while (sc.hasNextLine()) {
+                lines.add(sc.nextLine());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        JenkinsEngine je = new JenkinsEngine();
+        je.setUsername(lines.get(0));
+        je.setPassword(lines.get(1));
+        je.setURL(lines.get(2));
+        je.login();
+    	return je;
+    }
 
 }
