@@ -55,22 +55,24 @@ public class VeEndpointContoller {
 		ObjectMapper mapper = new ObjectMapper();
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		
+		String jobName = jobFromVE.getJobName();
 		String alfrescoToken = jobFromVE.getAlfrescoToken();
 		String mmsServer = jobFromVE.getMmsServer();
 		String associatedElementID = jobFromVE.getAssociatedElementID();
 		String jobElementID = "PMA_" + timestamp.getTime();
+		String ownerID = projectID+"_pm";
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, projectID, "tempJob");
+		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, ownerID, jobName);
 		
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
-		System.out.println("Job element response: "+elementCreationResponse);
+		System.out.println("MMS Job element response: "+elementCreationResponse);
 		
 		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
 		{
 			System.out.println("Element Created");
 			
-			//Post to jenkins using jobElementID as the job name
+			// Post to jenkins using jobElementID as the job name
 	        String buildAgent = "Analysis01-UAT";
 //	        String teamworkProject = "PROJECT-ID_2_24_17_3_05_44_PM__4fbf6b8b_15a55999900__6e6f_cae_tw_uat_jpl_nasa_gov_128_149_18_101";
 	        
@@ -85,7 +87,7 @@ public class VeEndpointContoller {
 	        JenkinsEngine je = login();
 
 	        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
-	        System.out.println("Job creation response: "+jobCreationResponse);
+	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
 
 	        return jobCreationResponse;
 		}
@@ -93,14 +95,16 @@ public class VeEndpointContoller {
 			return elementCreationResponse;
 		}
 	}
-
+	
+	// This will run the job on jenkins and create an instance of a job
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/instances", method = RequestMethod.POST)
 	@ResponseBody
 	public Job runJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final Job job) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
 		return job;
 	}
-
+	
+	
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE)
 	@ResponseBody
 	public String deleteJob(@PathVariable String projectID, @PathVariable String refID,

@@ -162,8 +162,8 @@ public class MMSUtil {
 		    request.addHeader("content-type", "application/json");
 		    request.setEntity(params);
 		    HttpResponse response = httpClient.execute(request);
-		    System.out.println(response.getStatusLine());
-		    System.out.println(response.toString());
+//		    System.out.println(response.getStatusLine());
+//		    System.out.println(response.toString());
 		    return response.getStatusLine().toString();
 		} catch (IOException e) 
 		{

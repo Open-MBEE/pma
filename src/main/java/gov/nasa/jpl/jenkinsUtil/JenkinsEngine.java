@@ -579,9 +579,9 @@ public class JenkinsEngine implements ExecutionEngine {
             post.setHeader( "Content-Type", "application/xml" );
             post.setEntity( xmlEntity );
             HttpResponse response = this.jenkinsClient.execute( post, this.context );
-            System.out.println("Response: "+response);
+//            System.out.println("Response: "+response);
             EntityUtils.consume( response.getEntity() );
-            return response.getStatusLine().toString();
+            return Integer.toString(response.getStatusLine().getStatusCode());
         } catch( Exception e ) {
             e.printStackTrace();
         }
