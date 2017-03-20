@@ -581,7 +581,7 @@ public class JenkinsEngine implements ExecutionEngine {
             HttpResponse response = this.jenkinsClient.execute( post, this.context );
             System.out.println("Response: "+response);
             EntityUtils.consume( response.getEntity() );
-            return response.toString();
+            return response.getStatusLine().toString();
         } catch( Exception e ) {
             e.printStackTrace();
         }

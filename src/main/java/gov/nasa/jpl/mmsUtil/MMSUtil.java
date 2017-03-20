@@ -177,7 +177,7 @@ public class MMSUtil {
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		String sysmlID = "PMA_"+timestamp.getTime();
 		String ownerID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c_pm";
-		String token = "TICKET_98936cf233fbd6884ec876d4ba272394c0639f50";
+		String token = "TICKET_18a9d0431f010af5941b920b0c80f361a6d35f37";
 		String server = "opencae-uat.jpl.nasa.gov";
 		String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
 		String refID = "master";

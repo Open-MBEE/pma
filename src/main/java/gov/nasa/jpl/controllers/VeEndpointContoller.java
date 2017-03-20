@@ -61,34 +61,36 @@ public class VeEndpointContoller {
 		String jobElementID = "PMA_" + timestamp.getTime();
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, "tempJob");
+		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, projectID, "tempJob");
 		
-		String response = mmsUtil.post(mmsServer, projectID, refID, on);
-
-		if (response.equals("HTTP/1.1 200 OK"))
+		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
+		System.out.println("Job element response: "+elementCreationResponse);
+		
+		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
 		{
 			System.out.println("Element Created");
 			
 			//Post to jenkins using jobElementID as the job name
 	        String buildAgent = "Analysis01-UAT";
-	        String teamworkProject = "PROJECT-ID_2_24_17_3_05_44_PM__4fbf6b8b_15a55999900__6e6f_cae_tw_uat_jpl_nasa_gov_128_149_18_101";
+//	        String teamworkProject = "PROJECT-ID_2_24_17_3_05_44_PM__4fbf6b8b_15a55999900__6e6f_cae_tw_uat_jpl_nasa_gov_128_149_18_101";
 	        
 	        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
 	        jbc.setBuildAgent(buildAgent);
 	        jbc.setDocumentID(associatedElementID);
 	        jbc.setMmsServer(mmsServer);
-	        jbc.setTeamworkProject(teamworkProject);
+	        jbc.setTeamworkProject(projectID);
 	        jbc.setJobID(jobElementID);
-	        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
+//	        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
 	        
 	        JenkinsEngine je = login();
 
-	        String jobCreationStatus = je.postConfigXml(jbc, jobElementID, true);
-	        System.out.println("Status: "+jobCreationStatus);
-	        return jobCreationStatus;
+	        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
+	        System.out.println("Job creation response: "+jobCreationResponse);
+
+	        return jobCreationResponse;
 		}
 		else {
-			return response;
+			return elementCreationResponse;
 		}
 	}
 
