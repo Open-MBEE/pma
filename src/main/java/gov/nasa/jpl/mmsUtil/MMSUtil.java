@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -147,7 +148,6 @@ public class MMSUtil {
 	 * 
 	 * @param server mms server (ex. opencae-uat.jpl.nasa.gov)
 	 * @param project magicdraw project (ex.PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b)
-	 * @param token alfresco authentication token
 	 * @param on Jackson json object node. Should contain element(s) to send
 	 * @return Response message from the post.
 	 */
@@ -164,6 +164,31 @@ public class MMSUtil {
 		    HttpResponse response = httpClient.execute(request);
 //		    System.out.println(response.getStatusLine());
 //		    System.out.println(response.toString());
+		    return response.getStatusLine().toString();
+		} catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+		return "Exception Occured"; 
+	}
+	
+	/**
+	 * Used for deleting elements to MMS
+	 * 
+	 * @param server mms server (ex. opencae-uat.jpl.nasa.gov)
+	 * @param project magicdraw project (ex.PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b)
+	 * @param elementID ID of element to be deleted 
+	 * @return Response message from the post.
+	 */
+	public String delete(String server,String project,String refID,String elementID){
+		
+		server = server.replace("https://", ""); 
+		server = server.replace("/", "");
+		HttpClient httpClient = HttpClientBuilder.create().build();
+		try {
+		    HttpDelete request = new HttpDelete("https://"+server+"/alfresco/service/projects/"+project+"/refs/"+refID+"/elements/"+elementID+"?alf_ticket="+alfrescoToken);
+		    HttpResponse response = httpClient.execute(request);
+
 		    return response.getStatusLine().toString();
 		} catch (IOException e) 
 		{

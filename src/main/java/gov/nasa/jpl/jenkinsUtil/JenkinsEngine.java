@@ -720,7 +720,13 @@ public class JenkinsEngine implements ExecutionEngine {
         }
         return position;
     }
-
+    
+    /**
+     * 
+     * @param jobName job name
+     * @param cancelId build number to stop
+     * @param isInQueue
+     */
     public void cancelJob(String jobName, String cancelId, boolean isInQueue){
         try{
             if(!isInQueue) {    // If job is running; Stop it

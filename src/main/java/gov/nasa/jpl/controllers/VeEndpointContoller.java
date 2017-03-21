@@ -43,15 +43,14 @@ public class VeEndpointContoller {
 	/**
 	 * Creates job element on mms and job on Jenkins.
 	 * 
-	 * @param projectID
-	 * @param refID
-	 * @param jobjobFromVE
+	 * @param projectID magicdraw project ID
+	 * @param refID id of workspace
+	 * @param jobjobFromVE 
 	 * @return
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.POST)
 	@ResponseBody
-	public String createJob(@PathVariable String projectID, @PathVariable String refID,
-			@RequestBody final JobFromVE jobFromVE) {
+	public String createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromVE jobFromVE) {
 		ObjectMapper mapper = new ObjectMapper();
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		
@@ -74,7 +73,6 @@ public class VeEndpointContoller {
 			
 			// Post to jenkins using jobElementID as the job name
 	        String buildAgent = "Analysis01-UAT";
-//	        String teamworkProject = "PROJECT-ID_2_24_17_3_05_44_PM__4fbf6b8b_15a55999900__6e6f_cae_tw_uat_jpl_nasa_gov_128_149_18_101";
 	        
 	        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
 	        jbc.setBuildAgent(buildAgent);
@@ -88,7 +86,7 @@ public class VeEndpointContoller {
 
 	        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
 	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
-
+	        
 	        return jobCreationResponse;
 		}
 		else {
@@ -97,19 +95,35 @@ public class VeEndpointContoller {
 	}
 	
 	// This will run the job on jenkins and create an instance of a job
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/instances", method = RequestMethod.POST)
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.POST)
 	@ResponseBody
-	public Job runJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final Job job) {
-		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
+	public Job runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final Job job) {
+		
+		String jobName = "";
+		// Create job instance element. Use the jobSysmlID as the owner.
+//		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
+		System.out.println("job instance element created");
+		
+		// run job on jenkins
+    	JenkinsEngine je = login();
+        je.executeJob(jobSysmlID); // job name should be the job sysmlID
+        
+		System.out.println("Job is running");
 		return job;
 	}
 	
 	
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE)
 	@ResponseBody
-	public String deleteJob(@PathVariable String projectID, @PathVariable String refID,
-			@PathVariable String jobSysmlID) {
+	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
+		// Delete job element on MMS.
+//		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
+		
+		// delete job on jenkins
+    	JenkinsEngine je = login();
+    	je.deleteJob(jobSysmlID);
+        
 		return "job deleted" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID;
 	}
 	

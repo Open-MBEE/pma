@@ -61,7 +61,19 @@ public class JenkinsPostController {
         return "job deleted";
     }
     
+    @RequestMapping("/jenkinsCancel")
+    public String cancel(@RequestParam(value="jobName", defaultValue="testJob") String jobName) {
+    	JenkinsEngine je = login();
+    	Boolean isJobInQueue = je.isJobInQueue(jobName);
+    	String buildNumber = je.getBuildNumber(jobName);
+    	je.cancelJob(jobName, buildNumber, isJobInQueue);
+        return "job deleted";
+    }
     
+    /**
+     * Reads in a local config file for jenkins server and credentials.
+     * @return returns a JenkinsEngine object thats been logged in.
+     */
     public JenkinsEngine login()
     {
     	String configFile = "config.txt";
