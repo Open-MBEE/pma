@@ -11,15 +11,25 @@ package gov.nasa.jpl.jenkinsUtil;
  */
 
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
@@ -50,6 +60,8 @@ import org.json.JSONObject;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -505,6 +517,8 @@ public class JenkinsEngine implements ExecutionEngine {
         System.out.println( "Execution url is " + this.executeUrl );
     }
 
+
+
     // This should be called when you change the name, status, schedule of a job
     public String postConfigXml( JenkinsBuildConfig config,String jobName, boolean newConfig ) {
         String postUrl = null;
@@ -530,9 +544,9 @@ public class JenkinsEngine implements ExecutionEngine {
             post.setHeader( "Content-Type", "application/xml" );
             post.setEntity( xmlEntity );
             HttpResponse response = this.jenkinsClient.execute( post, this.context );
-//            System.out.println("Response: "+response);
+            System.out.println("Response: "+response);
             EntityUtils.consume( response.getEntity() );
-            return Integer.toString(response.getStatusLine().getStatusCode());
+            return response.getStatusLine().toString();
         } catch( Exception e ) {
             e.printStackTrace();
         }
@@ -671,13 +685,7 @@ public class JenkinsEngine implements ExecutionEngine {
         }
         return position;
     }
-    
-    /**
-     * 
-     * @param jobName job name
-     * @param cancelId build number to stop
-     * @param isInQueue
-     */
+
     public void cancelJob(String jobName, String cancelId, boolean isInQueue){
         try{
             if(!isInQueue) {    // If job is running; Stop it
@@ -785,39 +793,121 @@ public class JenkinsEngine implements ExecutionEngine {
         return total;
     }
     
-    public JSONObject getConfigXML(String jobUrl) throws SAXException, ParserConfigurationException {
-        String getUrl = jobUrl + "config.xml";
-
-        JSONObject o = new JSONObject();
+    /**
+     * Retrieves config.xml file of the job. Modifies the job id variable. 
+     * @param jobName name of the job
+     * @return returns xml object of job
+     */
+    public Document getConfigXML(String jobName) throws SAXException, ParserConfigurationException {
+        String getUrl = this.url + "/job/" + jobName + "/config.xml";
 
         HttpGet get = new HttpGet( getUrl );
 
         try {
-            HttpResponse response =
-                    this.jenkinsClient.execute( get, this.context );
+            HttpResponse response = this.jenkinsClient.execute( get, this.context );
             HttpEntity entity = response.getEntity();
             String xml = EntityUtils.toString( entity );
 
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse( new InputSource( new StringReader( xml )) );
-
-            // get the first element
-            Element element = doc.getDocumentElement();
-            System.out.println(element);
-
-
+            Document doc = db.parse( new InputSource( new StringReader( xml )) );          
+            return doc;
+           
         } catch ( IOException e ) {
             e.printStackTrace();
+        } catch ( ParserConfigurationException e ) {
+            e.printStackTrace();
         }
-          
-        return o;
+        
+		return null;
     }
+    
+    /**
+     * Replaces jobID variable in the config xml
+     * @param doc contains job configuration
+     * @return
+     */
+    public String replaceJobIDInConfigXML(Document doc,String newJobID)
+    {
+        // get the first element
+        Element item = doc.getDocumentElement(); // assuming that item is a root element
+        
+        // finding the text field containing job element id.
+        NodeList itemChilds = item.getChildNodes();
+        for (int i = 0; i != itemChilds.getLength(); i++)
+        {
+            Node itemChildNode = itemChilds.item(i);
+            if (!(itemChildNode instanceof Element))
+                continue;
+            Element itemChild = (Element) itemChildNode;
+            String itemChildName = itemChild.getNodeName();
+            if (itemChildName.equals("buildWrappers")) 
+            {
+            	System.out.println(itemChild.getTextContent());
+                String[] environmentVariables = itemChild.getTextContent().split("\n");
+                System.out.println(Arrays.toString(environmentVariables));
+                for(int j = 0;j<environmentVariables.length;j++)
+                {
+                	String environmentVariable = environmentVariables[j];
+                	if(environmentVariable.contains("JOB_ID"))
+                	{
+                		System.out.println("Changed ID");
+                		environmentVariables[j]="JOB_ID="+newJobID;
+                	}
+                }
+                System.out.println(Arrays.toString(environmentVariables));
+                String variablesToString = "";
+                for (String environmentVariable:environmentVariables)	
+                {
+                	variablesToString = variablesToString +environmentVariable+"\n";
+                }
+                System.out.println(variablesToString);
+                System.out.println(variablesToString.equals(itemChild.getTextContent()));
+                itemChild.setTextContent(variablesToString);
+            }
+
+        }
+        
+        try {
+        	// turns document object to a string.
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            StreamResult result = new StreamResult(new StringWriter());
+            DOMSource source = new DOMSource(doc);
+            transformer.transform(source, result);
+            System.out.println(result.getWriter().toString());
+            
+            return result.getWriter().toString();
+        } catch(TransformerException ex) {
+            ex.printStackTrace();
+        }
+        return "Error occured";
+    }
+    
+    public void setCredentials()
+    {
+    	String configFile = "config.txt";
+        List<String> lines = new ArrayList();
+        try {
+            Scanner sc = new Scanner(new File(configFile));
+
+            while (sc.hasNextLine()) {
+                lines.add(sc.nextLine());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        
+        this.setUsername(lines.get(0));
+        this.setPassword(lines.get(1));
+        this.setURL(lines.get(2));
+        
+    }
+    
 
     /* Don't see much use in these functions at the moment
      * may be subject to be removed from the interface so the code
      * isn't cluttered in the JenkinsEngine */
-    
+
     public JSONObject configXmlToJson(String jobUrl) throws SAXException, ParserConfigurationException {
         String getUrl = jobUrl + "config.xml";
 

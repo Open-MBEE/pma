@@ -136,21 +136,8 @@ public class VeEndpointContoller {
 	
     public JenkinsEngine login()
     {
-    	String configFile = "config.txt";
-        List<String> lines = new ArrayList();
-        try {
-            Scanner sc = new Scanner(new File(configFile));
-
-            while (sc.hasNextLine()) {
-                lines.add(sc.nextLine());
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
         JenkinsEngine je = new JenkinsEngine();
-        je.setUsername(lines.get(0));
-        je.setPassword(lines.get(1));
-        je.setURL(lines.get(2));
+        je.setCredentials();
         je.login();
     	return je;
     }
