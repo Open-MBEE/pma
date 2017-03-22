@@ -6,7 +6,7 @@ package gov.nasa.jpl.jenkinsUtil;
  * Jenkins server.
  *
  * @author Dan Karlsson (dank), Tommy Hang (hang)
- * @date 2/04/16
+ * @date 3/20/17
  *
  */
 
@@ -496,7 +496,7 @@ public class JenkinsEngine implements ExecutionEngine {
     }
 
     public void constructAllJobs() {
-        String url = this.url + "/view/DocWeb%20(cae-ems-uat)/api/json?tree=jobs[name,color]";
+        String url = this.url + "/view/DocWeb/api/json?tree=jobs[name,color]";
 
 
 
@@ -505,60 +505,11 @@ public class JenkinsEngine implements ExecutionEngine {
         System.out.println( "Execution url is " + this.executeUrl );
     }
 
-    public JSONObject configXmlToJson(String jobUrl) throws SAXException, ParserConfigurationException {
-        String getUrl = jobUrl + "config.xml";
-
-        JSONObject o = new JSONObject();
-
-        HttpGet get = new HttpGet( getUrl );
-
-        try {
-            HttpResponse response =
-                    this.jenkinsClient.execute( get, this.context );
-            HttpEntity entity = response.getEntity();
-            String xml = EntityUtils.toString( entity );
-
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse( new InputSource( new StringReader( xml )) );
-
-            // get the first element
-            Element element = doc.getDocumentElement();
-
-            // if there is a schedule for the job, add the property
-            if( element.getElementsByTagName( "spec" ).getLength() > 0)
-                o.put( "schedule",
-                       element.getElementsByTagName( "spec" )
-                       .item( 0 )
-                       .getTextContent()
-                       .replaceAll( "\\n", " " ) );
-            else
-                o.put( "schedule", JSONObject.NULL );
-
-            // NOTE: THIS WILL LEAVE THE CONNECTION OPEN, WE MIGHT NOT WANT THIS.
-            //EntityUtils.consume( entity );
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        }
-          catch ( SAXException e ) {
-            e.printStackTrace();
-        } catch ( ParserConfigurationException e ) {
-            e.printStackTrace();
-        } catch (DOMException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        return o;
-    }
-
     // This should be called when you change the name, status, schedule of a job
     public String postConfigXml( JenkinsBuildConfig config,String jobName, boolean newConfig ) {
         String postUrl = null;
         if( newConfig ) {
-            postUrl = this.url + "/view/DocWeb%20(cae-ems-uat)/createItem?name=" + jobName;
+            postUrl = this.url + "/view/DocWeb/createItem?name=" + jobName;
         }
         else {
             postUrl = this.url + "/job/" + jobName + "/config.xml";
@@ -833,11 +784,89 @@ public class JenkinsEngine implements ExecutionEngine {
 
         return total;
     }
+    
+    public JSONObject getConfigXML(String jobUrl) throws SAXException, ParserConfigurationException {
+        String getUrl = jobUrl + "config.xml";
+
+        JSONObject o = new JSONObject();
+
+        HttpGet get = new HttpGet( getUrl );
+
+        try {
+            HttpResponse response =
+                    this.jenkinsClient.execute( get, this.context );
+            HttpEntity entity = response.getEntity();
+            String xml = EntityUtils.toString( entity );
+
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse( new InputSource( new StringReader( xml )) );
+
+            // get the first element
+            Element element = doc.getDocumentElement();
+            System.out.println(element);
+
+
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+          
+        return o;
+    }
 
     /* Don't see much use in these functions at the moment
      * may be subject to be removed from the interface so the code
      * isn't cluttered in the JenkinsEngine */
+    
+    public JSONObject configXmlToJson(String jobUrl) throws SAXException, ParserConfigurationException {
+        String getUrl = jobUrl + "config.xml";
 
+        JSONObject o = new JSONObject();
+
+        HttpGet get = new HttpGet( getUrl );
+
+        try {
+            HttpResponse response =
+                    this.jenkinsClient.execute( get, this.context );
+            HttpEntity entity = response.getEntity();
+            String xml = EntityUtils.toString( entity );
+
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse( new InputSource( new StringReader( xml )) );
+
+            // get the first element
+            Element element = doc.getDocumentElement();
+
+            // if there is a schedule for the job, add the property
+            if( element.getElementsByTagName( "spec" ).getLength() > 0)
+                o.put( "schedule",
+                       element.getElementsByTagName( "spec" )
+                       .item( 0 )
+                       .getTextContent()
+                       .replaceAll( "\\n", " " ) );
+            else
+                o.put( "schedule", JSONObject.NULL );
+
+            // NOTE: THIS WILL LEAVE THE CONNECTION OPEN, WE MIGHT NOT WANT THIS.
+            //EntityUtils.consume( entity );
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+          catch ( SAXException e ) {
+            e.printStackTrace();
+        } catch ( ParserConfigurationException e ) {
+            e.printStackTrace();
+        } catch (DOMException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return o;
+    }
+    
     public JSONArray getJobUrls() {
         constructJobUrl( detail.URL );
         execute();

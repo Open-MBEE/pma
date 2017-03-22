@@ -104,7 +104,7 @@ public class VeEndpointContoller {
 //      Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 //      String jobElementID = "PMA_" + timestamp.getTime();		
 //		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-//		ObjectNode on = mmsUtil.buildJobInstanceElementJSON(jobElementID, jobSysmlID, "job instance");		
+//		ObjectNode on = mmsUtil.buildJobInstanceElementJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance"+timestamp.getTime()); //job element will be the owner of the instance element
 //		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
 		
 		System.out.println("job instance element created");
@@ -112,6 +112,7 @@ public class VeEndpointContoller {
 		// run job on jenkins
     	JenkinsEngine je = login();
         je.executeJob(jobSysmlID); // job name should be the job sysmlID
+        je.getBuildNumber(jobSysmlID);
         
 		System.out.println("Job is running");
 		return job;
