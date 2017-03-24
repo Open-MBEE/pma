@@ -319,7 +319,7 @@ public class JenkinsEngine implements ExecutionEngine {
 		}
 	}
 
-	public void build() {
+	public String build() {
 		// This sets the URL to an Object specifically for making GET calls
 		HttpPost post = new HttpPost(this.executeUrl);
 
@@ -329,9 +329,11 @@ public class JenkinsEngine implements ExecutionEngine {
 			EntityUtils.consume(response.getEntity());
 			// Will throw an error if the execution fails from either incorrect
 			// setup or if the jenkinsClient has not been instantiated.
+			return response.getStatusLine().toString();
 		} catch (IOException e) {
-			e.printStackTrace();
+			return e.toString();
 		}
+		
 	}
 
 	// calling this will close the current HTTP connection
@@ -567,13 +569,14 @@ public class JenkinsEngine implements ExecutionEngine {
 		return null;
 	}
 
-	public void executeJob(String jobName) {
+	public String executeJob(String jobName) {
 		try {
 			this.setJobToken("build");
 			this.executeUrl = this.url + "/job/" + jobName + "/build?token=" + this.jenkinsToken;
-			this.build();
+			String response = this.build();
+			return response;
 		} catch (Exception e) {
-			e.printStackTrace();
+			return e.toString();
 		}
 	}
 

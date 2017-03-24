@@ -23,6 +23,7 @@ import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 import gov.nasa.jpl.model.Job;
 import gov.nasa.jpl.model.JobFromVE;
+import gov.nasa.jpl.model.JobInstance;
 
 @Controller
 public class VeEndpointContoller {
@@ -35,8 +36,7 @@ public class VeEndpointContoller {
 
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID,
-			@PathVariable String jobSysmlID) {
+	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID) {
 		return "job instance" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID;
 	}
 
@@ -66,13 +66,13 @@ public class VeEndpointContoller {
 		
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
 		System.out.println("MMS Job element response: "+elementCreationResponse);
-		
+		System.out.println("");
 		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
 		{
 			System.out.println("Element Created");
 			
 			// Post to jenkins using jobElementID as the job name
-	        String buildAgent = "Analysis01-UAT";
+	        String buildAgent = "Analysis01-Int";
 	        
 	        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
 	        jbc.setBuildAgent(buildAgent);
@@ -97,25 +97,33 @@ public class VeEndpointContoller {
 	// This will run the job on jenkins and create an instance of a job
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.POST)
 	@ResponseBody
-	public Job runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final Job job) {
+	public String runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final JobInstance jobInstance) {
 		
-		String jobName = "";
+		String alfrescoToken = jobInstance.getAlfrescoToken();
+		String mmsServer = jobInstance.getMmsServer();
 		// Create job instance element. Use the jobSysmlID as the owner.
-//      Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-//      String jobElementID = "PMA_" + timestamp.getTime();		
-//		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-//		ObjectNode on = mmsUtil.buildJobInstanceElementJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance"+timestamp.getTime()); //job element will be the owner of the instance element
-//		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
 		
-		System.out.println("job instance element created");
+		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+      	String jobElementID = "PMA_" + timestamp.getTime();		
+      	
+		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
+		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance"+timestamp.getTime()); //job element will be the owner of the instance element
 		
-		// run job on jenkins
-    	JenkinsEngine je = login();
-        je.executeJob(jobSysmlID); // job name should be the job sysmlID
-        je.getBuildNumber(jobSysmlID);
-        
-		System.out.println("Job is running");
-		return job;
+		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
+		
+		System.out.println("job instance element creation response"+elementCreationResponse);
+		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
+		{
+			
+			// run job on jenkins
+	    	JenkinsEngine je = login();
+	        String runResponse = je.executeJob(jobSysmlID); // job name should be the job sysmlID
+	        je.getBuildNumber(jobSysmlID);
+	        
+			System.out.println("Job run response: "+runResponse);
+			return runResponse;
+		}
+		return elementCreationResponse;
 	}
 	
 	
