@@ -99,13 +99,12 @@ public class VeEndpointContoller {
 	@ResponseBody
 	public String runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final JobInstance jobInstance) {
 		
-		/*
-		 * Check if job exists on jenkins first
-		 */
+		
+		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
     	String jobResponse = je.getJob(jobSysmlID).toString();
     	
-    	if(jobResponse.equals(""))
+    	if(jobResponse!=null)
     	{
     		System.out.println("");
     		String alfrescoToken = jobInstance.getAlfrescoToken();
@@ -134,8 +133,13 @@ public class VeEndpointContoller {
     		}
     		return elementCreationResponse;
     	}
-    	
-		return jobResponse;
+    	else
+    	{
+    		jobResponse = "Job doesn't exist";
+    		return jobResponse;
+    	}
+  
+
 	}
 	
 	

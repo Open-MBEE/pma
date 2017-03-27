@@ -1,4 +1,6 @@
 package gov.nasa.jpl.jenkinsUtil;
+
+
 /**
  * JenkinsEngine ----
  *
@@ -161,30 +163,32 @@ public class JenkinsEngine implements ExecutionEngine {
 		// initialize the authentication scheme if there is not
 		this.jenkinsClient.addRequestInterceptor(new PreemptiveAuth(), 0);
 
-		// You get request that will start the build
-		// Example for setting a build REST call:
-		// String getUrl = jenkinsUrl + "/job/" + jobName + "/build?token="
-		// + buildToken;
-		if (DEBUG) {
-
-			String getUrl = jenkinsUrl;
-			System.out.println("The Build url is " + getUrl);
-			HttpGet get = new HttpGet(getUrl);
-
-			try {
-				HttpResponse response = this.jenkinsClient.execute(get, this.context);
-				HttpEntity entity = response.getEntity();
-				String retSrc = EntityUtils.toString(entity);
-				jsonResponse = new JSONObject(retSrc);
-				System.out.println("Content of the JSON Object is " + jsonResponse.toString());
-				EntityUtils.consume(entity);
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+		// // You get request that will start the build
+		// // Example for setting a build REST call:
+		// // String getUrl = jenkinsUrl + "/job/" + jobName + "/build?token="
+		// // + buildToken;
+		// if (DEBUG) {
+		//
+		// String getUrl = jenkinsUrl;
+		// System.out.println("The Build url is " + getUrl);
+		// HttpGet get = new HttpGet(getUrl);
+		//
+		// try {
+		// HttpResponse response = this.jenkinsClient.execute(get,
+		// this.context);
+		// HttpEntity entity = response.getEntity();
+		// String retSrc = EntityUtils.toString(entity);
+		// jsonResponse = new JSONObject(retSrc);
+		// System.out.println("Content of the JSON Object is " +
+		// jsonResponse.toString());
+		// EntityUtils.consume(entity);
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// } catch (JSONException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		// }
 	}
 
 	/**
@@ -280,7 +284,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	}
 
 	@Override
-	public void execute() {
+	public String execute() {
 		// This sets the URL to an Object specifically for making GET calls
 		HttpGet get = new HttpGet(this.executeUrl);
 		String entityString = null;
@@ -299,16 +303,17 @@ public class JenkinsEngine implements ExecutionEngine {
 			// this means there is no proper response... comes in as HTML?
 			// returning will prevent json errors
 			if (entityString.contains("<html>")) {
-				return;
+				System.out.println("Error " + response.getStatusLine().toString());
+				return response.getStatusLine().toString();
 			}
 
 			// Converts the HttpEntity String from the response of the GET
 			// call into a JSON object then consumes the entity to close the
 			// connection.
 
-			 if((entityString != null && !entityString.isEmpty())) {
-				 jsonResponse = new JSONObject( entityString );
-			 }
+			if ((entityString != null && !entityString.isEmpty())) {
+				jsonResponse = new JSONObject(entityString);
+			}
 
 			// Will throw an error if the execution fails from either incorrect
 			// setup or if the jenkinsClient has not been instantiated.
@@ -320,6 +325,8 @@ public class JenkinsEngine implements ExecutionEngine {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		return null;
 	}
 
 	public String build() {
@@ -336,7 +343,7 @@ public class JenkinsEngine implements ExecutionEngine {
 		} catch (IOException e) {
 			return e.toString();
 		}
-		
+
 	}
 
 	// calling this will close the current HTTP connection
@@ -497,7 +504,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	}
 
 	public void constructAllJobs() {
-		String url = this.url + "/view/DocWeb/api/json?tree=jobs[name,color]";
+		String url = this.url + "/view/PMA/api/json?tree=jobs[name,color]";
 
 		System.out.println("Current constuction url is " + url);
 		this.executeUrl = url;
@@ -508,7 +515,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	public String postConfigXml(JenkinsBuildConfig config, String jobName, boolean newConfig) {
 		String postUrl = null;
 		if (newConfig) {
-			postUrl = this.url + "/view/DocWeb/createItem?name=" + jobName;
+			postUrl = this.url + "/view/PMA/createItem?name=" + jobName;
 		} else {
 			postUrl = this.url + "/job/" + jobName + "/config.xml";
 		}
@@ -536,31 +543,47 @@ public class JenkinsEngine implements ExecutionEngine {
 		return "Failed to create job";
 	}
 
-	public JSONObject getJob(String jobName) {
+	/**
+	 * Gets job information from Jenkins.
+	 * @param jobName Name of job
+	 * @return Returns a JSON object from Jenkins with color of last job run. Ex. {"color":"red","name":"PMA_1490223990977"}
+	 */
+	public String getJob(String jobName) {
 		JSONObject json = null;
-		JSONObject allJobs = getAllJobs();
-		if (allJobs == null)
-			return null;
-		JSONArray jobs = allJobs.optJSONArray("jobs");
-		if (jobs == null || jobs.length() <= 0)
-			return null;
-		for (int i = 0; i < jobs.length(); ++i) {
-			JSONObject job = jobs.optJSONObject(i);
-			if (job == null)
-				continue;
-			String name = job.optString("name");
-			 if ((name != null && !name.isEmpty()) && name.equals( jobName ) ) {
-			 json = job;
-			 break;
-			 }
+
+		String allJobResponse = getAllJobs();
+		try {
+			JSONObject allJobs = new JSONObject(allJobResponse);
+			JSONArray jobs = allJobs.optJSONArray("jobs");
+			if (jobs == null || jobs.length() <= 0)
+				return null;
+			for (int i = 0; i < jobs.length(); ++i) {
+				JSONObject job = jobs.optJSONObject(i);
+				if (job == null)
+					continue;
+				String name = job.optString("name");
+				if ((name != null && !name.isEmpty()) && name.equals(jobName)) {
+					json = job;
+					break;
+				}
+			}
+			return json.toString();
+		} catch (JSONException e) {
+			return allJobResponse;
 		}
-		return json;
 	}
 
-	public JSONObject getAllJobs() {
+	/**
+	 * Gets a list of all jobs in the PMA view on Jenkins.
+	 * @return
+	 */
+	public String getAllJobs() {
 		constructAllJobs();
-		execute();
-		return jsonResponse;
+		String allJobs = execute();
+		if (allJobs != null) {
+			return allJobs;
+		}
+		return jsonResponse.toString();
 	}
 
 	public String generateConfigXML(JenkinsBuildConfig config) {
@@ -680,7 +703,7 @@ public class JenkinsEngine implements ExecutionEngine {
 				this.executeUrl = this.url + "/job/" + jobName + "/" + cancelId + "/stop";
 
 				// this has to be a GET
-				this.execute();
+				execute();
 			} else { // If job has not yet start; Cancel it
 
 				// TODO --
@@ -785,7 +808,8 @@ public class JenkinsEngine implements ExecutionEngine {
 	/**
 	 * Retrieves config.xml file of the job. Modifies the job id variable.
 	 * 
-	 * @param jobName name of the job
+	 * @param jobName
+	 *            name of the job
 	 * @return returns xml object of job
 	 */
 	public Document getConfigXML(String jobName) throws SAXException, ParserConfigurationException {
@@ -815,37 +839,40 @@ public class JenkinsEngine implements ExecutionEngine {
 	/**
 	 * Replaces jobID variable in the config xml
 	 * 
-	 * @param doc contains job configuration
+	 * @param doc
+	 *            contains job configuration
 	 * @return
 	 */
 	public String replaceJobIDInConfigXML(Document doc, String newJobID) {
 		NodeList nodeList = doc.getElementsByTagName("*");
-		
-		// iterates through all the nodes to find the one which contains the environment variables
+
+		// iterates through all the nodes to find the one which contains the
+		// environment variables
 		for (int i = 0; i < nodeList.getLength(); i++) {
 			Node node = nodeList.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				
-//				System.out.println(node.getNodeName());
+
+				// System.out.println(node.getNodeName());
 				if (node.getNodeName().equals("EnvInjectBuildWrapper")) {
 					String[] environmentVariables = node.getTextContent().split("\n");
-//					System.out.println(Arrays.toString(environmentVariables));
+					// System.out.println(Arrays.toString(environmentVariables));
 					for (int j = 0; j < environmentVariables.length; j++) {
 						String environmentVariable = environmentVariables[j];
 						if (environmentVariable.contains("JOB_ID")) {
-//							System.out.println("Changed ID");
-							// environmentVariables[j]="JOB_ID="+newJobID; //Changes job id to new id
+							// System.out.println("Changed ID");
+							// environmentVariables[j]="JOB_ID="+newJobID;
+							// //Changes job id to new id
 						}
 					}
-//					System.out.println(Arrays.toString(environmentVariables));
+					// System.out.println(Arrays.toString(environmentVariables));
 					String variablesToString = "";
 					for (String environmentVariable : environmentVariables) {
 						variablesToString = variablesToString + environmentVariable + "\n";
 					}
-//					System.out.println(variablesToString);
-//					System.out.println(variablesToString.equals(node.getTextContent()));
+					// System.out.println(variablesToString);
+					// System.out.println(variablesToString.equals(node.getTextContent()));
 					node.setTextContent(variablesToString);
-//					System.out.println(node.getTextContent());
+					// System.out.println(node.getTextContent());
 				}
 			}
 		}
@@ -884,7 +911,6 @@ public class JenkinsEngine implements ExecutionEngine {
 
 	}
 
-	
 	/*
 	 * Don't see much use in these functions at the moment may be subject to be
 	 * removed from the interface so the code isn't cluttered in the

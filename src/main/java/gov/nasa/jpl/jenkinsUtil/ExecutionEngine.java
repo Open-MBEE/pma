@@ -19,8 +19,9 @@ public interface ExecutionEngine {
      * Execute specified event
      * 
      * @param event
+     * @return 
      */
-    void execute();
+    String execute();
 
     /**
      * getEventDetail Searches for specific detail within the queue of events to
