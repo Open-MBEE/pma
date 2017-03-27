@@ -99,31 +99,43 @@ public class VeEndpointContoller {
 	@ResponseBody
 	public String runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final JobInstance jobInstance) {
 		
-		String alfrescoToken = jobInstance.getAlfrescoToken();
-		String mmsServer = jobInstance.getMmsServer();
-		// Create job instance element. Use the jobSysmlID as the owner.
-		
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-      	String jobElementID = "PMA_" + timestamp.getTime();		
-      	
-		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance"+timestamp.getTime()); //job element will be the owner of the instance element
-		
-		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
-		
-		System.out.println("job instance element creation response"+elementCreationResponse);
-		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
-		{
-			
-			// run job on jenkins
-	    	JenkinsEngine je = login();
-	        String runResponse = je.executeJob(jobSysmlID); // job name should be the job sysmlID
-	        je.getBuildNumber(jobSysmlID);
-	        
-			System.out.println("Job run response: "+runResponse);
-			return runResponse;
-		}
-		return elementCreationResponse;
+		/*
+		 * Check if job exists on jenkins first
+		 */
+    	JenkinsEngine je = login();
+    	String jobResponse = je.getJob(jobSysmlID).toString();
+    	
+    	if(jobResponse.equals(""))
+    	{
+    		System.out.println("");
+    		String alfrescoToken = jobInstance.getAlfrescoToken();
+    		String mmsServer = jobInstance.getMmsServer();
+    		// Create job instance element. Use the jobSysmlID as the owner.
+    		
+    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+          	String jobElementID = "PMA_" + timestamp.getTime();		
+          	
+    		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
+    		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance"+timestamp.getTime()); //job element will be the owner of the instance element
+    		
+    		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
+    		
+    		System.out.println("job instance element creation response"+elementCreationResponse);
+    		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
+    		{
+    			
+    			// run job on jenkins
+
+    	        String runResponse = je.executeJob(jobSysmlID); // job name should be the job sysmlID
+    	        je.getBuildNumber(jobSysmlID);
+    	        
+    			System.out.println("Job run response: "+runResponse);
+    			return runResponse;
+    		}
+    		return elementCreationResponse;
+    	}
+    	
+		return jobResponse;
 	}
 	
 	

@@ -306,15 +306,18 @@ public class JenkinsEngine implements ExecutionEngine {
 			// call into a JSON object then consumes the entity to close the
 			// connection.
 
-			// if( !Utils.isNullOrEmpty( entityString )) {
-			// jsonResponse = new JSONObject( entityString );
-			// }
+			 if((entityString != null && !entityString.isEmpty())) {
+				 jsonResponse = new JSONObject( entityString );
+			 }
 
 			// Will throw an error if the execution fails from either incorrect
 			// setup or if the jenkinsClient has not been instantiated.
 		} catch (IOException e) {
 			System.out.println(
 					"JenkinsEngine.execute(): response \"" + entityString + "\" failed to parse as a JSONObject");
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -546,10 +549,10 @@ public class JenkinsEngine implements ExecutionEngine {
 			if (job == null)
 				continue;
 			String name = job.optString("name");
-			// if ( !Utils.isNullOrEmpty( name ) && name.equals( jobName ) ) {
-			// json = job;
-			// break;
-			// }
+			 if ((name != null && !name.isEmpty()) && name.equals( jobName ) ) {
+			 json = job;
+			 break;
+			 }
 		}
 		return json;
 	}
