@@ -1,12 +1,6 @@
 package gov.nasa.jpl.controllers;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,14 +8,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
-import gov.nasa.jpl.model.Job;
 import gov.nasa.jpl.model.JobFromVE;
 import gov.nasa.jpl.model.JobInstance;
 
@@ -102,9 +94,9 @@ public class VeEndpointContoller {
 		
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
-    	String jobResponse = je.getJob(jobSysmlID).toString();
-    	
-    	if(jobResponse!=null)
+    	String jobResponse = je.getJob(jobSysmlID);
+    	System.out.println("Job Response: "+jobResponse);
+    	if(!jobResponse.equals("Job Not Found"))
     	{
     		System.out.println("");
     		String alfrescoToken = jobInstance.getAlfrescoToken();
@@ -122,9 +114,7 @@ public class VeEndpointContoller {
     		System.out.println("job instance element creation response"+elementCreationResponse);
     		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
     		{
-    			
     			// run job on jenkins
-
     	        String runResponse = je.executeJob(jobSysmlID); // job name should be the job sysmlID
     	        je.getBuildNumber(jobSysmlID);
     	        
@@ -135,7 +125,7 @@ public class VeEndpointContoller {
     	}
     	else
     	{
-    		jobResponse = "Job doesn't exist";
+    		jobResponse = "Job not found";
     		return jobResponse;
     	}
   

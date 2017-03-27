@@ -1,6 +1,5 @@
 package gov.nasa.jpl.jenkinsUtil;
 
-
 /**
  * JenkinsEngine ----
  *
@@ -545,15 +544,20 @@ public class JenkinsEngine implements ExecutionEngine {
 
 	/**
 	 * Gets job information from Jenkins.
-	 * @param jobName Name of job
-	 * @return Returns a JSON object from Jenkins with color of last job run. Ex. {"color":"red","name":"PMA_1490223990977"}
+	 * 
+	 * @param jobName
+	 *            Name of job
+	 * @return Returns a JSON object from Jenkins with color of last job run.
+	 *         Ex. {"color":"red","name":"PMA_1490223990977"}
 	 */
 	public String getJob(String jobName) {
 		JSONObject json = null;
 
 		String allJobResponse = getAllJobs();
+
 		try {
 			JSONObject allJobs = new JSONObject(allJobResponse);
+
 			JSONArray jobs = allJobs.optJSONArray("jobs");
 			if (jobs == null || jobs.length() <= 0)
 				return null;
@@ -567,19 +571,26 @@ public class JenkinsEngine implements ExecutionEngine {
 					break;
 				}
 			}
-			return json.toString();
+			if (json != null) {
+				return json.toString();
+			}
 		} catch (JSONException e) {
-			return allJobResponse;
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return "Job Not Found";
+
 	}
 
 	/**
 	 * Gets a list of all jobs in the PMA view on Jenkins.
+	 * 
 	 * @return
 	 */
 	public String getAllJobs() {
 		constructAllJobs();
-		String allJobs = execute();
+		String allJobs = execute(); // execute returns not null when theres an
+									// error
 		if (allJobs != null) {
 			return allJobs;
 		}
