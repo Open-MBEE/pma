@@ -176,14 +176,17 @@ public class JenkinsBuildConfig {
 			rootElement.appendChild(tempElement);
 
 			tempElement = doc.createElement("triggers");
-			// if ( !Utils.isNullOrEmpty( getSchedule() ) ) {
-			// Element hudTrig =
-			// doc.createElement("hudson.triggers.TimerTrigger");
-			// Element spec = doc.createElement("spec");
-			// spec.appendChild( doc.createTextNode( this.schedule ) );
-			// hudTrig.appendChild( spec );
-			// tempElement.appendChild( hudTrig );
-			// }
+			
+			/**
+			 * Sets Schedule. Should be in cron format: * * * * *
+			 */
+			if ((getSchedule() != null && !getSchedule().isEmpty())) {
+				Element hudTrig = doc.createElement("hudson.triggers.TimerTrigger");
+				Element spec = doc.createElement("spec");
+				spec.appendChild(doc.createTextNode(this.schedule));
+				hudTrig.appendChild(spec);
+				tempElement.appendChild(hudTrig);
+			}
 			rootElement.appendChild(tempElement);
 
 			tempElement = doc.createElement("concurrentBuild");
@@ -589,8 +592,7 @@ public class JenkinsBuildConfig {
 	}
 
 	/**
-	 * @param schedule
-	 *            the schedule to set
+	 * @param schedule The schedule to set. In cron format. ex: * * * * *
 	 */
 	public void setSchedule(String schedule) {
 		this.schedule = schedule;
