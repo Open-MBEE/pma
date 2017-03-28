@@ -62,6 +62,13 @@ public class MMSUtil {
 		return payload;
 	} 
 
+	/**
+	 * Builds the class element with its instance specification element.
+	 * @param id 
+	 * @param ownerID Owner of ID.
+	 * @param name element name
+	 * @return Array containing class and instance specification element. 
+	 */
 	public ArrayNode buildClassElement(String id, String ownerID,String name)
 	{
 		ObjectMapper mapper = new ObjectMapper();
@@ -231,8 +238,25 @@ public class MMSUtil {
 		return payload;
 	}
 	
-	public void buildJobInstanceJSON()
+	public ObjectNode buildJobInstanceJSON(String id, String ownerID,String name) 
 	{
+		
+		ObjectMapper mapper = new ObjectMapper();
+		
+		ObjectNode payload = mapper.createObjectNode();
+		ArrayNode elements = buildClassElement(id,ownerID,name);
+		
+		elements.add(buildPropertyNode(id,"buildNumber",""));
+		elements.add(buildPropertyNode(id,"jobStatus","pending"));
+		elements.add(buildPropertyNode(id,"jenkinsLog",""));
+		elements.add(buildPropertyNode(id,"timeCreated",""));
+		elements.add(buildPropertyNode(id,"completionTime",""));
+		
+		payload.put("elements",elements);
+		payload.put("source","pma");
+		payload.put("pmaVersion","1.0");
+		
+		return payload;
 		
 	}
 
@@ -307,9 +331,15 @@ public class MMSUtil {
 //		System.out.println(on.toString());
 //		mmsUtil.post(server, projectID, token, on);
 		
-		ObjectNode on2 = mmsUtil.buildJobElementJSON("PMA_"+timestamp.getTime(),ownerID,"tempJob");
+		String jobElementID = "PMA_"+timestamp.getTime();
+		ObjectNode on2 = mmsUtil.buildJobElementJSON("PMA_"+timestamp.getTime(),ownerID,"jobEle");
 		System.out.println(on2.toString());
 		mmsUtil.post(server, projectID,refID, on2);
+		
+		timestamp = new Timestamp(System.currentTimeMillis());
+		ObjectNode on3 = mmsUtil.buildJobInstanceJSON("PMA_"+timestamp.getTime()+"_instance",jobElementID,"jobInstance");
+		System.out.println(on3.toString());
+		mmsUtil.post(server, projectID,refID, on3);
 		
 	}
 }
