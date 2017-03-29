@@ -46,19 +46,18 @@ public class VeEndpointContoller {
 		ObjectMapper mapper = new ObjectMapper();
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		
-		
-		
 		String jobName = jobFromVE.getJobName();
 		String alfrescoToken = jobFromVE.getAlfrescoToken();
 		String mmsServer = jobFromVE.getMmsServer();
 		String associatedElementID = jobFromVE.getAssociatedElementID();
 		String jobElementID = "PMA_" + timestamp.getTime();
 		String ownerID = projectID+"_pm";
-		
+		String schedule = jobFromVE.getSchedule();
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName);
 		
+		System.out.println("Job class JSON: "+on.toString());
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
 		System.out.println("MMS Job element response: "+elementCreationResponse);
 		System.out.println("");
@@ -75,6 +74,7 @@ public class VeEndpointContoller {
 	        jbc.setMmsServer(mmsServer);
 	        jbc.setTeamworkProject(projectID);
 	        jbc.setJobID(jobElementID);
+//	        jbc.setSchedule(schedule); // Disabled for now
 //	        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
 	        
 	        JenkinsEngine je = login();
@@ -111,7 +111,7 @@ public class VeEndpointContoller {
           	
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
     		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance"+timestamp.getTime()); //job element will be the owner of the instance element
-    		
+    		System.out.println("job instance JSON: "+on.toString());
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
     		
     		System.out.println("job instance element creation response"+elementCreationResponse);
@@ -128,7 +128,7 @@ public class VeEndpointContoller {
     	}
     	else
     	{
-    		jobResponse = "Job not found";
+    		jobResponse = "Job not found on Jenkins";
     		return jobResponse;
     	}
   
