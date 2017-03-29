@@ -46,6 +46,8 @@ public class VeEndpointContoller {
 		ObjectMapper mapper = new ObjectMapper();
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		
+		
+		
 		String jobName = jobFromVE.getJobName();
 		String alfrescoToken = jobFromVE.getAlfrescoToken();
 		String mmsServer = jobFromVE.getMmsServer();
@@ -53,15 +55,16 @@ public class VeEndpointContoller {
 		String jobElementID = "PMA_" + timestamp.getTime();
 		String ownerID = projectID+"_pm";
 		
+		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, ownerID, jobName);
+		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName);
 		
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
 		System.out.println("MMS Job element response: "+elementCreationResponse);
 		System.out.println("");
 		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
 		{
-			System.out.println("Element Created");
+			System.out.println("Created Job Element ID: "+jobElementID);
 			
 			// Post to jenkins using jobElementID as the job name
 	        String buildAgent = "Analysis01-Int";
@@ -107,7 +110,7 @@ public class VeEndpointContoller {
           	String jobElementID = "PMA_" + timestamp.getTime();		
           	
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-    		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance"+timestamp.getTime()); //job element will be the owner of the instance element
+    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance"+timestamp.getTime()); //job element will be the owner of the instance element
     		
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
     		
