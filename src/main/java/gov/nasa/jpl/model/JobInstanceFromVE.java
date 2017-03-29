@@ -9,7 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-public class JobInstance implements Serializable {
+public class JobInstanceFromVE implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

@@ -15,7 +15,7 @@ import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 import gov.nasa.jpl.model.JobFromVE;
-import gov.nasa.jpl.model.JobInstance;
+import gov.nasa.jpl.model.JobInstanceFromVE;
 
 @Controller
 public class VeEndpointContoller {
@@ -92,7 +92,7 @@ public class VeEndpointContoller {
 	// This will run the job on jenkins and create an instance of a job
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.POST)
 	@ResponseBody
-	public String runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final JobInstance jobInstance) {
+	public String runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final JobInstanceFromVE jobInstance) {
 		
 		
 		// Check if job exists on jenkins first
