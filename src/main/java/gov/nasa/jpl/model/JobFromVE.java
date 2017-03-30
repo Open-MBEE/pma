@@ -8,6 +8,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+/**
+ * For handling job creation JSON recieved from VE.
+ * @author hang
+ *
+ */
 @Entity
 public class JobFromVE implements Serializable {
 

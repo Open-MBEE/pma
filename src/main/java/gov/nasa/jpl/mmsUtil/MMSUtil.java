@@ -5,15 +5,21 @@ package gov.nasa.jpl.mmsUtil;
  *
  */
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.Timestamp;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -151,7 +157,8 @@ public class MMSUtil {
 	public ObjectNode buildPropertyNode(String ownerID,String name,String value)
 	{
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-		String propertyID = ownerID+"_instance_"+timestamp.getTime()+Math.random()* 50 + 1;
+		
+		String propertyID = ownerID+"_instance_"+timestamp.getTime()+Math.round(Math.random()*50);
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode classElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
@@ -238,7 +245,7 @@ public class MMSUtil {
 		return payload;
 	}
 	
-	public ObjectNode buildJobInstanceJSON(String id, String ownerID,String name) 
+	public ObjectNode buildJobInstanceJSON(String id, String ownerID,String name,String buildNamer) 
 	{
 		
 		ObjectMapper mapper = new ObjectMapper();
@@ -246,7 +253,7 @@ public class MMSUtil {
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = buildClassElement(id,ownerID,name);
 		
-		elements.add(buildPropertyNode(id,"buildNumber",""));
+		elements.add(buildPropertyNode(id,"buildNumber",buildNamer));
 		elements.add(buildPropertyNode(id,"jobStatus","pending"));
 		elements.add(buildPropertyNode(id,"jenkinsLog",""));
 		elements.add(buildPropertyNode(id,"timeCreated",""));
@@ -284,7 +291,10 @@ public class MMSUtil {
 //		    System.out.println(response.getStatusLine());
 //		    System.out.println(response.toString());
 		    return response.getStatusLine().toString();
-		} catch (IOException e) 
+		} 
+		catch (java.net.UnknownHostException e) {
+		      System.out.println("Unknown Host Exception");
+		}catch (IOException e) 
 		{
 			e.printStackTrace();
 		}
@@ -309,21 +319,85 @@ public class MMSUtil {
 		    HttpResponse response = httpClient.execute(request);
 
 		    return response.getStatusLine().toString();
-		} catch (IOException e) 
+		} 
+		catch (java.net.UnknownHostException e) {
+		      System.out.println("Unknown Host Exception");
+		}catch (IOException e) 
 		{
 			e.printStackTrace();
 		}
 		return "Exception Occured"; 
 	}
 	
+	/**
+	 * Used for getting elements to MMS
+	 * 
+	 * @param server mms server (ex. opencae-uat.jpl.nasa.gov)
+	 * @param project magicdraw project (ex.PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b)
+	 * @param elementID ID of element to be retrieved 
+	 * @return json string of element.
+	 */
+	public String get(String server,String project,String refID,String elementID){
+		
+		server = server.replace("https://", ""); 
+		server = server.replace("/", "");
+		HttpClient httpClient = HttpClientBuilder.create().build();
+		try {
+			String url = "https://"+server+"/alfresco/service/projects/"+project+"/refs/"+refID+"/elements/"+elementID+"?recurse=true&alf_ticket="+alfrescoToken;
+			System.out.println("URL: "+url);
+		    HttpGet request = new HttpGet(url);
+			request.setHeader("Accept", "application/json");
+			request.setHeader("Content-type", "application/json");
+		    HttpResponse response = httpClient.execute(request);
+		    
+			BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+			
+			String result = "";
+			String line = "";
+			while ((line = rd.readLine()) != null) {
+				result = result+line.trim();
+			}
+			return result;
+			
+		}
+		catch (java.net.UnknownHostException e) {
+		      System.out.println("Unknown Host Exception");
+		}
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+
+		return "Exception Occured";
+	}
+	
+	// should get the current value, change it and send it back to mms
+	public String modifyPartPropertyValue(String server,String projectID,String refID,String elementID,String token)
+	{
+		
+		// find the part property
+		MMSUtil mmsUtil = new MMSUtil(token);
+		String jsonString = mmsUtil.get(server, projectID,refID, elementID);
+		// edit it
+		
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode rootNode = mapper.valueToTree(jsonString);
+		System.out.println(rootNode);
+		
+		
+		// send it back to mms. using post() method
+		return "";
+	}
+	
 	public static void main(String[] args) 
 	{
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		String sysmlID = "PMA_"+timestamp.getTime();
-		String ownerID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c_pm";
-		String token = "TICKET_1d4f13445f8f360e25e55b1646d080e34a8df338";
+		String ownerID = "PROJECT-921084a3-e465-465f-944b-61194213043e_pm";
+		String token = "TICKET_cefe89c4f27a50b29a7de9ff9409626302c5383c";
 		String server = "opencae-uat.jpl.nasa.gov";
-		String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
+		String projectID = "PROJECT-921084a3-e465-465f-944b-61194213043e";
 		String refID = "master";
 		MMSUtil mmsUtil = new MMSUtil(token);
 
@@ -331,15 +405,41 @@ public class MMSUtil {
 //		System.out.println(on.toString());
 //		mmsUtil.post(server, projectID, token, on);
 		
-		String jobElementID = "PMA_"+timestamp.getTime();
-		ObjectNode on2 = mmsUtil.buildJobElementJSON("PMA_"+timestamp.getTime(),ownerID,"jobEle");
-		System.out.println(on2.toString());
-		mmsUtil.post(server, projectID,refID, on2);
 		
-		timestamp = new Timestamp(System.currentTimeMillis());
-		ObjectNode on3 = mmsUtil.buildJobInstanceJSON("PMA_"+timestamp.getTime()+"_instance",jobElementID,"jobInstance");
-		System.out.println(on3.toString());
-		mmsUtil.post(server, projectID,refID, on3);
+//		String jobElementID = "PMA_"+timestamp.getTime();
+//		ObjectNode on2 = mmsUtil.buildJobElementJSON("PMA_"+timestamp.getTime(),ownerID,"jobEle");
+//		System.out.println(on2.toString());
+//		mmsUtil.post(server, projectID,refID, on2);
+//		
+//		timestamp = new Timestamp(System.currentTimeMillis());
+//		ObjectNode on3 = mmsUtil.buildJobInstanceJSON("PMA_"+timestamp.getTime()+"_instance",jobElementID,"jobInstance","1");
+//		System.out.println(on3.toString());
+//		mmsUtil.post(server, projectID,refID, on3);
+		
+		String jsonString = mmsUtil.get(server, projectID,refID, "PMA_1490903301038");
+		System.out.println(jsonString);
+		
+		ObjectMapper mapper = new ObjectMapper();
+		
+		try {
+			JsonNode fullJson = mapper.readTree(jsonString);
+			JsonNode elements = fullJson.get("elements");
+			for(JsonNode element:elements)
+			{
+				System.out.println(element.get("id"));
+			}
+			System.out.println(elements.size());
+			System.out.println(elements);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		String propertyID = ownerID+"_instance_"+timestamp.getTime()+Math.round(Math.random()*50);
+		System.out.println("ID: "+propertyID);
 		
 	}
 }

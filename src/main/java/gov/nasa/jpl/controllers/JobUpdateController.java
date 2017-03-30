@@ -20,17 +20,10 @@ import gov.nasa.jpl.model.JobFromVE;
 @Controller
 public class JobUpdateController 
 {
-	/**
-	 * Creates job element on mms and job on Jenkins.
-	 * 
-	 * @param projectID magicdraw project ID
-	 * @param refID id of workspace
-	 * @param jobjobFromVE 
-	 * @return
-	 */
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{instanceID}", method = RequestMethod.POST)
+	
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{instanceID}/{status}", method = RequestMethod.POST)
 	@ResponseBody
-	public String createJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String instanceID, @RequestBody final JobFromVE jobFromVE) {
+	public String createJobInstance(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String instanceID) {
 
 		return "";
 	}

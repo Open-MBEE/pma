@@ -104,13 +104,14 @@ public class VeEndpointContoller {
     		System.out.println("");
     		String alfrescoToken = jobInstance.getAlfrescoToken();
     		String mmsServer = jobInstance.getMmsServer();
+    		String buildNumber = je.getBuildNumber(jobSysmlID);
     		// Create job instance element. Use the jobSysmlID as the owner.
     		
     		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
           	String jobElementID = "PMA_" + timestamp.getTime();		
           	
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance"+timestamp.getTime()); //job element will be the owner of the instance element
+    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance"+timestamp.getTime(),buildNumber); //job element will be the owner of the instance element
     		System.out.println("job instance JSON: "+on.toString());
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
     		
