@@ -207,7 +207,7 @@ public class JenkinsBuildConfig {
 			String content = null;
 
 			try {
-				content = new String(Files.readAllBytes(Paths.get("docwebJenkinsScript.sh")));
+				content = new String(Files.readAllBytes(Paths.get("JenkinsScripts/docwebJenkinsScript.sh")));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
