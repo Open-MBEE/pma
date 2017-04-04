@@ -158,7 +158,7 @@ public class MMSUtil {
 	{
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		
-		String propertyID = ownerID+"_instance_"+timestamp.getTime()+Math.round(Math.random()*50);
+		String propertyID = ownerID+"_property_"+timestamp.getTime()+Math.round(Math.random()*50);
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode classElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
@@ -407,7 +407,7 @@ public class MMSUtil {
 		}
 		
 		// send it back to mms. using post() method
-		
+
 		
 		return "";
 	}
@@ -442,7 +442,7 @@ public class MMSUtil {
 		
 		String elementID = "PMA_1491257139219";
 		String buildNumber = "1";
-		String propertyName = "";
+		String propertyName = "buildNumber";
 		String newPropertyValue = "12345";
 		
 		String jsonString = mmsUtil.get(server, projectID,refID, elementID);
@@ -460,7 +460,7 @@ public class MMSUtil {
 				{
 					
 					// name has to equal "buildNumber" with the quotes and value has have the quotes as well.
-					if((element.get("name").toString().equals("\"buildNumber\""))&&(element.get("defaultValue").get("value").toString().equals("\""+buildNumber+"\"")))
+					if((element.get("name").toString().equals("\""+propertyName+"\""))&&(element.get("defaultValue").get("value").toString().equals("\""+buildNumber+"\"")))
 					{
 						System.out.println("id: "+element.get("id").toString());
 						System.out.println("ownerID: "+element.get("ownerId").toString());
@@ -470,8 +470,18 @@ public class MMSUtil {
 					}
 				}
 			}
+			
 			System.out.println(elements.size());
 			System.out.println(elements);
+			
+			ObjectNode payload = mapper.createObjectNode();
+			ArrayNode arrayElements = mapper.createArrayNode();
+			arrayElements.add(fullJson);
+			payload.put("elements",elements);
+			
+			
+			
+//			mmsUtil.post(server, projectID, refID, on);
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -480,6 +490,7 @@ public class MMSUtil {
 			e.printStackTrace();
 		}
 		
+
 		
 //		String propertyID = ownerID+"_instance_"+timestamp.getTime()+Math.round(Math.random()*50);
 //		System.out.println("ID: "+propertyID);
