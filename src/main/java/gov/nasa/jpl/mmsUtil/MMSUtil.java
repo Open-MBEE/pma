@@ -372,15 +372,26 @@ public class MMSUtil {
 		return "Exception Occured";
 	}
 	
-	// should get the current value, change it and send it back to mms
+	
+	/**
+	 * Should get the current value of the property, change it and send it back to mms
+	 * @param server MMS server. Ex. opencae-uat.jpl.nasa.gov
+	 * @param projectID Magicdraw project id
+	 * @param refID
+	 * @param elementID ID of job element (Should be the owner of the job instance element)
+	 * @param buildNumber Build number of the jenkins job. Starts from 1. 
+	 * @param propertyName Name of the part property. Ex: buildNumber,jobStatus,jenkinsLog,etc
+	 * @param newPropertyValue New value of the part property
+	 * @param token Alfresco token.
+	 * @return Status code returned from mms.
+	 */
 	public String modifyPartPropertyValue(String server,String projectID,String refID,String elementID,String buildNumber,String propertyName,String newPropertyValue,String token)
 	{
 		
-		// find the part property
+		// finding the part property
 		MMSUtil mmsUtil = new MMSUtil(token);
 		
 		String jsonString = mmsUtil.get(server, projectID,refID, elementID);
-		System.out.println(jsonString);
 		
 		ObjectMapper mapper = new ObjectMapper();
 		
@@ -391,14 +402,9 @@ public class MMSUtil {
 			if (elements != null)  // elements will be null if the json returned 
 			{
 				for (JsonNode element : elements) {
-					// Find the ID of the 
+					// Find the ID of the job instance element.
 					if((element.get("type").toString().equals("\"Property\""))&&(element.get("defaultValue").get("value").toString().equals("\""+buildNumber+"\"")))
 					{
-						System.out.println("id: "+element.get("id").toString());
-						System.out.println("ownerID: "+element.get("ownerId").toString());
-						System.out.println("name: "+element.get("name").toString());
-						System.out.println("value: "+element.get("defaultValue").get("value").toString());
-						System.out.println();
 						jobInstanceId = element.get("ownerId").toString();
 					}
 				}
@@ -409,9 +415,9 @@ public class MMSUtil {
 					 */
 					if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().equals(jobInstanceId))&&(element.get("name").toString().equals("\""+propertyName+"\"")))
 					{
-						propertyElement = (ObjectNode) element;
 						System.out.println("Found: "+propertyName);
 						System.out.println("Value: "+element.get("defaultValue").get("value").toString());
+						propertyElement = (ObjectNode) element;
 					}
 				}
 				if(propertyElement!=null) // will be null if the property element isn't found
@@ -429,8 +435,9 @@ public class MMSUtil {
 					ArrayNode arrayElements = mapper.createArrayNode();
 					arrayElements.add(propertyElement);
 					payload.put("elements",arrayElements);
+					
 					System.out.println("Payload: "+payload);
-					String response = mmsUtil.post(server, projectID, refID, payload);
+					String response = mmsUtil.post(server, projectID, refID, payload); // sending element to MMS . Expecting 200 OK response
 					System.out.println("Response: "+response);
 					return response;
 				}
@@ -442,9 +449,6 @@ public class MMSUtil {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-			
-
-		
 		return "";
 	}
 	
