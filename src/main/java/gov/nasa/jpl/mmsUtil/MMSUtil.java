@@ -158,7 +158,7 @@ public class MMSUtil {
 	{
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		
-		String propertyID = ownerID+"_property_"+timestamp.getTime()+Math.round(Math.random()*50);
+		String propertyID = "PMA_"+timestamp.getTime()+Math.round(Math.random()*50);
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode classElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
@@ -373,31 +373,68 @@ public class MMSUtil {
 	}
 	
 	// should get the current value, change it and send it back to mms
-	public String modifyPartPropertyValue(String server,String projectID,String refID,String elementID,String token)
+	public String modifyPartPropertyValue(String server,String projectID,String refID,String elementID,String buildNumber,String propertyName,String newPropertyValue,String token)
 	{
 		
 		// find the part property
 		MMSUtil mmsUtil = new MMSUtil(token);
+		
 		String jsonString = mmsUtil.get(server, projectID,refID, elementID);
-		// edit it
+		System.out.println(jsonString);
 		
 		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode rootNode = mapper.valueToTree(jsonString);
-		System.out.println(rootNode);
 		
 		try {
 			JsonNode fullJson = mapper.readTree(jsonString);
 			JsonNode elements = fullJson.get("elements");
-			for(JsonNode element:elements)
+			String jobInstanceId = ""; // owner of the instance part properties
+			if (elements != null)  // elements will be null if the json returned 
 			{
-				if(element.get("id").toString().contains("instance"))
+				for (JsonNode element : elements) {
+					// Find the ID of the 
+					if((element.get("type").toString().equals("\"Property\""))&&(element.get("defaultValue").get("value").toString().equals("\""+buildNumber+"\"")))
+					{
+						System.out.println("id: "+element.get("id").toString());
+						System.out.println("ownerID: "+element.get("ownerId").toString());
+						System.out.println("name: "+element.get("name").toString());
+						System.out.println("value: "+element.get("defaultValue").get("value").toString());
+						System.out.println();
+						jobInstanceId = element.get("ownerId").toString();
+					}
+				}
+				ObjectNode propertyElement = null;
+				for (JsonNode element : elements) {
+					/*
+					 * Find the property element that contains the value to be replaced.
+					 */
+					if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().equals(jobInstanceId))&&(element.get("name").toString().equals("\""+propertyName+"\"")))
+					{
+						propertyElement = (ObjectNode) element;
+						System.out.println("Found: "+propertyName);
+						System.out.println("Value: "+element.get("defaultValue").get("value").toString());
+					}
+				}
+				if(propertyElement!=null) // will be null if the property element isn't found
 				{
-					System.out.println(element.get("name")+", "+element.get("defaultValue").get("value"));
-					System.out.println();
+					/*
+					 * Replace the value in the json object
+					 */
+					System.out.println("Before: "+propertyElement);
+					ObjectNode propertyElementValue = (ObjectNode) propertyElement.get("defaultValue");
+					propertyElementValue.put("value", newPropertyValue);
+					propertyElement.put("defaultValue", propertyElementValue);
+					
+					// puts the new json object in an elements array that will be sent to mms
+					ObjectNode payload = mapper.createObjectNode();
+					ArrayNode arrayElements = mapper.createArrayNode();
+					arrayElements.add(propertyElement);
+					payload.put("elements",arrayElements);
+					System.out.println("Payload: "+payload);
+					String response = mmsUtil.post(server, projectID, refID, payload);
+					System.out.println("Response: "+response);
+					return response;
 				}
 			}
-			System.out.println(elements.size());
-			System.out.println(elements);
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -405,8 +442,7 @@ public class MMSUtil {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		// send it back to mms. using post() method
+			
 
 		
 		return "";
@@ -417,7 +453,7 @@ public class MMSUtil {
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		String sysmlID = "PMA_"+timestamp.getTime();
 		String ownerID = "PROJECT-921084a3-e465-465f-944b-61194213043e_pm";
-		String token = "TICKET_a3d9c2f4957454e5584b6d616f4f243d88e79ca7";
+		String token = "TICKET_1d13883a04478dcac13a6ff9c5ca876cc29219e2";
 		String server = "opencae-uat.jpl.nasa.gov";
 		String projectID = "PROJECT-921084a3-e465-465f-944b-61194213043e";
 		String refID = "master";
@@ -440,60 +476,14 @@ public class MMSUtil {
 //		System.out.println(on3.toString());
 //		mmsUtil.post(server, projectID,refID, on3);
 		
-		String elementID = "PMA_1491257139219";
+		String elementID = "PMA_1491324925592";
 		String buildNumber = "1";
-		String propertyName = "buildNumber";
-		String newPropertyValue = "12345";
+		String propertyName = "completionTime";
+		String newPropertyValue = "1234523";
 		
-		String jsonString = mmsUtil.get(server, projectID,refID, elementID);
-		System.out.println(jsonString);
-		
-		ObjectMapper mapper = new ObjectMapper();
-		
-		try {
-			JsonNode fullJson = mapper.readTree(jsonString);
-			JsonNode elements = fullJson.get("elements");
-			for(JsonNode element:elements)
-			{
-//				System.out.println(element.get("name"));
-				if(element.get("id").toString().contains("instance"))
-				{
-					
-					// name has to equal "buildNumber" with the quotes and value has have the quotes as well.
-					if((element.get("name").toString().equals("\""+propertyName+"\""))&&(element.get("defaultValue").get("value").toString().equals("\""+buildNumber+"\"")))
-					{
-						System.out.println("id: "+element.get("id").toString());
-						System.out.println("ownerID: "+element.get("ownerId").toString());
-						System.out.println("name: "+element.get("name").toString());
-						System.out.println("value: "+element.get("defaultValue").get("value").toString());
-						System.out.println();
-					}
-				}
-			}
-			
-			System.out.println(elements.size());
-			System.out.println(elements);
-			
-			ObjectNode payload = mapper.createObjectNode();
-			ArrayNode arrayElements = mapper.createArrayNode();
-			arrayElements.add(fullJson);
-			payload.put("elements",elements);
-			
-			
-			
-//			mmsUtil.post(server, projectID, refID, on);
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token);
 		
 
-		
-//		String propertyID = ownerID+"_instance_"+timestamp.getTime()+Math.round(Math.random()*50);
-//		System.out.println("ID: "+propertyID);
 		
 	}
 }
