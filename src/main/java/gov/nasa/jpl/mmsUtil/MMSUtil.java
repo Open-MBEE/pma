@@ -442,6 +442,10 @@ public class MMSUtil {
 					return response;
 				}
 			}
+			else
+			{
+				return jsonString; // Returns status from mms. Should be an error if the elements were null.
+			}
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -449,7 +453,7 @@ public class MMSUtil {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return "";
+		return "Element not found";
 	}
 	
 	public static void main(String[] args) 
@@ -457,7 +461,7 @@ public class MMSUtil {
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		String sysmlID = "PMA_"+timestamp.getTime();
 		String ownerID = "PROJECT-921084a3-e465-465f-944b-61194213043e_pm";
-		String token = "TICKET_1d13883a04478dcac13a6ff9c5ca876cc29219e2";
+		String token = "TICKET_6652a3850af7d05cbcec8e37a2bd21c2ec08b2c0";
 		String server = "opencae-uat.jpl.nasa.gov";
 		String projectID = "PROJECT-921084a3-e465-465f-944b-61194213043e";
 		String refID = "master";
@@ -483,9 +487,9 @@ public class MMSUtil {
 		String elementID = "PMA_1491324925592";
 		String buildNumber = "1";
 		String propertyName = "completionTime";
-		String newPropertyValue = "1234523";
+		String newPropertyValue = "test123";
 		
-		mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token);
+		System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
 		
 
 		
