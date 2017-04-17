@@ -245,7 +245,7 @@ public class MMSUtil {
 		return payload;
 	}
 	
-	public ObjectNode buildJobInstanceJSON(String id, String ownerID,String name,String buildName) 
+	public ObjectNode buildJobInstanceJSON(String id, String ownerID,String name,String buildNumber,String jobStatus) 
 	{
 		
 		ObjectMapper mapper = new ObjectMapper();
@@ -253,8 +253,8 @@ public class MMSUtil {
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = buildClassElement(id,ownerID,name);
 		
-		elements.add(buildPropertyNode(id,"buildNumber",buildName));
-		elements.add(buildPropertyNode(id,"jobStatus","pending"));
+		elements.add(buildPropertyNode(id,"buildNumber",buildNumber));
+		elements.add(buildPropertyNode(id,"jobStatus",jobStatus));
 		elements.add(buildPropertyNode(id,"jenkinsLog",""));
 		elements.add(buildPropertyNode(id,"timeCreated",""));
 		elements.add(buildPropertyNode(id,"completionTime",""));
@@ -385,6 +385,74 @@ public class MMSUtil {
 	 * @param token Alfresco token.
 	 * @return Status code returned from mms.
 	 */
+	public String getJobInstanceElement(String server,String projectID,String refID,String elementID,String buildNumber,String token)
+	{
+		
+		// finding the part property
+		MMSUtil mmsUtil = new MMSUtil(token);
+		
+		String jsonString = mmsUtil.get(server, projectID,refID, elementID);
+		
+		ObjectMapper mapper = new ObjectMapper();
+		
+		String propertyName = "buildNumber";
+		try {
+			JsonNode fullJson = mapper.readTree(jsonString);
+			JsonNode elements = fullJson.get("elements");
+			String jobInstanceId = ""; // owner of the instance part properties
+			if (elements != null)  // elements will be null if the json returned 
+			{
+				for (JsonNode element : elements) {
+					// Find the ID of the job instance element.
+					if((element.get("type").toString().equals("\"Property\""))&&(element.get("defaultValue").get("value").toString().equals("\""+buildNumber+"\"")))
+					{
+						jobInstanceId = element.get("ownerId").toString();
+					}
+				}
+				for (JsonNode element : elements) {
+					/*
+					 * Find the property element that contains the value to be replaced.
+					 */
+					if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().equals(jobInstanceId))&&(element.get("name").toString().equals("\""+propertyName+"\"")))
+					{
+						String elementBuildNumber = element.get("defaultValue").get("value").toString();
+						System.out.println("Looking for build number: "+buildNumber);
+						System.out.println("Found Value: "+elementBuildNumber);	
+						if(buildNumber.equals(elementBuildNumber))
+						{
+							return element.toString();
+						}
+						
+					}
+				}
+				return "Element not found"; // will reach here if the property isn't found
+			}
+			else
+			{
+				return jsonString; // Returns status from mms. Should be an error if the elements were null.
+			}
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	/**
+	 * Should get the current value of the property, change it and send it back to mms
+	 * @param server MMS server. Ex. opencae-uat.jpl.nasa.gov
+	 * @param projectID Magicdraw project id
+	 * @param refID
+	 * @param elementID ID of job element (Should be the owner of the job instance element)
+	 * @param buildNumber Build number of the jenkins job. Starts from 1. 
+	 * @param propertyName Name of the part property. Ex: buildNumber,jobStatus,jenkinsLog,etc
+	 * @param newPropertyValue New value of the part property
+	 * @param token Alfresco token.
+	 * @return Status code returned from mms.
+	 */
 	public String modifyPartPropertyValue(String server,String projectID,String refID,String elementID,String buildNumber,String propertyName,String newPropertyValue,String token)
 	{
 		
@@ -436,10 +504,15 @@ public class MMSUtil {
 					arrayElements.add(propertyElement);
 					payload.put("elements",arrayElements);
 					
+					// send element to MMS
 					System.out.println("Payload: "+payload);
 					String response = mmsUtil.post(server, projectID, refID, payload); // sending element to MMS . Expecting 200 OK response
 					System.out.println("Response: "+response);
 					return response;
+				}
+				else
+				{
+					
 				}
 			}
 			else
@@ -461,12 +534,11 @@ public class MMSUtil {
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		String sysmlID = "PMA_"+timestamp.getTime();
 		String ownerID = "PROJECT-921084a3-e465-465f-944b-61194213043e_pm";
-		String token = "TICKET_6652a3850af7d05cbcec8e37a2bd21c2ec08b2c0";
+		String token = "TICKET_945eff6a5857e6c95db8f7ad41c913f94c9d084d";
 		String server = "opencae-uat.jpl.nasa.gov";
 		String projectID = "PROJECT-921084a3-e465-465f-944b-61194213043e";
 		String refID = "master";
 		MMSUtil mmsUtil = new MMSUtil(token);
-
 
 		
 //		ObjectNode on = mmsUtil.buildPackageJSON(sysmlID,ownerID);
@@ -489,7 +561,7 @@ public class MMSUtil {
 		String propertyName = "completionTime";
 		String newPropertyValue = "test123";
 		
-		System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
+//		System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
 		
 
 		
