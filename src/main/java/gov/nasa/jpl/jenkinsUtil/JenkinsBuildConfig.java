@@ -203,11 +203,11 @@ public class JenkinsBuildConfig {
 			Element command = doc.createElement("command");
 
 			// Get the script file and put the string contents in
-			// magicdrawSchedulingCommand.
+			// jenkins execute shell.
 			String content = null;
 
 			try {
-				content = new String(Files.readAllBytes(Paths.get("JenkinsScripts/docwebJenkinsScript.sh")));
+				content = new String(Files.readAllBytes(Paths.get("JenkinsScripts/pmaTest.sh")));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
