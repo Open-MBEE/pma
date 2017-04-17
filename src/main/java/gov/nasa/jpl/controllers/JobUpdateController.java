@@ -22,19 +22,12 @@ import gov.nasa.jpl.mmsUtil.MMSUtil;
 @Controller
 public class JobUpdateController 
 {
-	
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{instanceID}/{status}", method = RequestMethod.POST)
-	@ResponseBody
-	public String createJobInstance(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String instanceID) {
-
-		return "";
-	}
-	
+		
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{buildNumber}/{propertyName}/{value}", method = RequestMethod.POST)
 	@ResponseBody
 	public String updateJobInstanceProperty(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String buildNumber,@PathVariable String propertyName,@PathVariable String value,@RequestBody String bodyContent) 
 	{
-		
+		// recieve token from jenkins
 		String token = "";
 		String server = "opencae-uat.jpl.nasa.gov";
 		System.out.println("propertyName: "+propertyName);
@@ -59,17 +52,13 @@ public class JobUpdateController
 			e.printStackTrace();
 		}
 		
-		
-//		String projectID = "PROJECT-921084a3-e465-465f-944b-61194213043e";
-//		String refID = "master";
 		MMSUtil mmsUtil = new MMSUtil(token);
-		
-//		String elementID = "PMA_1491324925592";
-//		String buildNumber = "1";
-//		String propertyName = "jobStatus";
 		String newPropertyValue = value;
 		
-		
+		/*
+		 * Finds the property and updates the value on mms. 
+		 * If the job instance doesn't exist, one will be created for the jenkins run.
+		 */
 		String mmsResponse = mmsUtil.modifyPartPropertyValue(server, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token);
 		
 		return mmsResponse;	

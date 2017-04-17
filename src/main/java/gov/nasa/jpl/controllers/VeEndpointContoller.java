@@ -55,7 +55,7 @@ public class VeEndpointContoller {
 		String schedule = jobFromVE.getSchedule();
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName);
+		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,schedule);
 		
 		System.out.println("Job class JSON: "+on.toString());
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
@@ -74,7 +74,7 @@ public class VeEndpointContoller {
 	        jbc.setMmsServer(mmsServer);
 	        jbc.setTeamworkProject(projectID);
 	        jbc.setJobID(jobElementID);
-//	        jbc.setSchedule(schedule); // Disabled for now
+	        jbc.setSchedule(schedule); 
 //	        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
 	        
 	        JenkinsEngine je = login();
@@ -125,10 +125,10 @@ public class VeEndpointContoller {
     		// Create job instance element. Use the jobSysmlID as the owner.
     		
     		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-          	String jobElementID = "PMA_" + timestamp.getTime();		
+          	String jobInstanceElementID = "PMA_" + timestamp.getTime();		
           	
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobElementID, jobSysmlID, jobSysmlID+"_instance_"+timestamp.getTime(),buildNumber,"pending"); //job element will be the owner of the instance element
+    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, jobSysmlID, jobSysmlID+"_instance_"+timestamp.getTime(),buildNumber,"pending"); //job element will be the owner of the instance element
     		System.out.println("job instance JSON: "+on.toString());
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
     		
