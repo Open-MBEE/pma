@@ -20,12 +20,42 @@ import gov.nasa.jpl.model.JobInstanceFromVE;
 @Controller
 public class VeEndpointContoller {
 
+
+	
+
+	
+	/**
+	 * Returns all the jobs of a project.
+	 * @param projectID
+	 * @param refID
+	 * @return
+	 */
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.GET)
+	@ResponseBody
+	public String getJobs(@PathVariable String projectID, @PathVariable String refID) {
+		return "job" + "\n" + projectID + "\n" + refID;
+	}
+	
+	/**
+	 *  Returns information about a job.
+	 * @param projectID
+	 * @param refID
+	 * @param jobSysmlID
+	 * @return
+	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.GET)
 	@ResponseBody
 	public String getJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID) {
 		return "job" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID;
 	}
-
+	
+	/**
+	 * Return job instances of a job.
+	 * @param projectID
+	 * @param refID
+	 * @param jobSysmlID
+	 * @return
+	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.GET)
 	@ResponseBody
 	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID) {
@@ -51,11 +81,12 @@ public class VeEndpointContoller {
 		String mmsServer = jobFromVE.getMmsServer();
 		String associatedElementID = jobFromVE.getAssociatedElementID();
 		String jobElementID = "PMA_" + timestamp.getTime();
-		String ownerID = projectID+"_pm";
+//		String ownerID = projectID+"_pm";
 		String schedule = jobFromVE.getSchedule();
+		String command = jobFromVE.getCommand();
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,schedule);
+		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,command,schedule);
 		
 		System.out.println("Job class JSON: "+on.toString());
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
@@ -158,9 +189,10 @@ public class VeEndpointContoller {
 	@ResponseBody
 	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
+		
 		// Delete job element on MMS.
 //		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-//		String elementDeleteResponse = mmsUtil.delete(mmsServer, projectID, refID, projectID);;
+//		String elementDeleteResponse = mmsUtil.delete(mmsServer, projectID, refID, projectID);
 		
 		// delete job on jenkins
     	JenkinsEngine je = login();

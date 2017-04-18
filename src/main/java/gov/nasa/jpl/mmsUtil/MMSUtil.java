@@ -227,16 +227,16 @@ public class MMSUtil {
 		return classElement;
 	}
 
-	public ObjectNode buildJobElementJSON(String id, String ownerID,String name,String schedule) {
+	public ObjectNode buildJobElementJSON(String id, String ownerID,String name,String command,String schedule) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = buildClassElement(id,ownerID,name);
 		
-		elements.add(buildPropertyNode(id,"command","docweb"));
+		elements.add(buildPropertyNode(id,"command",command));
 		elements.add(buildPropertyNode(id,"associatedElementID",ownerID));
 		elements.add(buildPropertyNode(id,"schedule",schedule));
-		elements.add(buildPropertyNode(id,"arguments","tempValue,merpmerp"));
+		elements.add(buildPropertyNode(id,"arguments","tempValue,tempValue2"));
 		
 		payload.put("elements",elements);
 		payload.put("source","pma");
@@ -372,6 +372,32 @@ public class MMSUtil {
 		return "Exception Occured";
 	}
 	
+	// finds all the job elements in a project
+	public String getJobElements()
+	{
+		return null;
+		
+	}
+	
+	public String getJobElement(String jobElementID)
+	{
+		return "MMS Element (jobElementID)";
+	}
+	
+	public String getJobInstanceElement(String jobSysmlID, String buildNumber)
+	{
+		// recursive get jobSysmlID
+		// look for property value equal to buildNumber
+		// the owner of the property value is the jobInstance element.
+		return null;
+		
+	}
+	
+	public String getJobInstanceElements()
+	{
+		return null;
+		
+	}
 	
 	/**
 	 * Should get the current value of the property, change it and send it back to mms
