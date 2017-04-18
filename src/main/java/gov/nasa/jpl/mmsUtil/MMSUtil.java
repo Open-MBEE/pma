@@ -373,8 +373,9 @@ public class MMSUtil {
 	}
 	
 	// finds all the job elements in a project
-	public String getJobElements()
+	public String getJobElements(String projectID,String refID)
 	{
+		
 		return null;
 		
 	}

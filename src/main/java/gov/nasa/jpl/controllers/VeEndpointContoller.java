@@ -32,8 +32,9 @@ public class VeEndpointContoller {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJobs(@PathVariable String projectID, @PathVariable String refID) {
-		return "job" + "\n" + projectID + "\n" + refID;
+	public String getJobs(@PathVariable String projectID, @PathVariable String refID, String alf_ticket) {
+		
+		return "job" + "\n" + projectID + "\n" + refID+ "\n"+alf_ticket;
 	}
 	
 	/**
@@ -45,8 +46,8 @@ public class VeEndpointContoller {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID) {
-		return "job" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID;
+	public String getJob(@ PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket) {
+		return "job" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
 	}
 	
 	/**
@@ -58,8 +59,8 @@ public class VeEndpointContoller {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID) {
-		return "job instance" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID;
+	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket) {
+		return "job instance" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
 	}
 
 	/**
