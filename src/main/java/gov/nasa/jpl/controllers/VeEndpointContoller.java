@@ -66,7 +66,7 @@ public class VeEndpointContoller {
 			System.out.println("Created Job Element ID: "+jobElementID);
 			
 			// Post to jenkins using jobElementID as the job name
-	        String buildAgent = "Analysis01-Int";
+	        String buildAgent = "CAE-Jenkins2-AgentL01-UAT";
 	        
 	        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
 	        jbc.setBuildAgent(buildAgent);

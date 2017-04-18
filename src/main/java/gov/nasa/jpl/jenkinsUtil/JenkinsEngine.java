@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -503,7 +502,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	}
 
 	public void constructAllJobs() {
-		String url = this.url + "/view/PMA/api/json?tree=jobs[name,color]";
+		String url = this.url + "/job/PMA/api/json?tree=jobs[name,color]";
 
 		System.out.println("Current constuction url is " + url);
 		this.executeUrl = url;
@@ -514,7 +513,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	public String postConfigXml(JenkinsBuildConfig config, String jobName, boolean newConfig) {
 		String postUrl = null;
 		if (newConfig) {
-			postUrl = this.url + "/view/PMA/createItem?name=" + jobName;
+			postUrl = this.url + "/job/PMA/createItem?name=" + jobName;
 		} else {
 			postUrl = this.url + "/job/" + jobName + "/config.xml";
 		}
@@ -904,7 +903,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	}
 
 	public void setCredentials() {
-		String configFile = "config.txt";
+		String configFile = "config-jenkins2.txt";
 		List<String> lines = new ArrayList();
 		try {
 			Scanner sc = new Scanner(new File(configFile));
@@ -1187,5 +1186,5 @@ public class JenkinsEngine implements ExecutionEngine {
 	public long getExecutionTime() {
 		return executionTime;
 	}
-
+	
 }
