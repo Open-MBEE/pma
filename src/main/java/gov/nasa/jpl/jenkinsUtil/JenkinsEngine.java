@@ -612,7 +612,7 @@ public class JenkinsEngine implements ExecutionEngine {
 		try {
 			this.setJobToken("build");
 //			this.executeUrl = this.url + "/job/" + jobName + "/build?token=" + this.jenkinsToken; // Jenkins 1
-			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/build"; // Jenkins 2
+			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/build?token=" + this.jenkinsToken; // Jenkins 2
 			System.out.println("Execute url: "+executeUrl);
 			String response = this.build();
 			return response;
@@ -740,12 +740,20 @@ public class JenkinsEngine implements ExecutionEngine {
 		}
 	}
 
+	/**
+	 * Gets the current build number
+	 * @param jobName
+	 * @return
+	 */
 	public String getBuildNumber(String jobName) {
 		try {
-			this.executeUrl = this.url + "/job/" + jobName + "/api/json?tree=builds[number]";
+//			this.executeUrl = this.url + "/job/" + jobName + "/api/json?tree=builds[number]";
+			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/api/json?tree=builds[number]";
+			System.out.println("Get build number url: "+this.executeUrl);
 			execute();
 
 			if (this.jsonResponse != null) {
+				
 				JSONArray builds = this.jsonResponse.optJSONArray("builds");
 
 				if (builds != null && builds.length() > 0) {
@@ -764,6 +772,31 @@ public class JenkinsEngine implements ExecutionEngine {
 		return null;
 	}
 
+	/**
+	 * Gets the next build number
+	 * @param jobName name of job.
+	 * @return
+	 */
+	public String getNextBuildNumber(String jobName) {
+		try {
+			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/api/json?tree=nextBuildNumber";
+
+			System.out.println("Get next build number url: "+this.executeUrl);
+			execute();
+
+			if (this.jsonResponse != null) {
+				
+				JSONObject response = this.jsonResponse;
+				return(response.get("nextBuildNumber").toString());
+				
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+	
 	public String getQueueId(String jobName) {
 
 		try {
@@ -1214,7 +1247,7 @@ public class JenkinsEngine implements ExecutionEngine {
         String associatedElementID = "ELEMENT_1234567";
         String mmsServer = "opencae-test.jpl.nasa.gov";
         String projectID = "PROJECT_1234567";
-        String jobElementID = "PMA_123523512";
+        String jobElementID = "PMA_1492637627350";
         String schedule = "H/2 * * * *";
         
         JenkinsBuildConfig jbc = new JenkinsBuildConfig();
@@ -1235,6 +1268,7 @@ public class JenkinsEngine implements ExecutionEngine {
 //        System.out.println(jenkinsDeleteResponse);
         
 //        System.out.println(je.getAllJobs());
+        System.out.println(je.getBuildNumber(jobElementID));
     	
 	}
 }
