@@ -17,6 +17,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.springframework.http.HttpStatus;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -227,16 +228,16 @@ public class MMSUtil {
 		return classElement;
 	}
 
-	public ObjectNode buildJobElementJSON(String id, String ownerID,String name,String schedule) {
+	public ObjectNode buildJobElementJSON(String id, String ownerID,String name,String command,String schedule) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = buildClassElement(id,ownerID,name);
 		
-		elements.add(buildPropertyNode(id,"command","docweb"));
+		elements.add(buildPropertyNode(id,"command",command));
 		elements.add(buildPropertyNode(id,"associatedElementID",ownerID));
 		elements.add(buildPropertyNode(id,"schedule",schedule));
-		elements.add(buildPropertyNode(id,"arguments","tempValue,merpmerp"));
+		elements.add(buildPropertyNode(id,"arguments","tempValue,tempValue2"));
 		
 		payload.put("elements",elements);
 		payload.put("source","pma");
@@ -335,15 +336,21 @@ public class MMSUtil {
 	 * @param server mms server (ex. opencae-uat.jpl.nasa.gov)
 	 * @param project magicdraw project (ex.PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b)
 	 * @param elementID ID of element to be retrieved 
+	 * @param recurse 
 	 * @return json string of element.
 	 */
-	public String get(String server,String project,String refID,String elementID){
+	public String get(String server,String project,String refID,String elementID,Boolean recurse){
 		
+		String recurseString = "";
+		if(recurse)
+		{
+			recurseString = "recurse=true&";
+		}
 		server = server.replace("https://", ""); 
 		server = server.replace("/", "");
 		HttpClient httpClient = HttpClientBuilder.create().build();
 		try {
-			String url = "https://"+server+"/alfresco/service/projects/"+project+"/refs/"+refID+"/elements/"+elementID+"?recurse=true&alf_ticket="+alfrescoToken;
+			String url = "https://"+server+"/alfresco/service/projects/"+project+"/refs/"+refID+"/elements/"+elementID+"?"+recurseString+"alf_ticket="+alfrescoToken;
 			System.out.println("URL: "+url);
 		    HttpGet request = new HttpGet(url);
 			request.setHeader("Accept", "application/json");
@@ -371,7 +378,7 @@ public class MMSUtil {
 
 		return "Exception Occured";
 	}
-	
+
 	
 	/**
 	 * Should get the current value of the property, change it and send it back to mms
@@ -391,7 +398,7 @@ public class MMSUtil {
 		// finding the part property
 		MMSUtil mmsUtil = new MMSUtil(token);
 		
-		String jsonString = mmsUtil.get(server, projectID,refID, elementID);
+		String jsonString = mmsUtil.get(server, projectID,refID, elementID,true);
 		
 		ObjectMapper mapper = new ObjectMapper();
 		
@@ -399,7 +406,7 @@ public class MMSUtil {
 			JsonNode fullJson = mapper.readTree(jsonString);
 			JsonNode elements = fullJson.get("elements");
 			String jobInstanceId = ""; // owner of the instance part properties
-			if (elements != null)  // elements will be null if the json returned 
+			if (elements != null)  // elements will be null if the json returned with error
 			{
 				for (JsonNode element : elements) {
 					// Find the ID of the job instance element.
@@ -445,7 +452,7 @@ public class MMSUtil {
 				else 
 				{
 					
-					if(propertyName.equals("jobStatus")) // creates the job instan
+					if(propertyName.equals("jobStatus")) // creates the job instance
 					{
 			    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 			          	String jobInstanceElementID = "PMA_" + timestamp.getTime();		
@@ -469,13 +476,76 @@ public class MMSUtil {
 		return "Element not found";
 	}
 	
+	// finds all the job elements in a project
+	public String getJobElements(String server,String projectID,String refID)
+	{
+		// find package
+		// look for command part property
+		// put owner of part property in a list. Owner should be the job element
+		// return the list.
+		return null;
+	}
+	
+	/**
+	 * Gets a job element from MMS. Recursively gets the element to include all the part properties and job instances.
+	 * 
+	 * @param server mms server
+	 * @param project magic draw project ID
+	 * @param refID
+	 * @param jobElementID element ID of job. 
+	 * @return
+	 */
+	public String getJobElement(String server, String project,String refID,String jobElementID)
+	{
+		return get(server,project,refID,jobElementID,true);
+	}
+	
+	
+	public String getJobInstanceElements(String server, String project, String refID, String jobElementID)
+	{
+		// recursive get job sysmlid
+		
+		String jsonString = get(server, project,refID, jobElementID, true);
+		
+		ObjectMapper mapper = new ObjectMapper();
+		ArrayNode instanceElements = mapper.createArrayNode();
+		
+		try {
+			JsonNode fullJson = mapper.readTree(jsonString);
+			JsonNode elements = fullJson.get("elements");
+			if (elements != null)  // elements will be null if the json returned with error
+			{
+				for (JsonNode element : elements) {
+					// Find the ID of the job instance element.
+					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"jobStatus\"")))
+					{
+						String jobInstanceId = element.get("ownerId").toString().replace("\"", "");// owner of the instance part properties
+						instanceElements.add(mapper.createObjectNode().put("id", jobInstanceId));
+					}
+				}
+				return instanceElements.toString();
+			}
+			else
+			{
+				return jsonString; // Returns status from mms. Should be an error if the elements were null.
+			}
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "Element not found";
+	}
+	
 	public static void main(String[] args) 
 	{
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		String sysmlID = "PMA_"+timestamp.getTime();
 		String ownerID = "PROJECT-921084a3-e465-465f-944b-61194213043e_pm";
-		String token = "TICKET_3af5fd69352311871afe36017f891e8737d9a75a";
-		String server = "opencae-uat.jpl.nasa.gov";
+		String token = "TICKET_cbdbba79ae146a419938fb76f250bb89a9953174";
+		String server = "opencae-test.jpl.nasa.gov";
 		String projectID = "PROJECT-921084a3-e465-465f-944b-61194213043e";
 		String refID = "master";
 		MMSUtil mmsUtil = new MMSUtil(token);
@@ -501,9 +571,8 @@ public class MMSUtil {
 		String propertyName = "jobStatus";
 		String newPropertyValue = "completed";
 		
-		System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
-		
-
+		System.out.println(mmsUtil.get(server, projectID, refID, elementID, true));
+//		System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
 		
 	}
 }

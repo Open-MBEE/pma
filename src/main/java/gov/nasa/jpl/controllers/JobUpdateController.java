@@ -1,5 +1,9 @@
 package gov.nasa.jpl.controllers;
 
+/**
+ * Endpoints for Jenkins to update elements on MMS.
+ */
+
 import java.io.IOException;
 import java.sql.Timestamp;
 
@@ -23,13 +27,13 @@ import gov.nasa.jpl.mmsUtil.MMSUtil;
 public class JobUpdateController 
 {
 		
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{buildNumber}/{propertyName}/{value}", method = RequestMethod.POST)
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{buildNumber}/{propertyName}/{value}/{mmsServer}", method = RequestMethod.POST)
 	@ResponseBody
-	public String updateJobInstanceProperty(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String buildNumber,@PathVariable String propertyName,@PathVariable String value,@RequestBody String bodyContent) 
+	public String updateJobInstanceProperty(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String buildNumber,@PathVariable String propertyName,@PathVariable String value,@PathVariable String mmsServer,@RequestBody String bodyContent) 
 	{
 		// recieve token from jenkins
 		String token = "";
-		String server = "opencae-uat.jpl.nasa.gov";
+//		String server = "opencae-uat.jpl.nasa.gov";
 		System.out.println("propertyName: "+propertyName);
 		System.out.println("value: "+value);
 		
@@ -59,7 +63,7 @@ public class JobUpdateController
 		 * Finds the property and updates the value on mms. 
 		 * If the job instance doesn't exist, one will be created for the jenkins run.
 		 */
-		String mmsResponse = mmsUtil.modifyPartPropertyValue(server, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token);
+		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token);
 		
 		return mmsResponse;	
 	}

@@ -616,14 +616,16 @@ public class JenkinsEngine implements ExecutionEngine {
 		}
 	}
 
-	public void deleteJob(String jobName) {
+	public String deleteJob(String jobName) {
 		try {
 
 			this.executeUrl = this.url + "/job/" + jobName + "/doDelete";
-			this.build();
+			String response = this.build();
+			return response;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return null;
 	}
 
 	public JSONObject isJobInQueue(JSONObject jenkinsJobJson) {
