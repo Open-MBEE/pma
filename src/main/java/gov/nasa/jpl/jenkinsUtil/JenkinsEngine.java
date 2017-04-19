@@ -502,7 +502,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	}
 
 	public void constructAllJobs() {
-		String url = this.url + "/job/PMA/api/json?tree=jobs[name,color]";
+		String url = this.url + "/job/PMA/api/json?tree=jobs[name,color]"; // Jenkins 2
 
 		System.out.println("Current constuction url is " + url);
 		this.executeUrl = url;
@@ -515,7 +515,8 @@ public class JenkinsEngine implements ExecutionEngine {
 		if (newConfig) {
 			postUrl = this.url + "/job/PMA/createItem?name=" + jobName;
 		} else {
-			postUrl = this.url + "/job/" + jobName + "/config.xml";
+//			postUrl = this.url + "/job/" + jobName + "/config.xml"; // Jenkins 1
+			postUrl = this.url + "/job/PMA/job/" + jobName + "/config.xml"; // Jenkins 2
 		}
 
 		String configFile = generateConfigXML(config);
@@ -608,7 +609,9 @@ public class JenkinsEngine implements ExecutionEngine {
 	public String executeJob(String jobName) {
 		try {
 			this.setJobToken("build");
-			this.executeUrl = this.url + "/job/" + jobName + "/build?token=" + this.jenkinsToken;
+//			this.executeUrl = this.url + "/job/" + jobName + "/build?token=" + this.jenkinsToken; // Jenkins 1
+			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/build"; // Jenkins 2
+			System.out.println("Execute url: "+executeUrl);
 			String response = this.build();
 			return response;
 		} catch (Exception e) {
@@ -618,8 +621,9 @@ public class JenkinsEngine implements ExecutionEngine {
 
 	public String deleteJob(String jobName) {
 		try {
-
-			this.executeUrl = this.url + "/job/" + jobName + "/doDelete";
+//			this.executeUrl = this.url + "/job/" + jobName + "/doDelete"; // Jenkins 1
+			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/doDelete"; // Jenkins2
+			System.out.println("Delete url: "+executeUrl);
 			String response = this.build();
 			return response;
 		} catch (Exception e) {
@@ -904,6 +908,12 @@ public class JenkinsEngine implements ExecutionEngine {
 		return "Error occured";
 	}
 
+	/**
+	 * Retrives credentials and jenkins server
+	 * line 1 = user name 
+	 * line 2 = password
+	 * line 3 = jenkins server
+	 */
 	public void setCredentials() {
 		String configFile = "config-jenkins2.txt";
 		List<String> lines = new ArrayList();
@@ -919,7 +929,11 @@ public class JenkinsEngine implements ExecutionEngine {
 
 		this.setUsername(lines.get(0));
 		this.setPassword(lines.get(1));
-		this.setURL(lines.get(2));
+		
+		String server = lines.get(2);
+		if(server.substring(server.length()-1).equals("/"))
+			server = server.substring(0, server.length()-1);
+		this.setURL(server);
 
 	}
 
@@ -1188,5 +1202,37 @@ public class JenkinsEngine implements ExecutionEngine {
 	public long getExecutionTime() {
 		return executionTime;
 	}
-	
+	public static void main(String[] args) 
+	{
+        JenkinsEngine je = new JenkinsEngine();
+        je.setCredentials();
+        je.login();
+        
+        String buildAgent = "CAE-Jenkins2-AgentL01-UAT";
+        String associatedElementID = "ELEMENT_1234567";
+        String mmsServer = "opencae-test.jpl.nasa.gov";
+        String projectID = "PROJECT_1234567";
+        String jobElementID = "PMA_123523512";
+        String schedule = "H/2 * * * *";
+        
+        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
+        jbc.setBuildAgent(buildAgent);
+        jbc.setDocumentID(associatedElementID);
+        jbc.setMmsServer(mmsServer);
+        jbc.setTeamworkProject(projectID);
+        jbc.setJobID(jobElementID);
+        jbc.setSchedule(schedule); 
+        
+//        String jobExecuteResponse = je.executeJob(jobElementID);
+//        System.out.println(jobExecuteResponse);
+        
+//        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);      
+//        System.out.println(jobCreationResponse);
+        
+//    	String jenkinsDeleteResponse = je.deleteJob(jobElementID);
+//        System.out.println(jenkinsDeleteResponse);
+        
+//        System.out.println(je.getAllJobs());
+    	
+	}
 }
