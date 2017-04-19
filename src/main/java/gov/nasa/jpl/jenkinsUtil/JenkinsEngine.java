@@ -502,6 +502,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	}
 
 	public void constructAllJobs() {
+//		String url = this.url + "/view/PMA/api/json?tree=jobs[name,color]"; // Jenkins 1
 		String url = this.url + "/job/PMA/api/json?tree=jobs[name,color]"; // Jenkins 2
 
 		System.out.println("Current constuction url is " + url);
@@ -513,7 +514,8 @@ public class JenkinsEngine implements ExecutionEngine {
 	public String postConfigXml(JenkinsBuildConfig config, String jobName, boolean newConfig) {
 		String postUrl = null;
 		if (newConfig) {
-			postUrl = this.url + "/job/PMA/createItem?name=" + jobName;
+//			postUrl = this.url + "/view/PMA/createItem?name=" + jobName; // Jenkins 1
+			postUrl = this.url + "/job/PMA/createItem?name=" + jobName; // Jenkins 2
 		} else {
 //			postUrl = this.url + "/job/" + jobName + "/config.xml"; // Jenkins 1
 			postUrl = this.url + "/job/PMA/job/" + jobName + "/config.xml"; // Jenkins 2
