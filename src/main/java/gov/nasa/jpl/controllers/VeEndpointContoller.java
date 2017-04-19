@@ -150,22 +150,7 @@ public class VeEndpointContoller {
     		String alfrescoToken = jobInstance.getAlfrescoToken();
     		String mmsServer = jobInstance.getMmsServer();
     		
-    		String buildNumber = je.getBuildNumber(jobSysmlID); // Grabbing build number before running the job.
-    		
-			if (buildNumber==null) // Build number will equal "" if no jobs have been ran.
-			{
-				buildNumber = "1"; // Build number will equal ""
-			} 
-			else {
-				try {
-					/*
-					 * Adding 1 to the build number because I am grabbing it before the run.
-					 */
-					buildNumber = Integer.toString(Integer.parseInt(buildNumber) + 1);
-				} catch (NumberFormatException e) {
-					System.out.println(e);
-				}
-			}
+    		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID);
     		
     		// Create job instance element. Use the jobSysmlID as the owner.
     		
@@ -173,7 +158,7 @@ public class VeEndpointContoller {
           	String jobInstanceElementID = "PMA_" + timestamp.getTime();		
           	
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, jobSysmlID, jobSysmlID+"_instance_"+timestamp.getTime(),buildNumber,"pending"); //job element will be the owner of the instance element
+    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, jobSysmlID, jobSysmlID+"_instance_"+timestamp.getTime(),nextBuildNumber,"pending"); //job element will be the owner of the instance element
     		System.out.println("job instance JSON: "+on.toString());
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
     		

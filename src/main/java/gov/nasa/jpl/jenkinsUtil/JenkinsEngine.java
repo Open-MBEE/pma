@@ -771,6 +771,34 @@ public class JenkinsEngine implements ExecutionEngine {
 
 		return null;
 	}
+	
+	/**
+	 * Gets the next build number
+	 * @param jobName name of job.
+	 * @return
+	 */
+	public String getNextBuildNumber(String jobName) {
+		try {
+			this.executeUrl = this.url + "/job/" + jobName + "/api/json?tree=nextBuildNumber";
+
+			System.out.println("Get next build number url: "+this.executeUrl);
+			execute();
+
+			if (this.jsonResponse != null) {
+				
+				JSONObject response = this.jsonResponse;
+				return(response.get("nextBuildNumber").toString());
+				
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+	
+
+	
 
 	/**
 	 * Gets the next build number
