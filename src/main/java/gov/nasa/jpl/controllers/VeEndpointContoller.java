@@ -32,7 +32,10 @@ public class VeEndpointContoller {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJobs(@PathVariable String projectID, @PathVariable String refID, String alf_ticket) {
+	public String getJobs(@PathVariable String projectID, @PathVariable String refID, String alf_ticket, String server) {
+		
+		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+		mmsUtil.getJobElements(server,projectID, refID);
 		
 		return "job" + "\n" + projectID + "\n" + refID+ "\n"+alf_ticket;
 	}
@@ -46,8 +49,13 @@ public class VeEndpointContoller {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJob(@ PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket) {
-		return "job" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
+	public String getJob(@ PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket, String server) {
+		
+		String input = "job" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
+		
+		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+		
+		return mmsUtil.getJobElement(server, projectID, refID, jobSysmlID);
 	}
 	
 	/**
@@ -59,7 +67,12 @@ public class VeEndpointContoller {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket) {
+	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket, String server) {
+		
+		
+		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+		mmsUtil.getJobInstanceElements(server, projectID, refID, jobSysmlID);
+		
 		return "job instance" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
 	}
 
