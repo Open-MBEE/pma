@@ -1,11 +1,15 @@
 package gov.nasa.jpl.controllers;
 
+/**
+ * Endpoints for applications to interface with PMA.
+ */
 import java.sql.Timestamp;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,10 +24,6 @@ import gov.nasa.jpl.model.JobInstanceFromVE;
 @Controller
 public class VeEndpointContoller {
 
-
-	
-
-	
 	/**
 	 * Returns all the jobs of a project.
 	 * @param projectID
@@ -32,10 +32,10 @@ public class VeEndpointContoller {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJobs(@PathVariable String projectID, @PathVariable String refID, String alf_ticket, String server) {
+	public String getJobs(@PathVariable String projectID, @PathVariable String refID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-		mmsUtil.getJobElements(server,projectID, refID);
+		mmsUtil.getJobElements(mmsServer,projectID, refID);
 		
 		return "job" + "\n" + projectID + "\n" + refID+ "\n"+alf_ticket;
 	}
@@ -49,13 +49,13 @@ public class VeEndpointContoller {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJob(@ PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket, String server) {
+	public String getJob(@ PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		
 		String input = "job" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
 		
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
 		
-		return mmsUtil.getJobElement(server, projectID, refID, jobSysmlID);
+		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
 	}
 	
 	/**
@@ -67,13 +67,13 @@ public class VeEndpointContoller {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket, String server) {
+	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, @RequestParam String alf_ticket, @RequestParam String mmsServer) {
 		
+		String input = "job instance" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
 		
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-		mmsUtil.getJobInstanceElements(server, projectID, refID, jobSysmlID);
 		
-		return "job instance" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
+		return mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
 	}
 
 	/**
@@ -201,18 +201,30 @@ public class VeEndpointContoller {
 	
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE)
 	@ResponseBody
-	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID) {
+	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket, String mmsServer) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
 		
 		// Delete job element on MMS.
-//		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-//		String elementDeleteResponse = mmsUtil.delete(mmsServer, projectID, refID, projectID);
+		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+		String elementDeleteResponse = mmsUtil.delete(mmsServer, projectID, refID, jobSysmlID);
+		System.out.println("Element delete response: "+elementDeleteResponse);
+		
+		if(!elementDeleteResponse.equals("HTTP/1.1 200 OK"))
+		{
+			return elementDeleteResponse+" on MMS";
+		}
 		
 		// delete job on jenkins
     	JenkinsEngine je = login();
-    	je.deleteJob(jobSysmlID);
-        
-		return "job deleted" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID;
+    	String jenkinsDeleteResponse = je.deleteJob(jobSysmlID);
+    	System.out.println("Jenkins delete response: "+jenkinsDeleteResponse);
+    	
+    	if(!jenkinsDeleteResponse.equals("HTTP/1.1 302 Found"))
+		{
+			return jenkinsDeleteResponse+" on Jenkins";
+		}
+    	
+		return "HTTP/1.1 200 OK";
 	}
 	
     public JenkinsEngine login()

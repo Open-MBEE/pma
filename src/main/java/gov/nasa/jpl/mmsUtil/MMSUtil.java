@@ -17,6 +17,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.springframework.http.HttpStatus;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -503,26 +504,26 @@ public class MMSUtil {
 	public String getJobInstanceElements(String server, String project, String refID, String jobElementID)
 	{
 		// recursive get job sysmlid
-		// looks for 
 		
 		String jsonString = get(server, project,refID, jobElementID, true);
 		
 		ObjectMapper mapper = new ObjectMapper();
+		ArrayNode instanceElements = mapper.createArrayNode();
 		
 		try {
 			JsonNode fullJson = mapper.readTree(jsonString);
 			JsonNode elements = fullJson.get("elements");
-			String jobInstanceId = ""; // owner of the instance part properties
 			if (elements != null)  // elements will be null if the json returned with error
 			{
 				for (JsonNode element : elements) {
 					// Find the ID of the job instance element.
 					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"jobStatus\"")))
 					{
-						jobInstanceId = element.get("ownerId").toString();
+						String jobInstanceId = element.get("ownerId").toString().replace("\"", "");// owner of the instance part properties
+						instanceElements.add(mapper.createObjectNode().put("id", jobInstanceId));
 					}
 				}
-
+				return instanceElements.toString();
 			}
 			else
 			{
