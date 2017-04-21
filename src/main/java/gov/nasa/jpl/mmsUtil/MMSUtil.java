@@ -369,14 +369,14 @@ public class MMSUtil {
 		}
 		catch (java.net.UnknownHostException e) {
 		      System.out.println("Unknown Host Exception");
+		      return "Unknown Host exception: "+e.toString();
 		}
 		catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 
-		return "Exception Occured";
+		return "Exception occured ";
 	}
 
 	
@@ -399,7 +399,7 @@ public class MMSUtil {
 		MMSUtil mmsUtil = new MMSUtil(token);
 		
 		String jsonString = mmsUtil.get(server, projectID,refID, elementID,true);
-		
+		System.out.println("Modify Part Property JSON String: "+jsonString);
 		ObjectMapper mapper = new ObjectMapper();
 		
 		try {
@@ -473,7 +473,7 @@ public class MMSUtil {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return "Element not found";
+		return jsonString;
 	}
 	
 	// finds all the job elements in a project

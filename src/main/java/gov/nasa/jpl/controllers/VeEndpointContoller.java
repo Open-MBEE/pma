@@ -53,9 +53,23 @@ public class VeEndpointContoller {
 		
 		String input = "job" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
 		
-		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+		// Check if job exists on jenkins first
+    	JenkinsEngine je = login();
+    	String jobResponse = je.getJob(jobSysmlID);
+    	System.out.println("Job Response: "+jobResponse);
+    	if(!jobResponse.equals("Job Not Found"))
+    	{
+    		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+    		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
+    	}
+    	else
+    	{
+    		jobResponse = "Job not found on Jenkins";
+    		return jobResponse;
+    	}
+    	
 		
-		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
+		
 	}
 	
 	/**
@@ -186,7 +200,7 @@ public class VeEndpointContoller {
 	
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE)
 	@ResponseBody
-	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket, String mmsServer) {
+	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
 		
 		// Delete job element on MMS.
