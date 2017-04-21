@@ -186,7 +186,7 @@ public class VeEndpointContoller {
 	
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE)
 	@ResponseBody
-	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, String alf_ticket, String mmsServer) {
+	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
 		
 		// Delete job element on MMS.
