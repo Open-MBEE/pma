@@ -53,9 +53,23 @@ public class VeEndpointContoller {
 		
 		String input = "job" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
 		
-		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+		// Check if job exists on jenkins first
+    	JenkinsEngine je = login();
+    	String jobResponse = je.getJob(jobSysmlID);
+    	System.out.println("Job Response: "+jobResponse);
+    	if(!jobResponse.equals("Job Not Found"))
+    	{
+    		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+    		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
+    	}
+    	else
+    	{
+    		jobResponse = "Job not found on Jenkins";
+    		return jobResponse;
+    	}
+    	
 		
-		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
+		
 	}
 	
 	/**
