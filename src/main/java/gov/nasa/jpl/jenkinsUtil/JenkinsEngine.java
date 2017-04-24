@@ -30,6 +30,12 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.FileBasedConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -254,7 +260,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	}
 
 	/**
-	 * This method will set the job url
+	 * This method will set the jenkins URL
 	 *
 	 * @param job
 	 */
@@ -945,31 +951,23 @@ public class JenkinsEngine implements ExecutionEngine {
 
 	/**
 	 * Retrives credentials and jenkins server
-	 * line 1 = user name 
-	 * line 2 = password
-	 * line 3 = jenkins server
 	 */
 	public void setCredentials() {
-		String configFile = "config-jenkins2.txt";
-		List<String> lines = new ArrayList();
+		Parameters params = new Parameters();
+		// Read data from this file
+		File propertiesFile = new File("jenkins.properties");
+		FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class).configure(params.fileBased().setFile(propertiesFile));
+
 		try {
-			Scanner sc = new Scanner(new File(configFile));
-
-			while (sc.hasNextLine()) {
-				lines.add(sc.nextLine());
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			Configuration config = builder.getConfiguration();
+			// config contains all properties read from the file
+			this.setUsername(config.getString("jenkins.username"));
+			this.setPassword(config.getString("jenkins.password"));
+			this.setURL(config.getString("jenkins.server"));
+		} catch (ConfigurationException cex) {
+			// loading of the configuration file failed
+			System.out.println("[ERROR] Unable to read Jenkins Properties file.");
 		}
-
-		this.setUsername(lines.get(0));
-		this.setPassword(lines.get(1));
-		
-		String server = lines.get(2);
-		if(server.substring(server.length()-1).equals("/"))
-			server = server.substring(0, server.length()-1);
-		this.setURL(server);
-
 	}
 
 	/*
