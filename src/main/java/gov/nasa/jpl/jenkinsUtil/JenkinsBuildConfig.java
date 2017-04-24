@@ -207,7 +207,7 @@ public class JenkinsBuildConfig {
 			String content = null;
 
 			try {
-				content = new String(Files.readAllBytes(Paths.get("jenkinsTemplates/pmaTest.sh")));
+				content = new String(Files.readAllBytes(Paths.get("src/main/resources/templates/pmaTestJenkins2.sh")));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
