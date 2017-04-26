@@ -12,15 +12,12 @@ package gov.nasa.jpl.jenkinsUtil;
  */
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -1235,18 +1232,16 @@ public class JenkinsEngine implements ExecutionEngine {
 	public long getExecutionTime() {
 		return executionTime;
 	}
+	
 	public static void main(String[] args) 
 	{
-        JenkinsEngine je = new JenkinsEngine();
-        je.setCredentials();
-        je.login();
-        
+		// Post to jenkins using jobElementID as the job name
         String buildAgent = "CAE-Jenkins2-AgentL01-UAT";
-        String associatedElementID = "ELEMENT_1234567";
-        String mmsServer = "opencae-test.jpl.nasa.gov";
-        String projectID = "PROJECT_1234567";
-        String jobElementID = "PMA_1492637627350";
-        String schedule = "H/2 * * * *";
+        String associatedElementID = "";
+        String mmsServer = "mms";
+        String projectID = "IDTEMP";
+        String jobElementID = "JOBID";
+        String schedule = "";
         
         JenkinsBuildConfig jbc = new JenkinsBuildConfig();
         jbc.setBuildAgent(buildAgent);
@@ -1256,17 +1251,11 @@ public class JenkinsEngine implements ExecutionEngine {
         jbc.setJobID(jobElementID);
         jbc.setSchedule(schedule); 
         
-//        String jobExecuteResponse = je.executeJob(jobElementID);
-//        System.out.println(jobExecuteResponse);
-        
-//        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);      
-//        System.out.println(jobCreationResponse);
-        
-//    	String jenkinsDeleteResponse = je.deleteJob(jobElementID);
-//        System.out.println(jenkinsDeleteResponse);
-        
-//        System.out.println(je.getAllJobs());
-        System.out.println(je.getBuildNumber(jobElementID));
-    	
+        JenkinsEngine je = new JenkinsEngine();
+        je.setCredentials();
+        je.login();
+
+        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
+        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
 	}
 }

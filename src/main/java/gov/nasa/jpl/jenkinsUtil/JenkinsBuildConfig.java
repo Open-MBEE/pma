@@ -1,5 +1,8 @@
 package gov.nasa.jpl.jenkinsUtil;
 
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
+
 /**
  * JenkinsBuildConfig ----
  *
@@ -13,7 +16,6 @@ package gov.nasa.jpl.jenkinsUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-//import com.sun.xml.fastinfoset.stax.events.Util;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -25,10 +27,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class JenkinsBuildConfig {
 
@@ -205,13 +208,47 @@ public class JenkinsBuildConfig {
 			// Get the script file and put the string contents in
 			// jenkins execute shell.
 			String content = null;
-
+			
 			try {
-				content = new String(Files.readAllBytes(Paths.get("src/main/resources/templates/pmaTestJenkins2.sh")));
+
+				ResourceLoader resourceLoader = new DefaultResourceLoader();
+				InputStream is = resourceLoader.getResource("classpath:templates/pmaTestJenkins2.sh").getInputStream();
+				BufferedReader br = null;
+				StringBuilder sb = new StringBuilder();
+
+				String line;
+				try {
+
+					br = new BufferedReader(new InputStreamReader(is));
+					while ((line = br.readLine()) != null) {
+						sb.append(line);
+						sb.append("\n");
+					}
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				} finally {
+					if (br != null) {
+						try {
+							br.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+				content = sb.toString();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			// Old way of reading in template. Does not work when project is exported as a jar.
+//			try {
+//				content = new String(Files.readAllBytes(Paths.get("src/main/resources/templates/pmaTestJenkins2.sh")));
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 
 			command.appendChild(doc.createTextNode(content));
 			hudson.appendChild(command);
