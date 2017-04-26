@@ -102,18 +102,17 @@ public class VeEndpointContoller {
 	@ResponseBody
 	public String createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromVE jobFromVE) {
 		ObjectMapper mapper = new ObjectMapper();
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		
 		String jobName = jobFromVE.getJobName();
 		String alfrescoToken = jobFromVE.getAlfrescoToken();
 		String mmsServer = jobFromVE.getMmsServer();
 		String associatedElementID = jobFromVE.getAssociatedElementID();
-		String jobElementID = "PMA_" + timestamp.getTime();
 //		String ownerID = projectID+"_pm";
 		String schedule = jobFromVE.getSchedule();
 		String command = jobFromVE.getCommand();
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
+		String jobElementID = mmsUtil.createId();
 		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,command,schedule);
 		
 		System.out.println("Job class JSON: "+on.toString());
@@ -169,9 +168,9 @@ public class VeEndpointContoller {
     		// Create job instance element. Use the jobSysmlID as the owner.
     		
     		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-          	String jobInstanceElementID = "PMA_" + timestamp.getTime();		
           	
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
+    		String jobInstanceElementID = mmsUtil.createId();
     		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, jobSysmlID, jobSysmlID+"_instance_"+timestamp.getTime(),nextBuildNumber,"pending"); //job element will be the owner of the instance element
     		System.out.println("job instance JSON: "+on.toString());
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
