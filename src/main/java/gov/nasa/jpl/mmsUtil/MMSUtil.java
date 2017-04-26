@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Timestamp;
+import java.util.UUID;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -537,6 +538,12 @@ public class MMSUtil {
 			e.printStackTrace();
 		}
 		return "Element not found";
+	}
+	
+	public String createId() {
+		String id = "MMS_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString();
+		return id;
+
 	}
 	
 	public static void main(String[] args) 
