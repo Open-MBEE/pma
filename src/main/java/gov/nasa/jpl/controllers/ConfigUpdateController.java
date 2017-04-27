@@ -4,33 +4,23 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-/**
- * Endpoint for updating the properties file.
- */
-import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.tomcat.jdbc.pool.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
-import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
-import gov.nasa.jpl.model.JobFromVE;
-import gov.nasa.jpl.model.JobInstanceFromVE;
 
 @Controller
 public class ConfigUpdateController {
@@ -49,6 +39,19 @@ public class ConfigUpdateController {
 		mmsUtil.getJobElements(mmsServer,projectID, refID);
 		
 		return "job" + "\n" + projectID + "\n" + refID+ "\n"+alf_ticket;
+	}
+	
+	@RestController
+	@EnableAutoConfiguration
+	public class DBController {
+
+	    @RequestMapping(value = "/db", method = RequestMethod.GET)
+	    public String getDB() throws IOException {
+	    	
+			return null;
+	    	
+	    }
+
 	}
 	
 	@RestController
@@ -89,4 +92,26 @@ public class ConfigUpdateController {
 
 	}
 
+	@RequestMapping(value = "/db", method = RequestMethod.GET)
+	public String getDB() throws IOException {
+
+		JdbcTemplate jdbcTemplate = new JdbcTemplate();
+		DataSource ds = new DataSource();
+		ds.setUrl("jdbc:h2:./testdb");
+		ds.setUsername("sa");
+		ds.setPassword("sa");
+		jdbcTemplate.setDataSource(ds);
+
+		String sql = "SELECT * FROM INFORMATION_SCHEMA.TABLES";
+		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+		for (Map<String, Object> row : list) {
+			System.out.println(row.toString());
+		}
+		return null;
+
+	}
+
+	
+ 
+	
 }
