@@ -1,6 +1,7 @@
 package gov.nasa.jpl;
 
 import gov.nasa.jpl.controllers.ConfigUpdateController;
+import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,11 +25,43 @@ public class JenkinsEngineTests {
     }
 
     @Test
-    public void testLogin(){
-        System.out.println("\n----------------------- [ Test Login ] -----------------------\n");
+    public void testLogin() {
+        System.out.println("\n----------------------------[ Test Login ] ---------------------------\n");
         JenkinsEngine je = new JenkinsEngine();
+        je.setCredentials();
         je.login();
-        assert (je.jenkinsClient != null);
-        System.out.println(je.jenkinsClient.getRequestInterceptor(0).);
+        System.out.println(je.getJobNames());
+    }
+
+    @Test
+    public void testPostConfigXML() {
+        System.out.println("\n---------------------- [ Test Post Config XML] -----------------------\n");
+        JenkinsEngine je = new JenkinsEngine();
+        je.setCredentials();
+        je.login();
+        JenkinsBuildConfig buildConfig = new JenkinsBuildConfig();
+        buildConfig.generateBaseConfigXML();
+        je.postConfigXml(buildConfig, "PMAUnitTest-PostConfig", true);
+        assert(!je.getJob("PMAUnitTest-PostConfig").contains("Job Not Found"));
+        je.deleteJob("PMAUnitTest-PostConfig");
+        assert(je.getJob("PMAUnitTest-PostConfig").contains("Job Not Found") || je.getJob("PMAUnitTest-PostConfig") == null);
+    }
+
+    @Test
+    public void testExecuteJob()
+    {
+        System.out.println("\n------------------------- [ Test Execute Job] ------------------------\n");
+        JenkinsEngine je = new JenkinsEngine();
+        je.setCredentials();
+        je.login();
+        JenkinsBuildConfig buildConfig = new JenkinsBuildConfig();
+        buildConfig.generateBaseConfigXML();
+        je.postConfigXml(buildConfig, "PMAUnitTest-ExecuteJob", true);
+        assert(!je.getJob("PMAUnitTest-ExecuteJob").contains("Job Not Found"));
+        System.out.println(je.executeJob("PMAUnitTest-ExecuteJob"));
+
+        assert(je.isJobInQueue("PMAUnitTest-ExecuteJob"));
+        je.deleteJob("PMAUnitTest-ExecuteJob");
+        assert(je.getJob("PMAUnitTest-ExecuteJob").contains("Job Not Found"));
     }
 }
