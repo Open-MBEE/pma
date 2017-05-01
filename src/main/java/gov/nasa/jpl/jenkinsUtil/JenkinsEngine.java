@@ -12,16 +12,12 @@ package gov.nasa.jpl.jenkinsUtil;
  */
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -31,6 +27,12 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.FileBasedConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -255,7 +257,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	}
 
 	/**
-	 * This method will set the job url
+	 * This method will set the jenkins URL
 	 *
 	 * @param job
 	 */
@@ -503,7 +505,8 @@ public class JenkinsEngine implements ExecutionEngine {
 	}
 
 	public void constructAllJobs() {
-		String url = this.url + "/view/PMA/api/json?tree=jobs[name,color]";
+//		String url = this.url + "/view/PMA/api/json?tree=jobs[name,color]"; // Jenkins 1
+		String url = this.url + "/job/PMA/api/json?tree=jobs[name,color]"; // Jenkins 2
 
 		System.out.println("Current constuction url is " + url);
 		this.executeUrl = url;
@@ -514,9 +517,11 @@ public class JenkinsEngine implements ExecutionEngine {
 	public String postConfigXml(JenkinsBuildConfig config, String jobName, boolean newConfig) {
 		String postUrl = null;
 		if (newConfig) {
-			postUrl = this.url + "/view/PMA/createItem?name=" + jobName;
+//			postUrl = this.url + "/view/PMA/createItem?name=" + jobName; // Jenkins 1
+			postUrl = this.url + "/job/PMA/createItem?name=" + jobName; // Jenkins 2
 		} else {
-			postUrl = this.url + "/job/" + jobName + "/config.xml";
+//			postUrl = this.url + "/job/" + jobName + "/config.xml"; // Jenkins 1
+			postUrl = this.url + "/job/PMA/job/" + jobName + "/config.xml"; // Jenkins 2
 		}
 
 		String configFile = generateConfigXML(config);
@@ -609,7 +614,9 @@ public class JenkinsEngine implements ExecutionEngine {
 	public String executeJob(String jobName) {
 		try {
 			this.setJobToken("build");
-			this.executeUrl = this.url + "/job/" + jobName + "/build?token=" + this.jenkinsToken;
+//			this.executeUrl = this.url + "/job/" + jobName + "/build?token=" + this.jenkinsToken; // Jenkins 1
+			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/build?token=" + this.jenkinsToken; // Jenkins 2
+			System.out.println("Execute url: "+executeUrl);
 			String response = this.build();
 			return response;
 		} catch (Exception e) {
@@ -619,8 +626,9 @@ public class JenkinsEngine implements ExecutionEngine {
 
 	public String deleteJob(String jobName) {
 		try {
-
-			this.executeUrl = this.url + "/job/" + jobName + "/doDelete";
+//			this.executeUrl = this.url + "/job/" + jobName + "/doDelete"; // Jenkins 1
+			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/doDelete"; // Jenkins2
+			System.out.println("Delete url: "+executeUrl);
 			String response = this.build();
 			return response;
 		} catch (Exception e) {
@@ -742,10 +750,13 @@ public class JenkinsEngine implements ExecutionEngine {
 	 */
 	public String getBuildNumber(String jobName) {
 		try {
-			this.executeUrl = this.url + "/job/" + jobName + "/api/json?tree=builds[number]";
+//			this.executeUrl = this.url + "/job/" + jobName + "/api/json?tree=builds[number]";
+			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/api/json?tree=builds[number]";
+			System.out.println("Get build number url: "+this.executeUrl);
 			execute();
 
 			if (this.jsonResponse != null) {
+				
 				JSONArray builds = this.jsonResponse.optJSONArray("builds");
 
 				if (builds != null && builds.length() > 0) {
@@ -771,7 +782,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	 */
 	public String getNextBuildNumber(String jobName) {
 		try {
-			this.executeUrl = this.url + "/job/" + jobName + "/api/json?tree=nextBuildNumber";
+			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/api/json?tree=nextBuildNumber";
 
 			System.out.println("Get next build number url: "+this.executeUrl);
 			execute();
@@ -789,9 +800,6 @@ public class JenkinsEngine implements ExecutionEngine {
 		return null;
 	}
 	
-
-	
-
 	public String getQueueId(String jobName) {
 
 		try {
@@ -938,23 +946,25 @@ public class JenkinsEngine implements ExecutionEngine {
 		return "Error occured";
 	}
 
+	/**
+	 * Retrives credentials and jenkins server
+	 */
 	public void setCredentials() {
-		String configFile = "config.txt";
-		List<String> lines = new ArrayList();
+		Parameters params = new Parameters();
+		// Read data from this file
+		File propertiesFile = new File("jenkins.properties");
+		FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class).configure(params.fileBased().setFile(propertiesFile));
+
 		try {
-			Scanner sc = new Scanner(new File(configFile));
-
-			while (sc.hasNextLine()) {
-				lines.add(sc.nextLine());
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			Configuration config = builder.getConfiguration();
+			// config contains all properties read from the file
+			this.setUsername(config.getString("jenkins.username"));
+			this.setPassword(config.getString("jenkins.password"));
+			this.setURL(config.getString("jenkins.server"));
+		} catch (ConfigurationException cex) {
+			// loading of the configuration file failed
+			System.out.println("[ERROR] Unable to read Jenkins Properties file.");
 		}
-
-		this.setUsername(lines.get(0));
-		this.setPassword(lines.get(1));
-		this.setURL(lines.get(2));
-
 	}
 
 	/*
@@ -1222,5 +1232,30 @@ public class JenkinsEngine implements ExecutionEngine {
 	public long getExecutionTime() {
 		return executionTime;
 	}
+	
+	public static void main(String[] args) 
+	{
+		// Post to jenkins using jobElementID as the job name
+        String buildAgent = "CAE-Jenkins2-AgentL01-UAT";
+        String associatedElementID = "";
+        String mmsServer = "mms";
+        String projectID = "IDTEMP";
+        String jobElementID = "JOBID";
+        String schedule = "";
+        
+        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
+        jbc.setBuildAgent(buildAgent);
+        jbc.setDocumentID(associatedElementID);
+        jbc.setMmsServer(mmsServer);
+        jbc.setTeamworkProject(projectID);
+        jbc.setJobID(jobElementID);
+        jbc.setSchedule(schedule); 
+        
+        JenkinsEngine je = new JenkinsEngine();
+        je.setCredentials();
+        je.login();
 
+        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
+        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
+	}
 }

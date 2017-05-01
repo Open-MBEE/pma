@@ -158,9 +158,8 @@ public class MMSUtil {
 	 */
 	public ObjectNode buildPropertyNode(String ownerID,String name,String value)
 	{
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		
-		String propertyID = "PMA_"+timestamp.getTime()+Math.round(Math.random()*50);
+		String propertyID = createId();
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode classElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
@@ -456,7 +455,7 @@ public class MMSUtil {
 					if(propertyName.equals("jobStatus")) // creates the job instance
 					{
 			    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-			          	String jobInstanceElementID = "PMA_" + timestamp.getTime();		
+			          	String jobInstanceElementID = createId();
 			    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, elementID, elementID+"_instance_"+timestamp.getTime(),buildNumber,newPropertyValue); //job element will be the owner of the instance element
 			    		String elementCreationResponse = mmsUtil.post(server, projectID, refID, on);
 			    		return elementCreationResponse;
@@ -540,10 +539,18 @@ public class MMSUtil {
 		return "Element not found";
 	}
 	
+<<<<<<< HEAD
     private String createId() {
     	String id = "PMA_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString();
     	return id;
     }
+=======
+	public String createId() {
+		String id = "PMA_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString();
+		return id;
+
+	}
+>>>>>>> jenkins2
 	
 	public static void main(String[] args) 
 	{
