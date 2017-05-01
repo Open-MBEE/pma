@@ -1,12 +1,23 @@
 package gov.nasa.jpl.controllers;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.FileBasedConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -39,19 +50,6 @@ public class ConfigUpdateController {
 		mmsUtil.getJobElements(mmsServer,projectID, refID);
 		
 		return "job" + "\n" + projectID + "\n" + refID+ "\n"+alf_ticket;
-	}
-	
-	@RestController
-	@EnableAutoConfiguration
-	public class DBController {
-
-	    @RequestMapping(value = "/db", method = RequestMethod.GET)
-	    public String getDB() throws IOException {
-	    	
-			return null;
-	    	
-	    }
-
 	}
 	
 	@RestController
@@ -92,26 +90,77 @@ public class ConfigUpdateController {
 
 	}
 
+	
 	@RequestMapping(value = "/db", method = RequestMethod.GET)
-	public String getDB() throws IOException {
-
+	@ResponseBody
+	public String updateJobInstanceProperty() 
+	{
+		
+		Parameters params = new Parameters();
+		// Read data from this file
+		File propertiesFile = new File("application.properties");
+		FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class).configure(params.fileBased().setFile(propertiesFile));
+		String username = "";
+		String password = "";
+		String url = "";
+		
+		try {
+			Configuration config = builder.getConfiguration();
+			username = (config.getString("spring.datasource.username"));
+			password = (config.getString("spring.datasource.password"));
+			url = (config.getString("spring.datasource.url"));
+		} catch (ConfigurationException cex) {
+			// loading of the configuration file failed
+			System.out.println("[ERROR] Unable to read Application Properties file.");
+		}
+		
+		
 		JdbcTemplate jdbcTemplate = new JdbcTemplate();
 		DataSource ds = new DataSource();
-		ds.setUrl("jdbc:h2:./testdb");
-		ds.setUsername("sa");
-		ds.setPassword("sa");
+		
+		System.out.println("DB Username: "+username);
+		System.out.println("DB password: "+password);
+		System.out.println("DB url: "+url);
+		
+		ds.setUrl(url);
+		ds.setUsername(username);
+		ds.setPassword(password);
 		jdbcTemplate.setDataSource(ds);
 
-		String sql = "SELECT * FROM INFORMATION_SCHEMA.TABLES";
-		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-		for (Map<String, Object> row : list) {
-			System.out.println(row.toString());
+		String sql = "SELECT * FROM CREDENTIALS";
+		String dbString = "";
+		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
+		
+//		for (Map<String, Object> row : list) {
+//			System.out.println(row.toString());
+//			System.out.println("Keyset: "+row.keySet().toString());
+//			System.out.println("Values: "+row.values().toString());
+//		}
+		
+		if(!list.isEmpty())
+		{
+			/*
+			 * Getting first row of the CREDENTIALS table.
+			 * Contains the Jenkins username, password, and the server url.
+			 * Example values of the first row: tempUSER, tempPassword, tempURL
+			 */
+			
+			Map<String, Object> firstRow = list.get(0); 
+			
+			ArrayList valueList = new ArrayList();
+			valueList.addAll(firstRow.values());
+			
+			if(valueList.size()==3)
+			{
+				String jenkinsUsername = (String) valueList.get(0);
+				String jenkinsPassword = (String) valueList.get(1);
+				String jenkinsURL = (String) valueList.get(2);
+				System.out.println(jenkinsUsername+jenkinsPassword+jenkinsURL);
+			}
+			
 		}
-		return null;
-
+		
+		return dbString;	
 	}
-
-	
- 
 	
 }
