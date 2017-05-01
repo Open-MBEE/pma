@@ -22,7 +22,7 @@ import gov.nasa.jpl.model.JobFromVE;
 import gov.nasa.jpl.model.JobInstanceFromVE;
 
 @Controller
-public class VeEndpointContoller {
+public class VeEndpointController {
 
 	/**
 	 * Returns all the jobs of a project.
