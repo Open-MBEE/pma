@@ -16,6 +16,8 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.tomcat.jdbc.pool.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.core.io.ResourceLoader;
@@ -37,7 +39,9 @@ import gov.nasa.jpl.mmsUtil.MMSUtil;
 
 @Controller
 public class ConfigUpdateController {
-
+	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
 	/**
 	 * Returns all the jobs of a project.
 	 * @param projectID
@@ -103,16 +107,16 @@ public class ConfigUpdateController {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			JsonNode fullJson = mapper.readTree(bodyContent);
-			System.out.println(fullJson);
+			logger.debug(fullJson.toString());
 			if ((fullJson.get("username") != null)&&(fullJson.get("password") != null) &&(fullJson.get("url") != null) ) 
 			{
 				jenkinsUsername = fullJson.get("username").toString().replace("\"", "");
 				jenkinsPassword = fullJson.get("password").toString().replace("\"", "");
 				jenkinsURL = fullJson.get("url").toString().replace("\"", "");
 
-				System.out.println(jenkinsUsername);
-				System.out.println(jenkinsPassword);
-				System.out.println(jenkinsURL);
+				logger.debug(jenkinsUsername);
+				logger.debug(jenkinsPassword);
+				logger.debug(jenkinsURL);
 			}
 			
 		} catch (JsonProcessingException e) {
@@ -138,7 +142,7 @@ public class ConfigUpdateController {
 			dbUrl = (config.getString("spring.datasource.url"));
 		} catch (ConfigurationException cex) {
 			// loading of the configuration file failed
-			System.out.println("[ERROR] Unable to read Application Properties file.");
+			logger.error("[ERROR] Unable to read Application Properties file.");
 		}
 		
 		
@@ -153,6 +157,8 @@ public class ConfigUpdateController {
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET username='"+jenkinsUsername+"'");
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET password='"+jenkinsPassword+"'");
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET server='"+jenkinsURL+"'");
+		
+		logger.info("Credentials Updated");
 		
 		return "";
 	}
@@ -177,16 +183,16 @@ public class ConfigUpdateController {
 			url = (config.getString("spring.datasource.url"));
 		} catch (ConfigurationException cex) {
 			// loading of the configuration file failed
-			System.out.println("[ERROR] Unable to read Application Properties file.");
+			logger.error("[ERROR] Unable to read Application Properties file.");
 		}
 		
 		
 		JdbcTemplate jdbcTemplate = new JdbcTemplate();
 		DataSource ds = new DataSource();
 		
-		System.out.println("DB Username: "+username);
-		System.out.println("DB password: "+password);
-		System.out.println("DB url: "+url);
+		logger.debug("DB Username: "+username);
+		logger.debug("DB password: "+password);
+		logger.debug("DB url: "+url);
 		
 		ds.setUrl(url);
 		ds.setUsername(username);
@@ -221,7 +227,7 @@ public class ConfigUpdateController {
 				String jenkinsUsername = (String) valueList.get(0);
 				String jenkinsPassword = (String) valueList.get(1);
 				String jenkinsURL = (String) valueList.get(2);
-				System.out.println(jenkinsUsername+jenkinsPassword+jenkinsURL);
+				logger.debug(jenkinsUsername+jenkinsPassword+jenkinsURL);
 			}
 			
 		}
