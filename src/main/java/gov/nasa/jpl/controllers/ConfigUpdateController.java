@@ -160,7 +160,7 @@ public class ConfigUpdateController {
 		
 		logger.info("Credentials Updated");
 		
-		return "";
+		return "Credentials Updated";
 	}
 	
 	@RequestMapping(value = "/db", method = RequestMethod.GET)
