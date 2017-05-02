@@ -107,16 +107,16 @@ public class ConfigUpdateController {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			JsonNode fullJson = mapper.readTree(bodyContent);
-			logger.debug(fullJson.toString());
+			logger.info(fullJson.toString());
 			if ((fullJson.get("username") != null)&&(fullJson.get("password") != null) &&(fullJson.get("url") != null) ) 
 			{
 				jenkinsUsername = fullJson.get("username").toString().replace("\"", "");
 				jenkinsPassword = fullJson.get("password").toString().replace("\"", "");
 				jenkinsURL = fullJson.get("url").toString().replace("\"", "");
 
-				logger.debug(jenkinsUsername);
-				logger.debug(jenkinsPassword);
-				logger.debug(jenkinsURL);
+				logger.info(jenkinsUsername);
+				logger.info(jenkinsPassword);
+				logger.info(jenkinsURL);
 			}
 			
 		} catch (JsonProcessingException e) {
@@ -190,9 +190,9 @@ public class ConfigUpdateController {
 		JdbcTemplate jdbcTemplate = new JdbcTemplate();
 		DataSource ds = new DataSource();
 		
-		logger.debug("DB Username: "+username);
-		logger.debug("DB password: "+password);
-		logger.debug("DB url: "+url);
+		logger.info("DB Username: "+username);
+		logger.info("DB password: "+password);
+		logger.info("DB url: "+url);
 		
 		ds.setUrl(url);
 		ds.setUsername(username);
@@ -227,7 +227,7 @@ public class ConfigUpdateController {
 				String jenkinsUsername = (String) valueList.get(0);
 				String jenkinsPassword = (String) valueList.get(1);
 				String jenkinsURL = (String) valueList.get(2);
-				logger.debug(jenkinsUsername+jenkinsPassword+jenkinsURL);
+				logger.info(jenkinsUsername+jenkinsPassword+jenkinsURL);
 			}
 			
 		}

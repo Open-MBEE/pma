@@ -59,6 +59,8 @@ import org.apache.tomcat.jdbc.pool.DataSource;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -88,6 +90,8 @@ import org.xml.sax.SAXException;
  */
 public class JenkinsEngine implements ExecutionEngine {
 
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
 	private String username = ""; // User name to be used to connect to jenkins
 
 	private String passwordOrToken = ""; // Token or password
