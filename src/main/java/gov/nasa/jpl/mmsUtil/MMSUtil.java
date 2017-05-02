@@ -369,7 +369,7 @@ public class MMSUtil {
 		}
 		catch (java.net.UnknownHostException e) {
 		      System.out.println("Unknown Host Exception");
-		      return "Unknown Host exception: "+e.toString();
+		      return "MMS Unknown Host exception: "+e.toString();
 		}
 		catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -527,7 +527,7 @@ public class MMSUtil {
 			}
 			else
 			{
-				return jsonString; // Returns status from mms. Should be an error if the elements were null.
+				return jsonString+" MMS"; // Returns status from mms. Should be an error if the elements were null.
 			}
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block

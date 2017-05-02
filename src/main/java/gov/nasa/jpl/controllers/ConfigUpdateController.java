@@ -22,11 +22,16 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 
@@ -86,7 +91,71 @@ public class ConfigUpdateController {
 	    }
 
 	}
+	@RequestMapping(value = "/dbUpdate", method = RequestMethod.POST)
+	@ResponseBody
+	public String dbUpdate(@RequestBody String bodyContent) 
+	{
+		
+		String jenkinsUsername = "";
+		String jenkinsPassword = "";
+		String jenkinsURL = "";
+		
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			JsonNode fullJson = mapper.readTree(bodyContent);
+			System.out.println(fullJson);
+			if ((fullJson.get("username") != null)&&(fullJson.get("password") != null) &&(fullJson.get("url") != null) ) 
+			{
+				jenkinsUsername = fullJson.get("username").toString().replace("\"", "");
+				jenkinsPassword = fullJson.get("password").toString().replace("\"", "");
+				jenkinsURL = fullJson.get("url").toString().replace("\"", "");
 
+				System.out.println(jenkinsUsername);
+				System.out.println(jenkinsPassword);
+				System.out.println(jenkinsURL);
+			}
+			
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		Parameters params = new Parameters();
+		// Read data from this file
+		File propertiesFile = new File("application.properties");
+		FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class).configure(params.fileBased().setFile(propertiesFile));
+		String dbUsername = "";
+		String dbPassword = "";
+		String dbUrl = "";
+		
+		try {
+			Configuration config = builder.getConfiguration();
+			dbUsername = (config.getString("spring.datasource.username"));
+			dbPassword = (config.getString("spring.datasource.password"));
+			dbUrl = (config.getString("spring.datasource.url"));
+		} catch (ConfigurationException cex) {
+			// loading of the configuration file failed
+			System.out.println("[ERROR] Unable to read Application Properties file.");
+		}
+		
+		
+		JdbcTemplate jdbcTemplate = new JdbcTemplate();
+		DataSource ds = new DataSource();
+		
+		ds.setUsername(dbUsername);
+		ds.setPassword(dbPassword);
+		ds.setUrl(dbUrl);
+		jdbcTemplate.setDataSource(ds);
+
+		jdbcTemplate.execute("UPDATE CREDENTIALS SET username='"+jenkinsUsername+"'");
+		jdbcTemplate.execute("UPDATE CREDENTIALS SET password='"+jenkinsPassword+"'");
+		jdbcTemplate.execute("UPDATE CREDENTIALS SET server='"+jenkinsURL+"'");
+		
+		return "";
+	}
 	
 	@RequestMapping(value = "/db", method = RequestMethod.GET)
 	@ResponseBody

@@ -51,8 +51,6 @@ public class VeEndpointController {
 	@ResponseBody
 	public String getJob(@ PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		
-		String input = "job" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
-		
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
     	String jobResponse = je.getJob(jobSysmlID);
@@ -83,11 +81,22 @@ public class VeEndpointController {
 	@ResponseBody
 	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, @RequestParam String alf_ticket, @RequestParam String mmsServer) {
 		
-		String input = "job instance" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
-		
-		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-		
-		return mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
+		// Check if job exists on jenkins first
+    	JenkinsEngine je = login();
+    	String jobResponse = je.getJob(jobSysmlID);
+    	System.out.println("Job Response: "+jobResponse);
+    	if(!jobResponse.equals("Job Not Found"))
+    	{
+    		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+    		
+    		return mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
+    	}
+    	else
+    	{
+    		jobResponse = "Job not found on Jenkins";
+    		return jobResponse;
+    	}
+
 	}
 
 	/**
@@ -107,7 +116,6 @@ public class VeEndpointController {
 		String alfrescoToken = jobFromVE.getAlfrescoToken();
 		String mmsServer = jobFromVE.getMmsServer();
 		String associatedElementID = jobFromVE.getAssociatedElementID();
-//		String ownerID = projectID+"_pm";
 		String schedule = jobFromVE.getSchedule();
 		String command = jobFromVE.getCommand();
 		
@@ -140,10 +148,14 @@ public class VeEndpointController {
 	        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
 	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
 	        
-	        return jobCreationResponse;
+	        if(jobCreationResponse.equals("HTTP/1.1 200 OK"))
+	        {
+	        	return jobCreationResponse + " " + jobElementID;
+	        }
+	        return jobCreationResponse +" Jenkins";
 		}
 		else {
-			return elementCreationResponse;
+			return elementCreationResponse+" MMS";
 		}
 	}
 	
@@ -183,9 +195,9 @@ public class VeEndpointController {
     	        je.getBuildNumber(jobSysmlID);
     	        
     			System.out.println("Job run response: "+runResponse);
-    			return runResponse;
+    			return runResponse + " Jenkins";
     		}
-    		return elementCreationResponse;
+    		return elementCreationResponse +" MMS";
     	}
     	else
     	{
@@ -209,7 +221,7 @@ public class VeEndpointController {
 		
 		if(!elementDeleteResponse.equals("HTTP/1.1 200 OK"))
 		{
-			return elementDeleteResponse+" on MMS";
+			return elementDeleteResponse+" MMS";
 		}
 		
 		// delete job on jenkins
@@ -219,7 +231,7 @@ public class VeEndpointController {
     	
     	if(!jenkinsDeleteResponse.equals("HTTP/1.1 302 Found"))
 		{
-			return jenkinsDeleteResponse+" on Jenkins";
+			return jenkinsDeleteResponse+" Jenkins";
 		}
     	
 		return "HTTP/1.1 200 OK";
