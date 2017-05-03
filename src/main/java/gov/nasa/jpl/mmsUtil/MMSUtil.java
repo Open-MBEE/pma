@@ -507,7 +507,7 @@ public class MMSUtil {
 			}
 			else
 			{
-				return jsonString+" MMS"; // Returns status from mms. Should be an error if the elements were null.
+				return jsonString; // Returns status from mms. Should be an error or empty if the elements were null.
 			}
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
@@ -560,7 +560,7 @@ public class MMSUtil {
 			}
 			else
 			{
-				return jsonString+" MMS"; // Returns status from mms. Should be an error if the elements were null.
+				return jsonString; // Returns status from mms. Should be an error or empty if the elements were null.
 			}
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
