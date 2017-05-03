@@ -41,10 +41,10 @@ public class VeEndpointController {
 		
 		logger.info("Get Jobs was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
+		System.out.println("Get JOBS was called");
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-		mmsUtil.getJobElements(mmsServer,projectID, refID);
 		
-		return "job" + "\n" + projectID + "\n" + refID+ "\n"+alf_ticket;
+		return mmsUtil.getJobElements(mmsServer,projectID, refID);
 	}
 	
 	/**
@@ -142,9 +142,20 @@ public class VeEndpointController {
 		String schedule = jobFromVE.getSchedule();
 		String command = jobFromVE.getCommand();
 		
+		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
+		
+		Boolean jobPackageExists = mmsUtil.jobPackageExists(mmsServer, projectID, refID);
+		
+		if(!jobPackageExists) // create jobs bin package if it doesn't exist.
+		{
+			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm");
+			System.out.println(packageNode.toString());
+			mmsUtil.post(mmsServer, projectID, alfrescoToken, packageNode);
+		}
+		
 		String jobElementID = mmsUtil.createId();
-		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,command,schedule);
+		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,command,schedule,"jobs_bin_"+projectID); // Job elements should be created in the jobs bin package
 		
 		System.out.println("Job class JSON: "+on.toString());
 		logger.info("Job class JSON: "+on.toString());
