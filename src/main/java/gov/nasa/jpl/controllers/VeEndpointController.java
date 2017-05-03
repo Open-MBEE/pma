@@ -4,9 +4,11 @@ package gov.nasa.jpl.controllers;
  * Endpoints for applications to interface with PMA.
  */
 import java.sql.Timestamp;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -141,7 +143,7 @@ public class VeEndpointController {
 		String associatedElementID = jobFromVE.getAssociatedElementID();
 		String schedule = jobFromVE.getSchedule();
 		String command = jobFromVE.getCommand();
-		
+		String arguments = Arrays.toString(jobFromVE.getArguments());
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		
@@ -155,7 +157,7 @@ public class VeEndpointController {
 		}
 		
 		String jobElementID = mmsUtil.createId();
-		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,command,schedule,"jobs_bin_"+projectID); // Job elements should be created in the jobs bin package
+		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,command,schedule,"jobs_bin_"+projectID,arguments); // Job elements should be created in the jobs bin package
 		
 		System.out.println("Job class JSON: "+on.toString());
 		logger.info("Job class JSON: "+on.toString());

@@ -228,7 +228,7 @@ public class MMSUtil {
 		return classElement;
 	}
 
-	public ObjectNode buildJobElementJSON(String id, String associatedElementID,String name,String command,String schedule, String ownerID) {
+	public ObjectNode buildJobElementJSON(String id, String associatedElementID,String name,String command,String schedule, String ownerID,String arguments) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		ObjectNode payload = mapper.createObjectNode();
@@ -237,7 +237,7 @@ public class MMSUtil {
 		elements.add(buildPropertyNode(id,"command",command));
 		elements.add(buildPropertyNode(id,"associatedElementID",associatedElementID));
 		elements.add(buildPropertyNode(id,"schedule",schedule));
-		elements.add(buildPropertyNode(id,"arguments","tempValue,tempValue2"));
+		elements.add(buildPropertyNode(id,"arguments",arguments));
 		
 		payload.put("elements",elements);
 		payload.put("source","pma");
