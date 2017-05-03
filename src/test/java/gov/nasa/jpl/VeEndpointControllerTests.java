@@ -33,13 +33,15 @@ public class VeEndpointControllerTests {
 
     @Test
     public void testCreateJob() {
+        String alfTicket = "TICKET_966561726f35a382c76fa36d3a0a53b471f2db0b";
+        String testServer = "https://opencae-int.jpl.nasa.gov";
         JobFromVE job = new JobFromVE();
         JenkinsEngine je = new JenkinsEngine();
         je.setCredentials();
         je.login();
-        job.setMmsServer("https://opencae-int.jpl.nasa.gov");
+        job.setMmsServer(testServer);
         job.setJobName("PMA_1493825038894_5fcafd6e-6e5a-4d03-a6e2-f47ff29286de");
-        job.setAlfrescoToken("TICKET_966561726f35a382c76fa36d3a0a53b471f2db0b");
+        job.setAlfrescoToken(alfTicket);
         job.setArguments(new String[0]);
         job.setAssociatedElementID("");
         job.setCommand("");
@@ -49,7 +51,7 @@ public class VeEndpointControllerTests {
         assert (!elementId.contains("Unauthorized MMS"));
         assert (elementId.contains("PMA"));
         elementId = elementId.replace("HTTP/1.1 200 OK ", "");
-        assert(je.getJob(elementId) != null);
-        je.deleteJob(elementId);
+        String output = veEndpointController.deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", elementId, alfTicket, testServer);
+        assert (output.contains("200 OK"));
     }
 }
