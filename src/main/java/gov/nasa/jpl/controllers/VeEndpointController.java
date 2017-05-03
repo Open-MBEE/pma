@@ -41,10 +41,10 @@ public class VeEndpointController {
 		
 		logger.info("Get Jobs was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
+		System.out.println("Get JOBS was called");
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-		mmsUtil.getJobElements(mmsServer,projectID, refID);
 		
-		return "job" + "\n" + projectID + "\n" + refID+ "\n"+alf_ticket;
+		return mmsUtil.getJobElements(mmsServer,projectID, refID);
 	}
 	
 	/**

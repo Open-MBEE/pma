@@ -479,14 +479,44 @@ public class MMSUtil {
 	// finds all the job elements in a project
 	public String getJobElements(String server,String projectID,String refID)
 	{
-		// find package
+		// find all elements inside the jobs bin package
+		// recursive get job sysmlid
+		String jsonString = get(server, projectID,refID, "jobs_bin_"+projectID, true);
 		
-		// look for command part property
+		ObjectMapper mapper = new ObjectMapper();
+		ArrayNode jobElements = mapper.createArrayNode();
 		
-		// put owner of part property in a list. Owner should be the job element
-		
-		// return the list.
-		return null;
+		try {
+			JsonNode fullJson = mapper.readTree(jsonString);
+			JsonNode elements = fullJson.get("elements");
+			if (elements != null)  // elements will be null if the json returned with error
+			{
+				for (JsonNode element : elements) {
+					/*
+					 * Find the ID of job element by looking for the owner of the command property
+					 * only job elements have the command part property
+					 */
+					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"command\"")))
+					{
+						String jobInstanceId = element.get("ownerId").toString().replace("\"", "");//id of owner of part propertie
+						// put owner of part property in a list. Owner should be the job element
+						jobElements.add(mapper.createObjectNode().put("id", jobInstanceId));
+					}
+				}
+				return jobElements.toString();
+			}
+			else
+			{
+				return jsonString+" MMS"; // Returns status from mms. Should be an error if the elements were null.
+			}
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "Element not found";
 	}
 	
 	/**
