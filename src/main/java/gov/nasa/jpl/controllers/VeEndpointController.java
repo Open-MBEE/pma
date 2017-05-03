@@ -4,6 +4,9 @@ package gov.nasa.jpl.controllers;
  * Endpoints for applications to interface with PMA.
  */
 import java.sql.Timestamp;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,8 +25,10 @@ import gov.nasa.jpl.model.JobFromVE;
 import gov.nasa.jpl.model.JobInstanceFromVE;
 
 @Controller
-public class VeEndpointContoller {
-
+public class VeEndpointController {
+	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
 	/**
 	 * Returns all the jobs of a project.
 	 * @param projectID
@@ -34,6 +39,8 @@ public class VeEndpointContoller {
 	@ResponseBody
 	public String getJobs(@PathVariable String projectID, @PathVariable String refID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		
+		logger.info("Get Jobs was called");
+		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
 		mmsUtil.getJobElements(mmsServer,projectID, refID);
 		
@@ -51,7 +58,8 @@ public class VeEndpointContoller {
 	@ResponseBody
 	public String getJob(@ PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		
-		String input = "job" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
+		logger.info("Get Job was called");
+		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
 		
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
@@ -60,15 +68,14 @@ public class VeEndpointContoller {
     	if(!jobResponse.equals("Job Not Found"))
     	{
     		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-    		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
+    		jobResponse = mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
     	}
     	else
     	{
     		jobResponse = "Job not found on Jenkins";
-    		return jobResponse;
     	}
-    	
-		
+    	logger.info("Get Job Response: "+jobResponse);
+    	return jobResponse;
 		
 	}
 	
@@ -83,11 +90,28 @@ public class VeEndpointContoller {
 	@ResponseBody
 	public String getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, @RequestParam String alf_ticket, @RequestParam String mmsServer) {
 		
-		String input = "job instance" + "\n" + projectID + "\n" + refID + "\n" + jobSysmlID+ "\n"+alf_ticket;
+		logger.info("Get Job Instances was called");
+		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
 		
-		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
 		
-		return mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
+		// Check if job exists on jenkins first
+    	JenkinsEngine je = login();
+    	String jobResponse = je.getJob(jobSysmlID);
+    	System.out.println("Job Response: "+jobResponse);
+    	if(!jobResponse.equals("Job Not Found"))
+    	{
+    		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+    		
+    		jobResponse = mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
+    	}
+    	else
+    	{
+    		jobResponse = "Job not found on Jenkins";
+    	}
+    	
+		logger.info("Get Job Instances response: "+jobResponse);
+		return jobResponse;
+
 	}
 
 	/**
@@ -101,13 +125,20 @@ public class VeEndpointContoller {
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.POST)
 	@ResponseBody
 	public String createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromVE jobFromVE) {
+		
+		logger.info("Create Job was called");
+		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Job Name: "
+				+ jobFromVE.getJobName() + "\n" + "Command: " + jobFromVE.getCommand() + "\n" + "Arguments: "
+				+ jobFromVE.getArguments() + "\n" + "Schedule: " + jobFromVE.getSchedule() + "\n"
+				+ "Associated Element ID: " + jobFromVE.getAssociatedElementID() + "\n" + "MMS Server: "
+				+ jobFromVE.getMmsServer() + "\n" + "Alfresco Token: " + jobFromVE.getAlfrescoToken() );
+		
 		ObjectMapper mapper = new ObjectMapper();
 		
 		String jobName = jobFromVE.getJobName();
 		String alfrescoToken = jobFromVE.getAlfrescoToken();
 		String mmsServer = jobFromVE.getMmsServer();
 		String associatedElementID = jobFromVE.getAssociatedElementID();
-//		String ownerID = projectID+"_pm";
 		String schedule = jobFromVE.getSchedule();
 		String command = jobFromVE.getCommand();
 		
@@ -116,8 +147,11 @@ public class VeEndpointContoller {
 		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,command,schedule);
 		
 		System.out.println("Job class JSON: "+on.toString());
+		logger.info("Job class JSON: "+on.toString());
+		
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
 		System.out.println("MMS Job element response: "+elementCreationResponse);
+		logger.info("MMS Job element response: "+elementCreationResponse);
 		System.out.println("");
 		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
 		{
@@ -140,10 +174,17 @@ public class VeEndpointContoller {
 	        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
 	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
 	        
-	        return jobCreationResponse;
+	        if(jobCreationResponse.equals("HTTP/1.1 200 OK"))
+	        {
+	        	logger.info("Return message: "+jobCreationResponse + " " + jobElementID);
+	        	return jobCreationResponse + " " + jobElementID;
+	        }
+	        logger.info("Return message: "+jobCreationResponse +" Jenkins");
+	        return jobCreationResponse +" Jenkins";
 		}
 		else {
-			return elementCreationResponse;
+			logger.info("Return message: "+elementCreationResponse+" MMS");
+			return elementCreationResponse+" MMS";
 		}
 	}
 	
@@ -152,6 +193,11 @@ public class VeEndpointContoller {
 	@ResponseBody
 	public String runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final JobInstanceFromVE jobInstance) {
 		
+		logger.info("Run job was called");
+		
+		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Arguments: "
+				+ jobInstance.getArguments() + "\n" + "MMS Server: " + jobInstance.getMmsServer() + "\n"
+				+ "Alfresco Token: " + jobInstance.getAlfrescoToken());
 		
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
@@ -173,9 +219,11 @@ public class VeEndpointContoller {
     		String jobInstanceElementID = mmsUtil.createId();
     		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, jobSysmlID, jobSysmlID+"_instance_"+timestamp.getTime(),nextBuildNumber,"pending"); //job element will be the owner of the instance element
     		System.out.println("job instance JSON: "+on.toString());
+    		logger.info("job instance JSON: "+on.toString());
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
     		
     		System.out.println("job instance element creation response"+elementCreationResponse);
+    		logger.info("job instance element creation response"+elementCreationResponse);
     		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
     		{
     			// run job on jenkins
@@ -183,13 +231,16 @@ public class VeEndpointContoller {
     	        je.getBuildNumber(jobSysmlID);
     	        
     			System.out.println("Job run response: "+runResponse);
-    			return runResponse;
+    			logger.info("Run job Jenkins response: "+runResponse);
+    			return runResponse + " Jenkins";
     		}
-    		return elementCreationResponse;
+    		logger.info("MMS Element creation response: "+elementCreationResponse);
+    		return elementCreationResponse +" MMS";
     	}
     	else
     	{
     		jobResponse = "Job not found on Jenkins";
+    		logger.info(jobResponse);
     		return jobResponse;
     	}
   
@@ -202,14 +253,20 @@ public class VeEndpointContoller {
 	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
 		
+		logger.info("Delete Job was called");
+		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
+		
+		
 		// Delete job element on MMS.
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
 		String elementDeleteResponse = mmsUtil.delete(mmsServer, projectID, refID, jobSysmlID);
 		System.out.println("Element delete response: "+elementDeleteResponse);
+		logger.info( "Element delete response: "+elementDeleteResponse);
 		
 		if(!elementDeleteResponse.equals("HTTP/1.1 200 OK"))
 		{
-			return elementDeleteResponse+" on MMS";
+			logger.info( "MMS Element delete response: "+elementDeleteResponse);
+			return elementDeleteResponse+" MMS";
 		}
 		
 		// delete job on jenkins
@@ -219,9 +276,10 @@ public class VeEndpointContoller {
     	
     	if(!jenkinsDeleteResponse.equals("HTTP/1.1 302 Found"))
 		{
-			return jenkinsDeleteResponse+" on Jenkins";
+    		logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
+			return jenkinsDeleteResponse+" Jenkins";
 		}
-    	
+    	logger.info("Delete Succesfull");
 		return "HTTP/1.1 200 OK";
 	}
 	

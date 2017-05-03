@@ -55,10 +55,13 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
-
+import org.apache.tomcat.jdbc.pool.DataSource;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -87,6 +90,8 @@ import org.xml.sax.SAXException;
  */
 public class JenkinsEngine implements ExecutionEngine {
 
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
 	private String username = ""; // User name to be used to connect to jenkins
 
 	private String passwordOrToken = ""; // Token or password
@@ -947,23 +952,59 @@ public class JenkinsEngine implements ExecutionEngine {
 	}
 
 	/**
-	 * Retrives credentials and jenkins server
+	 * Retrieves credentials and jenkins server from the database.
 	 */
-	public void setCredentials() {
+	public void setCredentials() 
+	{
 		Parameters params = new Parameters();
-		// Read data from this file
-		File propertiesFile = new File("jenkins.properties");
+		// Read database login from the properties file
+		File propertiesFile = new File("application.properties");
 		FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class).configure(params.fileBased().setFile(propertiesFile));
-
+		String username = "";
+		String password = "";
+		String url = "";
+		
 		try {
 			Configuration config = builder.getConfiguration();
-			// config contains all properties read from the file
-			this.setUsername(config.getString("jenkins.username"));
-			this.setPassword(config.getString("jenkins.password"));
-			this.setURL(config.getString("jenkins.server"));
+			username = (config.getString("spring.datasource.username"));
+			password = (config.getString("spring.datasource.password"));
+			url = (config.getString("spring.datasource.url"));
 		} catch (ConfigurationException cex) {
 			// loading of the configuration file failed
-			System.out.println("[ERROR] Unable to read Jenkins Properties file.");
+			System.out.println("[ERROR] Unable to read Application Properties file.");
+		}
+		
+		JdbcTemplate jdbcTemplate = new JdbcTemplate();
+		DataSource ds = new DataSource();
+		
+		ds.setUrl(url);
+		ds.setUsername(username);
+		ds.setPassword(password);
+		jdbcTemplate.setDataSource(ds);
+
+		String sql = "SELECT * FROM CREDENTIALS";
+		String dbString = "";
+		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
+		
+		if(!list.isEmpty())
+		{
+			/*
+			 * Getting first row of the CREDENTIALS table.
+			 * Contains the Jenkins username, password, and the server url.
+			 * Example values of the first row: tempUSER, tempPassword, tempURL
+			 */
+			Map<String, Object> firstRow = list.get(0); 
+			
+			ArrayList valueList = new ArrayList();
+			valueList.addAll(firstRow.values());
+			
+			if(valueList.size()==3)
+			{
+				this.setUsername((String) valueList.get(0));
+				this.setPassword((String) valueList.get(1));
+				this.setURL((String) valueList.get(2));
+			}
+			
 		}
 	}
 
