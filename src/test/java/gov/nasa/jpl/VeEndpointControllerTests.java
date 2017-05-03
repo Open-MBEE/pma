@@ -1,6 +1,8 @@
 package gov.nasa.jpl;
 
-import gov.nasa.jpl.controllers.VeEndpointContoller;
+import gov.nasa.jpl.controllers.VeEndpointController;
+import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
+import gov.nasa.jpl.model.JobFromVE;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,15 +20,11 @@ import static org.mockito.BDDMockito.given;
  * Created by dank on 5/1/17.
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(VeEndpointContoller.class)
+@SpringBootTest
 public class VeEndpointControllerTests {
 
 
-    @Autowired
-    private MockMvc mvc;
-
-    @MockBean
-    private VeEndpointContoller veEndpointContoller;
+    private VeEndpointController veEndpointController = new VeEndpointController();
 
     @Test
     public void outputHeader() {
@@ -34,10 +32,24 @@ public class VeEndpointControllerTests {
     }
 
     @Test
-    public void testGetJobInformation() throws exception {
-        try {
-            URL myURL = new URL("Https://cae-ems.jpl.nasa.gov/alfresco/s/api/login")
-        }
-        //given(this.veEndpointContoller.getJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master",""));
+    public void testCreateJob() {
+        JobFromVE job = new JobFromVE();
+        JenkinsEngine je = new JenkinsEngine();
+        je.setCredentials();
+        je.login();
+        job.setMmsServer("https://opencae-int.jpl.nasa.gov");
+        job.setJobName("PMA_1493825038894_5fcafd6e-6e5a-4d03-a6e2-f47ff29286de");
+        job.setAlfrescoToken("TICKET_966561726f35a382c76fa36d3a0a53b471f2db0b");
+        job.setArguments(new String[0]);
+        job.setAssociatedElementID("");
+        job.setCommand("");
+        job.setSchedule("");
+
+        String elementId = veEndpointController.createJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", job);
+        assert (!elementId.contains("Unauthorized MMS"));
+        assert (elementId.contains("PMA"));
+        elementId = elementId.replace("HTTP/1.1 200 OK ", "");
+        assert(je.getJob(elementId) != null);
+        je.deleteJob(elementId);
     }
 }
