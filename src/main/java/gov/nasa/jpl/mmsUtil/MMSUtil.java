@@ -485,78 +485,8 @@ public class MMSUtil {
 		// find all elements inside the jobs bin package
 		// recursive get job sysmlid
 		String jsonString = get(server, projectID,refID, "jobs_bin_"+projectID, true);
-		
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode jobJSON = mapper.createObjectNode();
-		ArrayNode jobElements = mapper.createArrayNode();
-		ArrayList<String> jobElementIDList = new ArrayList<String>();
-		
-		try {
-			JsonNode fullJson = mapper.readTree(jsonString);
-			JsonNode elements = fullJson.get("elements");
-			if (elements != null)  // elements will be null if the json returned with error
-			{
-				for (JsonNode element : elements) {
-					/*
-					 * Find the ID of job element by looking for the owner of the command property
-					 * only job elements have the command part property
-					 */
-					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"command\"")))
-					{
-						String jobID = element.get("ownerId").toString().replace("\"", "");//id of owner of part property
-						jobElementIDList.add(jobID);
-						// put owner of part property in a list. Owner should be the job element
-//						jobElements.add(mapper.createObjectNode().put("id", jobID));
-					}
-				}
-				
-				PMAUtil pmaUtil = new PMAUtil();
-				for(String jobID:jobElementIDList)
-				{
-					Map<String,String> jobMap = new HashMap();
-					jobMap.put("id", jobID);
-					for (JsonNode element : elements) 
-					{	
-						
-						String elementOwner = element.get("ownerId").toString().replace("\"", "");
-						if(element.get("id").toString().replace("\"", "").equals(jobID))
-						{
-							String jobName = element.get("name").toString().replace("\"", "");
-							System.out.println("Job Name: "+jobName);
-							jobMap.put("name", jobName);
-						}
-						if((element.get("type").toString().equals("\"Property\""))&&(elementOwner.equals(jobID)))
-						{
-							String propertyName = element.get("name").toString().replace("\"", "");
-							String propertyValue = element.get("defaultValue").get("value").toString().replace("\"", "");
-							System.out.println(propertyName);
-							System.out.println(propertyValue);
-							jobMap.put(propertyName, propertyValue);
-						}
-						
-					}
-					
-					jobElements.add(pmaUtil.createJobJSON(jobMap));
-					
-				}
-
-//				jobJSON.put("jobs",jobElements);
-//				return jobJSON.toString();
-			}
-			else
-			{
-				return jsonString; // Returns status from mms. Should be an error or empty if the elements were null.
-			}
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		jobJSON.put("jobs",jobElements);
-		
-		return jobJSON.toString();
+		PMAUtil pmaUtil = new PMAUtil();
+		return pmaUtil.generateJobArrayJSON(jsonString);
 	}
 	
 	/**
@@ -570,7 +500,9 @@ public class MMSUtil {
 	 */
 	public String getJobElement(String server, String project,String refID,String jobElementID)
 	{
-		return get(server,project,refID,jobElementID,true);
+		String jsonString = get(server,project,refID,jobElementID,true); //should contain job element information from mms
+		PMAUtil pmaUtil = new PMAUtil();
+		return pmaUtil.generateJobArrayJSON(jsonString);
 	}
 	
 	
