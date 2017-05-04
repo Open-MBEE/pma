@@ -5,8 +5,9 @@ package gov.nasa.jpl.controllers;
  */
 
 import java.io.IOException;
-import java.sql.Timestamp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,20 +19,19 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 
 @Controller
 public class JobUpdateController 
 {
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 		
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{buildNumber}/{propertyName}/{value}", method = RequestMethod.POST)
 	@ResponseBody
 	public String updateJobInstanceProperty(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String buildNumber,@PathVariable String propertyName,@PathVariable String value,@RequestParam String mmsServer,@RequestBody String bodyContent) 
 	{
+		logger.info("Update Jobs was called");
+		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"JobID: "+jobID+ "\n"+"Build Number: "+buildNumber+ "\n"+"Property admin: "+propertyName+ "\n"+"Value: "+value+ "\n"+"mmsServer: "+mmsServer+ "\n"+"Body Content: "+bodyContent);
 		// recieve token from jenkins
 		String token = "";
 //		String server = "opencae-uat.jpl.nasa.gov";
@@ -65,7 +65,7 @@ public class JobUpdateController
 		 * If the job instance doesn't exist, one will be created for the jenkins run.
 		 */
 		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token);
-		
+		logger.info("MMS Response: "+mmsResponse);
 		return mmsResponse;	
 	}
 
