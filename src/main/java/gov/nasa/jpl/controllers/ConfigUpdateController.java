@@ -35,6 +35,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import gov.nasa.jpl.dbUtils.DBUtils;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 
 @Controller
@@ -103,6 +104,7 @@ public class ConfigUpdateController {
 		String jenkinsUsername = "";
 		String jenkinsPassword = "";
 		String jenkinsURL = "";
+		String jenkinsAgent = "";
 		
 		ObjectMapper mapper = new ObjectMapper();
 		try {
@@ -113,50 +115,33 @@ public class ConfigUpdateController {
 				jenkinsUsername = fullJson.get("username").toString().replace("\"", "");
 				jenkinsPassword = fullJson.get("password").toString().replace("\"", "");
 				jenkinsURL = fullJson.get("url").toString().replace("\"", "");
-
+				jenkinsAgent = fullJson.get("agent").toString().replace("\"", "");
+				
 				logger.info(jenkinsUsername);
 				logger.info(jenkinsPassword);
 				logger.info(jenkinsURL);
+				logger.info(jenkinsAgent);
 			}
 			
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return e.toString();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
-		Parameters params = new Parameters();
-		// Read data from this file
-		File propertiesFile = new File("application.properties");
-		FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class).configure(params.fileBased().setFile(propertiesFile));
-		String dbUsername = "";
-		String dbPassword = "";
-		String dbUrl = "";
-		
-		try {
-			Configuration config = builder.getConfiguration();
-			dbUsername = (config.getString("spring.datasource.username"));
-			dbPassword = (config.getString("spring.datasource.password"));
-			dbUrl = (config.getString("spring.datasource.url"));
-		} catch (ConfigurationException cex) {
-			// loading of the configuration file failed
-			logger.error("[ERROR] Unable to read Application Properties file.");
+			return e.toString();
 		}
 		
 		
-		JdbcTemplate jdbcTemplate = new JdbcTemplate();
-		DataSource ds = new DataSource();
+		DBUtils dbUtil = new DBUtils();
 		
-		ds.setUsername(dbUsername);
-		ds.setPassword(dbPassword);
-		ds.setUrl(dbUrl);
-		jdbcTemplate.setDataSource(ds);
-
+		JdbcTemplate jdbcTemplate = dbUtil.createJdbcTemplate();
+		
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET username='"+jenkinsUsername+"'");
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET password='"+jenkinsPassword+"'");
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET server='"+jenkinsURL+"'");
+		jdbcTemplate.execute("UPDATE CREDENTIALS SET agent='"+jenkinsAgent+"'");
 		
 		logger.info("Credentials Updated");
 		

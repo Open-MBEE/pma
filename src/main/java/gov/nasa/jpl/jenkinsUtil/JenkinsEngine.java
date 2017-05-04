@@ -70,6 +70,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import gov.nasa.jpl.dbUtils.DBUtils;
+
 /**
  * Implements the ExecutionEngine as a way to execute jobs (events) on the
  * Jenkins server.
@@ -954,58 +956,18 @@ public class JenkinsEngine implements ExecutionEngine {
 	/**
 	 * Retrieves credentials and jenkins server from the database.
 	 */
-	public void setCredentials() 
-	{
-		Parameters params = new Parameters();
-		// Read database login from the properties file
-		File propertiesFile = new File("application.properties");
-		FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class).configure(params.fileBased().setFile(propertiesFile));
-		String username = "";
-		String password = "";
-		String url = "";
-		
-		try {
-			Configuration config = builder.getConfiguration();
-			username = (config.getString("spring.datasource.username"));
-			password = (config.getString("spring.datasource.password"));
-			url = (config.getString("spring.datasource.url"));
-		} catch (ConfigurationException cex) {
-			// loading of the configuration file failed
-			System.out.println("[ERROR] Unable to read Application Properties file.");
-		}
-		
-		JdbcTemplate jdbcTemplate = new JdbcTemplate();
-		DataSource ds = new DataSource();
-		
-		ds.setUrl(url);
-		ds.setUsername(username);
-		ds.setPassword(password);
-		jdbcTemplate.setDataSource(ds);
+	public void setCredentials() {
 
-		String sql = "SELECT * FROM CREDENTIALS";
-		String dbString = "";
-		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
+		DBUtils dbUtil = new DBUtils();
+		dbUtil.getCredentials();
+		System.out.println(dbUtil.getJenkinsUsername());
+		System.out.println(dbUtil.getJenkinsPassword());
+		System.out.println("JenkinsURL: "+dbUtil.getJenkinsURL());
 		
-		if(!list.isEmpty())
-		{
-			/*
-			 * Getting first row of the CREDENTIALS table.
-			 * Contains the Jenkins username, password, and the server url.
-			 * Example values of the first row: tempUSER, tempPassword, tempURL
-			 */
-			Map<String, Object> firstRow = list.get(0); 
-			
-			ArrayList valueList = new ArrayList();
-			valueList.addAll(firstRow.values());
-			
-			if(valueList.size()==3)
-			{
-				this.setUsername((String) valueList.get(0));
-				this.setPassword((String) valueList.get(1));
-				this.setURL((String) valueList.get(2));
-			}
-			
-		}
+		this.setUsername(dbUtil.getJenkinsUsername());
+		this.setPassword(dbUtil.getJenkinsPassword());
+		this.setURL(dbUtil.getJenkinsURL());
+
 	}
 
 	/*

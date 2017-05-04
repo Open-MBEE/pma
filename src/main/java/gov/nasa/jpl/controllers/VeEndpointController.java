@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.nasa.jpl.dbUtils.DBUtils;
 import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
@@ -171,10 +172,13 @@ public class VeEndpointController {
 			System.out.println("Created Job Element ID: "+jobElementID);
 			
 			// Post to jenkins using jobElementID as the job name
-	        String buildAgent = "CAE-Jenkins2-AgentL01-UAT";
+	       
+			DBUtils dbUtil = new DBUtils();
+			dbUtil.getCredentials();
+			String jenkinsAgent = dbUtil.getJenkinsAgent();
 	        
 	        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
-	        jbc.setBuildAgent(buildAgent);
+	        jbc.setBuildAgent(jenkinsAgent);
 	        jbc.setDocumentID(associatedElementID);
 	        jbc.setMmsServer(mmsServer);
 	        jbc.setTeamworkProject(projectID);
