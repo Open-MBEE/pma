@@ -540,10 +540,8 @@ public class MMSUtil {
 					
 				}
 
-				
-				jobJSON.put("jobs",jobElements);
-				
-				return jobJSON.toString();
+//				jobJSON.put("jobs",jobElements);
+//				return jobJSON.toString();
 			}
 			else
 			{
@@ -556,7 +554,9 @@ public class MMSUtil {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return "Element not found";
+		jobJSON.put("jobs",jobElements);
+		
+		return jobJSON.toString();
 	}
 	
 	/**

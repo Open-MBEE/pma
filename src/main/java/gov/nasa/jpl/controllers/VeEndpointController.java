@@ -46,6 +46,7 @@ public class VeEndpointController {
 		System.out.println("Get JOBS was called");
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
 		
+		
 		return mmsUtil.getJobElements(mmsServer,projectID, refID);
 	}
 	
@@ -56,7 +57,7 @@ public class VeEndpointController {
 	 * @param jobSysmlID
 	 * @return
 	 */
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.GET)
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
 	public String getJob(@ PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		

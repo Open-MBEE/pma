@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nasa.jpl.dbUtil.DBUtil;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
@@ -49,14 +52,20 @@ public class ConfigUpdateController {
 	 * @param refID
 	 * @return
 	 */
-	@RequestMapping(value = "/admin/", method = RequestMethod.GET)
+	@RequestMapping(value = "/test", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJobs(@PathVariable String projectID, @PathVariable String refID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
-		
-		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-		mmsUtil.getJobElements(mmsServer,projectID, refID);
-		
-		return "job" + "\n" + projectID + "\n" + refID+ "\n"+alf_ticket;
+	public ResponseEntity getJobs() {
+
+		HttpStatus httpStatus = HttpStatus.NOT_FOUND;
+		ObjectMapper mapper = new ObjectMapper();
+
+		ObjectNode jobElement = mapper.createObjectNode();
+		jobElement.put("id", "");
+		jobElement.put("name", "");
+
+		String json = jobElement.toString();
+
+		return new ResponseEntity<>("Not Found", httpStatus);
 	}
 	
 	@RestController
