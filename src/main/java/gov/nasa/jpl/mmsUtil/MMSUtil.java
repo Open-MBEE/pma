@@ -498,7 +498,7 @@ public class MMSUtil {
 					 */
 					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"command\"")))
 					{
-						String jobInstanceId = element.get("ownerId").toString().replace("\"", "");//id of owner of part propertie
+						String jobInstanceId = element.get("ownerId").toString().replace("\"", "");//id of owner of part property
 						// put owner of part property in a list. Owner should be the job element
 						jobElements.add(mapper.createObjectNode().put("id", jobInstanceId));
 					}
