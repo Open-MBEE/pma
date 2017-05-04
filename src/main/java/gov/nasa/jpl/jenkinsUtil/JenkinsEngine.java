@@ -11,7 +11,6 @@ package gov.nasa.jpl.jenkinsUtil;
  *
  */
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -27,12 +26,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -55,13 +48,11 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
-import org.apache.tomcat.jdbc.pool.DataSource;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -70,7 +61,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import gov.nasa.jpl.dbUtils.DBUtils;
+import gov.nasa.jpl.dbUtil.DBUtil;
 
 /**
  * Implements the ExecutionEngine as a way to execute jobs (events) on the
@@ -958,7 +949,7 @@ public class JenkinsEngine implements ExecutionEngine {
 	 */
 	public void setCredentials() {
 
-		DBUtils dbUtil = new DBUtils();
+		DBUtil dbUtil = new DBUtil();
 		dbUtil.getCredentials();
 		System.out.println(dbUtil.getJenkinsUsername());
 		System.out.println(dbUtil.getJenkinsPassword());

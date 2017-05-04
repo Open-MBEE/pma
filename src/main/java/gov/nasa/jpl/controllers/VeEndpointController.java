@@ -8,7 +8,6 @@ import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,7 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nasa.jpl.dbUtils.DBUtils;
+import gov.nasa.jpl.dbUtil.DBUtil;
 import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
@@ -38,7 +37,7 @@ public class VeEndpointController {
 	 * @param refID
 	 * @return
 	 */
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.GET)
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
 	public String getJobs(@PathVariable String projectID, @PathVariable String refID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		
@@ -173,7 +172,7 @@ public class VeEndpointController {
 			
 			// Post to jenkins using jobElementID as the job name
 	       
-			DBUtils dbUtil = new DBUtils();
+			DBUtil dbUtil = new DBUtil();
 			dbUtil.getCredentials();
 			String jenkinsAgent = dbUtil.getJenkinsAgent();
 	        

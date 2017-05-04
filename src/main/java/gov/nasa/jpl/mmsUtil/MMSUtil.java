@@ -9,6 +9,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.HttpResponse;
@@ -18,13 +21,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.springframework.http.HttpStatus;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import gov.nasa.jpl.pmaUtil.PMAUtil;
 
 
 public class MMSUtil {
@@ -484,7 +487,9 @@ public class MMSUtil {
 		String jsonString = get(server, projectID,refID, "jobs_bin_"+projectID, true);
 		
 		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode jobJSON = mapper.createObjectNode();
 		ArrayNode jobElements = mapper.createArrayNode();
+		ArrayList<String> jobElementIDList = new ArrayList<String>();
 		
 		try {
 			JsonNode fullJson = mapper.readTree(jsonString);
@@ -498,12 +503,47 @@ public class MMSUtil {
 					 */
 					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"command\"")))
 					{
-						String jobInstanceId = element.get("ownerId").toString().replace("\"", "");//id of owner of part property
+						String jobID = element.get("ownerId").toString().replace("\"", "");//id of owner of part property
+						jobElementIDList.add(jobID);
 						// put owner of part property in a list. Owner should be the job element
-						jobElements.add(mapper.createObjectNode().put("id", jobInstanceId));
+//						jobElements.add(mapper.createObjectNode().put("id", jobID));
 					}
 				}
-				return jobElements.toString();
+				
+				PMAUtil pmaUtil = new PMAUtil();
+				for(String jobID:jobElementIDList)
+				{
+					Map<String,String> jobMap = new HashMap();
+					jobMap.put("id", jobID);
+					for (JsonNode element : elements) 
+					{	
+						
+						String elementOwner = element.get("ownerId").toString().replace("\"", "");
+						if(element.get("id").toString().replace("\"", "").equals(jobID))
+						{
+							String jobName = element.get("name").toString().replace("\"", "");
+							System.out.println("Job Name: "+jobName);
+							jobMap.put("name", jobName);
+						}
+						if((element.get("type").toString().equals("\"Property\""))&&(elementOwner.equals(jobID)))
+						{
+							String propertyName = element.get("name").toString().replace("\"", "");
+							String propertyValue = element.get("defaultValue").get("value").toString().replace("\"", "");
+							System.out.println(propertyName);
+							System.out.println(propertyValue);
+							jobMap.put(propertyName, propertyValue);
+						}
+						
+					}
+					
+					jobElements.add(pmaUtil.createJobJSON(jobMap));
+					
+				}
+
+				
+				jobJSON.put("jobs",jobElements);
+				
+				return jobJSON.toString();
 			}
 			else
 			{
