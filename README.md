@@ -15,3 +15,11 @@ To package the project
 mvn package
 ```
 The resulting files will be located inside of the target directory.
+
+## Deployment
+ssh into server
+java -jar pma.jar &
+
+A log file will be generated when pma starts. File will be called pma.log
+
+The endpoint /dbUpdate will need to be called to pass in jenkins credentials. 
