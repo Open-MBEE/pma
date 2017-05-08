@@ -9,6 +9,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.HttpResponse;
@@ -18,13 +21,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.springframework.http.HttpStatus;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import gov.nasa.jpl.pmaUtil.PMAUtil;
 
 
 public class MMSUtil {
@@ -228,7 +231,7 @@ public class MMSUtil {
 		return classElement;
 	}
 
-	public ObjectNode buildJobElementJSON(String id, String associatedElementID,String name,String command,String schedule, String ownerID) {
+	public ObjectNode buildJobElementJSON(String id, String associatedElementID,String name,String command,String schedule, String ownerID,String arguments) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		ObjectNode payload = mapper.createObjectNode();
@@ -237,7 +240,7 @@ public class MMSUtil {
 		elements.add(buildPropertyNode(id,"command",command));
 		elements.add(buildPropertyNode(id,"associatedElementID",associatedElementID));
 		elements.add(buildPropertyNode(id,"schedule",schedule));
-		elements.add(buildPropertyNode(id,"arguments","tempValue,tempValue2"));
+		elements.add(buildPropertyNode(id,"arguments",arguments));
 		
 		payload.put("elements",elements);
 		payload.put("source","pma");
@@ -482,41 +485,8 @@ public class MMSUtil {
 		// find all elements inside the jobs bin package
 		// recursive get job sysmlid
 		String jsonString = get(server, projectID,refID, "jobs_bin_"+projectID, true);
-		
-		ObjectMapper mapper = new ObjectMapper();
-		ArrayNode jobElements = mapper.createArrayNode();
-		
-		try {
-			JsonNode fullJson = mapper.readTree(jsonString);
-			JsonNode elements = fullJson.get("elements");
-			if (elements != null)  // elements will be null if the json returned with error
-			{
-				for (JsonNode element : elements) {
-					/*
-					 * Find the ID of job element by looking for the owner of the command property
-					 * only job elements have the command part property
-					 */
-					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"command\"")))
-					{
-						String jobInstanceId = element.get("ownerId").toString().replace("\"", "");//id of owner of part propertie
-						// put owner of part property in a list. Owner should be the job element
-						jobElements.add(mapper.createObjectNode().put("id", jobInstanceId));
-					}
-				}
-				return jobElements.toString();
-			}
-			else
-			{
-				return jsonString; // Returns status from mms. Should be an error or empty if the elements were null.
-			}
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return "Element not found";
+		PMAUtil pmaUtil = new PMAUtil();
+		return pmaUtil.generateJobArrayJSON(jsonString);
 	}
 	
 	/**
@@ -530,7 +500,9 @@ public class MMSUtil {
 	 */
 	public String getJobElement(String server, String project,String refID,String jobElementID)
 	{
-		return get(server,project,refID,jobElementID,true);
+		String jsonString = get(server,project,refID,jobElementID,true); //should contain job element information from mms
+		PMAUtil pmaUtil = new PMAUtil();
+		return pmaUtil.generateJobArrayJSON(jsonString);
 	}
 	
 	
@@ -540,36 +512,8 @@ public class MMSUtil {
 		
 		String jsonString = get(server, project,refID, jobElementID, true);
 		
-		ObjectMapper mapper = new ObjectMapper();
-		ArrayNode instanceElements = mapper.createArrayNode();
-		
-		try {
-			JsonNode fullJson = mapper.readTree(jsonString);
-			JsonNode elements = fullJson.get("elements");
-			if (elements != null)  // elements will be null if the json returned with error
-			{
-				for (JsonNode element : elements) {
-					// Find the ID of the job instance element.
-					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"jobStatus\"")))
-					{
-						String jobInstanceId = element.get("ownerId").toString().replace("\"", "");// owner of the instance part properties
-						instanceElements.add(mapper.createObjectNode().put("id", jobInstanceId));
-					}
-				}
-				return instanceElements.toString();
-			}
-			else
-			{
-				return jsonString; // Returns status from mms. Should be an error or empty if the elements were null.
-			}
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return "Element not found";
+		PMAUtil pmaUtil = new PMAUtil();
+		return pmaUtil.generateJobInstanceArrayJSON(jsonString);
 	}
 	
 <<<<<<< HEAD
