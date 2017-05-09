@@ -516,18 +516,10 @@ public class MMSUtil {
 		return pmaUtil.generateJobInstanceArrayJSON(jsonString);
 	}
 	
-<<<<<<< HEAD
-    private String createId() {
+    public String createId() {
     	String id = "PMA_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString();
     	return id;
     }
-=======
-	public String createId() {
-		String id = "PMA_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString();
-		return id;
-
-	}
->>>>>>> jenkins2
 	
 	/**
 	 *  Checks if job package exists on server. True if package exists. 
