@@ -1234,7 +1234,7 @@ public class JenkinsEngine implements ExecutionEngine {
         String associatedElementID = "";
         String mmsServer = "mms";
         String projectID = "IDTEMP";
-        String jobElementID = "JOBID";
+        String jobElementID = "testJob";
         String schedule = "";
         
         JenkinsBuildConfig jbc = new JenkinsBuildConfig();
@@ -1250,6 +1250,120 @@ public class JenkinsEngine implements ExecutionEngine {
         je.login();
 
         String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
+        je.postConfigXml(jbc, jobElementID, true);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.deleteJob(jobElementID);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.postConfigXml(jbc, jobElementID, true);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.deleteJob(jobElementID);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.postConfigXml(jbc, jobElementID, true);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.deleteJob(jobElementID);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.postConfigXml(jbc, jobElementID, true);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.deleteJob(jobElementID);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.postConfigXml(jbc, jobElementID, true);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.deleteJob(jobElementID);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.postConfigXml(jbc, jobElementID+"a", true);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.postConfigXml(jbc, jobElementID+"b", true);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.postConfigXml(jbc, jobElementID+"c", true);
+        try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.deleteJob(jobElementID+"a");
+        try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.deleteJob(jobElementID+"b");
+        try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        je.deleteJob(jobElementID+"c");
+        try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         System.out.println("Jenkins Job creation response: "+jobCreationResponse);
+//        je.deleteJob(jobElementID);
+        
 	}
 }

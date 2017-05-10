@@ -147,6 +147,10 @@ public class ConfigUpdateController {
 		
 		JdbcTemplate jdbcTemplate = dbUtil.createJdbcTemplate();
 		
+		jdbcTemplate.execute("drop table if exists credentials"); // deletes the previous table if there is one.
+		jdbcTemplate.execute("CREATE TABLE if not exists credentials (username TEXT, password TEXT, server TEXT, agent TEXT)"); //creates the table that will store the credentials
+		jdbcTemplate.execute("insert into CREDENTIALS (username, password, server, agent) values ('tempUSER', 'tempPassword', 'tempURL' ,'tempAgent')"); // inserts temp values for first row
+		
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET username='"+jenkinsUsername+"'");
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET password='"+jenkinsPassword+"'");
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET server='"+jenkinsURL+"'");
