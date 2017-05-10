@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,7 +36,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.nasa.jpl.dbUtil.DBUtil;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 
 @Controller
@@ -48,14 +52,20 @@ public class ConfigUpdateController {
 	 * @param refID
 	 * @return
 	 */
-	@RequestMapping(value = "/admin/", method = RequestMethod.GET)
+	@RequestMapping(value = "/test", method = RequestMethod.GET)
 	@ResponseBody
-	public String getJobs(@PathVariable String projectID, @PathVariable String refID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
-		
-		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-		mmsUtil.getJobElements(mmsServer,projectID, refID);
-		
-		return "job" + "\n" + projectID + "\n" + refID+ "\n"+alf_ticket;
+	public ResponseEntity getJobs() {
+
+		HttpStatus httpStatus = HttpStatus.NOT_FOUND;
+		ObjectMapper mapper = new ObjectMapper();
+
+		ObjectNode jobElement = mapper.createObjectNode();
+		jobElement.put("id", "");
+		jobElement.put("name", "");
+
+		String json = jobElement.toString();
+
+		return new ResponseEntity<>("Not Found", httpStatus);
 	}
 	
 	@RestController
@@ -103,6 +113,7 @@ public class ConfigUpdateController {
 		String jenkinsUsername = "";
 		String jenkinsPassword = "";
 		String jenkinsURL = "";
+		String jenkinsAgent = "";
 		
 		ObjectMapper mapper = new ObjectMapper();
 		try {
@@ -113,50 +124,33 @@ public class ConfigUpdateController {
 				jenkinsUsername = fullJson.get("username").toString().replace("\"", "");
 				jenkinsPassword = fullJson.get("password").toString().replace("\"", "");
 				jenkinsURL = fullJson.get("url").toString().replace("\"", "");
-
+				jenkinsAgent = fullJson.get("agent").toString().replace("\"", "");
+				
 				logger.info(jenkinsUsername);
 				logger.info(jenkinsPassword);
 				logger.info(jenkinsURL);
+				logger.info(jenkinsAgent);
 			}
 			
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return e.toString();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
-		Parameters params = new Parameters();
-		// Read data from this file
-		File propertiesFile = new File("application.properties");
-		FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class).configure(params.fileBased().setFile(propertiesFile));
-		String dbUsername = "";
-		String dbPassword = "";
-		String dbUrl = "";
-		
-		try {
-			Configuration config = builder.getConfiguration();
-			dbUsername = (config.getString("spring.datasource.username"));
-			dbPassword = (config.getString("spring.datasource.password"));
-			dbUrl = (config.getString("spring.datasource.url"));
-		} catch (ConfigurationException cex) {
-			// loading of the configuration file failed
-			logger.error("[ERROR] Unable to read Application Properties file.");
+			return e.toString();
 		}
 		
 		
-		JdbcTemplate jdbcTemplate = new JdbcTemplate();
-		DataSource ds = new DataSource();
+		DBUtil dbUtil = new DBUtil();
 		
-		ds.setUsername(dbUsername);
-		ds.setPassword(dbPassword);
-		ds.setUrl(dbUrl);
-		jdbcTemplate.setDataSource(ds);
-
+		JdbcTemplate jdbcTemplate = dbUtil.createJdbcTemplate();
+		
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET username='"+jenkinsUsername+"'");
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET password='"+jenkinsPassword+"'");
 		jdbcTemplate.execute("UPDATE CREDENTIALS SET server='"+jenkinsURL+"'");
+		jdbcTemplate.execute("UPDATE CREDENTIALS SET agent='"+jenkinsAgent+"'");
 		
 		logger.info("Credentials Updated");
 		

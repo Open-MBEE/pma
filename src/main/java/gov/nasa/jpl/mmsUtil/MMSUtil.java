@@ -9,6 +9,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.HttpResponse;
@@ -18,13 +21,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.springframework.http.HttpStatus;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import gov.nasa.jpl.pmaUtil.PMAUtil;
 
 
 public class MMSUtil {
@@ -41,10 +44,10 @@ public class MMSUtil {
 		ArrayNode elements = mapper.createArrayNode();
 		ObjectNode packageElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
-		packageElement.put("type", "Package");
-		packageElement.put("documentation", "");
 		packageElement.put("_appliedStereotypeIds", mapper.createArrayNode());
+		packageElement.put("documentation", "");
 		packageElement.put("_isSite", Boolean.FALSE);
+		packageElement.put("type", "Package");
 		packageElement.put("id", id);
 		packageElement.put("mdExtensionsIds", mapper.createArrayNode());
 		packageElement.put("ownerId", ownerID);
@@ -52,7 +55,7 @@ public class MMSUtil {
 		packageElement.put("appliedStereotypeInstanceId", nullNode);
 		packageElement.put("clientDependencyIds", mapper.createArrayNode());
 		packageElement.put("supplierDependencyIds", mapper.createArrayNode());
-		packageElement.put("name", "jobs_bin");
+		packageElement.put("name", "Jobs Bin");
 		packageElement.put("nameExpression", nullNode);
 		packageElement.put("visibility", "public");
 		packageElement.put("templateParameterId", nullNode);
@@ -228,16 +231,16 @@ public class MMSUtil {
 		return classElement;
 	}
 
-	public ObjectNode buildJobElementJSON(String id, String ownerID,String name,String command,String schedule) {
+	public ObjectNode buildJobElementJSON(String id, String associatedElementID,String name,String command,String schedule, String ownerID,String arguments) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = buildClassElement(id,ownerID,name);
 		
 		elements.add(buildPropertyNode(id,"command",command));
-		elements.add(buildPropertyNode(id,"associatedElementID",ownerID));
+		elements.add(buildPropertyNode(id,"associatedElementID",associatedElementID));
 		elements.add(buildPropertyNode(id,"schedule",schedule));
-		elements.add(buildPropertyNode(id,"arguments","tempValue,tempValue2"));
+		elements.add(buildPropertyNode(id,"arguments",arguments));
 		
 		payload.put("elements",elements);
 		payload.put("source","pma");
@@ -479,11 +482,11 @@ public class MMSUtil {
 	// finds all the job elements in a project
 	public String getJobElements(String server,String projectID,String refID)
 	{
-		// find package
-		// look for command part property
-		// put owner of part property in a list. Owner should be the job element
-		// return the list.
-		return null;
+		// find all elements inside the jobs bin package
+		// recursive get job sysmlid
+		String jsonString = get(server, projectID,refID, "jobs_bin_"+projectID, true);
+		PMAUtil pmaUtil = new PMAUtil();
+		return pmaUtil.generateJobArrayJSON(jsonString);
 	}
 	
 	/**
@@ -497,7 +500,9 @@ public class MMSUtil {
 	 */
 	public String getJobElement(String server, String project,String refID,String jobElementID)
 	{
-		return get(server,project,refID,jobElementID,true);
+		String jsonString = get(server,project,refID,jobElementID,true); //should contain job element information from mms
+		PMAUtil pmaUtil = new PMAUtil();
+		return pmaUtil.generateJobArrayJSON(jsonString);
 	}
 	
 	
@@ -507,42 +512,48 @@ public class MMSUtil {
 		
 		String jsonString = get(server, project,refID, jobElementID, true);
 		
-		ObjectMapper mapper = new ObjectMapper();
-		ArrayNode instanceElements = mapper.createArrayNode();
+		PMAUtil pmaUtil = new PMAUtil();
+		return pmaUtil.generateJobInstanceArrayJSON(jsonString);
+	}
+	
+    public String createId() {
+    	String id = "PMA_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString();
+    	return id;
+    }
+	
+	/**
+	 *  Checks if job package exists on server. True if package exists. 
+	 *  Job package should have the id jobs_bin_PACKAGEID
+	 * @param server mmsServer
+	 * @param projectID md project ID
+	 * @param refID workspaceID
+	 * @return
+	 */
+	public Boolean jobPackageExists(String server,String projectID,String refID)
+	{
+		// finds a package with id projectID_job
+		String packageID = "jobs_bin_"+projectID;
+		String jsonReturnString = this.get(server,projectID,refID,packageID,true);
+		System.out.println("JSON RETURN STRING: "+jsonReturnString);
 		
 		try {
-			JsonNode fullJson = mapper.readTree(jsonString);
-			JsonNode elements = fullJson.get("elements");
-			if (elements != null)  // elements will be null if the json returned with error
-			{
-				for (JsonNode element : elements) {
-					// Find the ID of the job instance element.
-					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"jobStatus\"")))
-					{
-						String jobInstanceId = element.get("ownerId").toString().replace("\"", "");// owner of the instance part properties
-						instanceElements.add(mapper.createObjectNode().put("id", jobInstanceId));
-					}
-				}
-				return instanceElements.toString();
-			}
-			else
-			{
-				return jsonString+" MMS"; // Returns status from mms. Should be an error if the elements were null.
-			}
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode fullJson = mapper.readTree(jsonReturnString);
+		JsonNode elements = fullJson.get("elements");
+		if (elements == null)  // elements will be null if the json returned with error
+		{
+			return false;
+		}
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return false;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return false;
 		}
-		return "Element not found";
-	}
-	
-	public String createId() {
-		String id = "PMA_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString();
-		return id;
-
+		return true;
 	}
 	
 	public static void main(String[] args) 
@@ -550,17 +561,26 @@ public class MMSUtil {
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		String sysmlID = "PMA_"+timestamp.getTime();
 		String ownerID = "PROJECT-921084a3-e465-465f-944b-61194213043e_pm";
-		String token = "TICKET_cbdbba79ae146a419938fb76f250bb89a9953174";
-		String server = "opencae-test.jpl.nasa.gov";
+		String token = "TICKET_966561726f35a382c76fa36d3a0a53b471f2db0b";
+		String server = "opencae-int.jpl.nasa.gov";
 		String projectID = "PROJECT-921084a3-e465-465f-944b-61194213043e";
 		String refID = "master";
 		MMSUtil mmsUtil = new MMSUtil(token);
 
 		
-//		ObjectNode on = mmsUtil.buildPackageJSON(sysmlID,ownerID);
-//		System.out.println(on.toString());
-//		mmsUtil.post(server, projectID, token, on);
+		ObjectNode on = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm");
+		System.out.println(on.toString());
+		mmsUtil.post(server, projectID, token, on);
 		
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println("Package: "+mmsUtil.jobPackageExists(server, projectID, refID));
+//		System.out.println(mmsUtil.get(server, projectID, refID, "jobs_bin_PROJECT-921084a3-e465-465f-944b-61194213043e", true));
 		
 //		String jobElementID = "PMA_"+timestamp.getTime();
 //		ObjectNode on2 = mmsUtil.buildJobElementJSON("PMA_"+timestamp.getTime(),ownerID,"jobEle");
@@ -572,13 +592,13 @@ public class MMSUtil {
 //		System.out.println(on3.toString());
 //		mmsUtil.post(server, projectID,refID, on3);
 		
-		String elementID = "PMA_1491324925592";
-		String buildNumber = "55";
-		String propertyName = "jobStatus";
-		String newPropertyValue = "completed";
-		
-		System.out.println(mmsUtil.get(server, projectID, refID, elementID, true));
-//		System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
+//		String elementID = "PMA_1491324925592";
+//		String buildNumber = "55";
+//		String propertyName = "jobStatus";
+//		String newPropertyValue = "completed";
+//		
+//		System.out.println(mmsUtil.get(server, projectID, refID, elementID, true));
+////		System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
 		
 	}
 }
