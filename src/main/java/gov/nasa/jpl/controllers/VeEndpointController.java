@@ -236,7 +236,14 @@ public class VeEndpointController {
 		}
 	}
 	
-	// This will run the job on jenkins and create an instance of a job
+	/**
+	 * This will run the job on jenkins and create an instance of a job
+	 * @param projectID
+	 * @param refID
+	 * @param jobSysmlID
+	 * @param jobInstance
+	 * @return
+	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.POST)
 	@ResponseBody
 	public String runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final JobInstanceFromVE jobInstance) {
