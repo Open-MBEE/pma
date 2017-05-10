@@ -100,7 +100,7 @@ public class VeEndpointController {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, @RequestParam String alf_ticket, @RequestParam String mmsServer) {
+	public ResponseEntity<String> getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, @RequestParam String alf_ticket, @RequestParam String mmsServer) {
 		
 		logger.info("Get Job Instances was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
@@ -139,9 +139,9 @@ public class VeEndpointController {
 	 * @param jobjobFromVE 
 	 * @return
 	 */
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.POST)
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public String createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromVE jobFromVE) {
+	public ResponseEntity<String> createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromVE jobFromVE) {
 		
 		logger.info("Create Job was called");
 		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Job Name: "
@@ -159,6 +159,8 @@ public class VeEndpointController {
 		String schedule = jobFromVE.getSchedule();
 		String command = jobFromVE.getCommand();
 		String arguments = Arrays.toString(jobFromVE.getArguments());
+		
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		
@@ -208,14 +210,29 @@ public class VeEndpointController {
 	        if(jobCreationResponse.equals("HTTP/1.1 200 OK"))
 	        {
 	        	logger.info("Return message: "+jobCreationResponse + " " + jobElementID);
-	        	return jobCreationResponse + " " + jobElementID;
+//	        	return jobCreationResponse + " " + jobElementID; //job element created on mms and job is created on jenkins
+	    		
+	    		String response = mmsUtil.getJobElement(mmsServer, projectID, refID, jobElementID);
+	    		status = HttpStatus.OK;
+	        	return new ResponseEntity<String>(response,status);
 	        }
-	        logger.info("Return message: "+jobCreationResponse +" Jenkins");
-	        return jobCreationResponse +" Jenkins";
+	        
+	        mmsUtil.delete(mmsServer, projectID, refID, jobElementID); // Delete the job element since the job wasn't created on Jenkins.
+	        
+	        logger.info("Return message: "+jobCreationResponse +" Jenkins"); // job not created on jenkins 
+	        System.out.println("jobCreationResponse");
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", jobCreationResponse+" Jenkins");
+    		jobCreationResponse = responseJSON.toString();
+	        return new ResponseEntity<String>(jobCreationResponse,status);
 		}
 		else {
-			logger.info("Return message: "+elementCreationResponse+" MMS");
-			return elementCreationResponse+" MMS";
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", elementCreationResponse+" MMS");
+    		elementCreationResponse = responseJSON.toString();
+    		System.out.println("Return message: "+elementCreationResponse);
+			logger.info("Return message: "+elementCreationResponse+" MMS"); // job element not created on mms. 
+			return new ResponseEntity<String>(elementCreationResponse,status);
 		}
 	}
 	

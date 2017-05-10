@@ -41,43 +41,43 @@ public class VeEndpointControllerTests {
         job.setSchedule("");
     }
 
-    @Test
-    public void testCreateDeleteJob() {
-        System.out.println("\n----------------------- [ VeEndpointController CreateDeleteJob ] -----------------------\n");
-        if (!isConfigured) {
-            configVeEndpointController();
-        }
-        String elementId = veEndpointController.createJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", job);
-        assert (!elementId.contains("Unauthorized MMS"));
-        assert (elementId.contains("PMA"));
-        elementId = elementId.replace("HTTP/1.1 200 OK ", "");
-        String output = veEndpointController.deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", elementId, alfTicket, testServer);
-        assert (output.contains("200 OK"));
-    }
-
-    @Test
-    public void testRunJob() {
-        System.out.println("\n----------------------- [ VeEndpointController RunJob ] -----------------------\n");
-        if (!isConfigured) {
-            configVeEndpointController();
-        }
-
-        JobInstanceFromVE jobInstanceFromVE = new JobInstanceFromVE();
-        jobInstanceFromVE.setMmsServer(testServer);
-        jobInstanceFromVE.setArguments(null);
-        jobInstanceFromVE.setAlfrescoToken(alfTicket);
-
-        String elementId = veEndpointController.createJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", job);
-        assert (!elementId.contains("Unauthorized MMS"));
-        assert (elementId.contains("PMA"));
-        elementId = elementId.replace("HTTP/1.1 200 OK ", "");
-        String output = veEndpointController.runJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", elementId, jobInstanceFromVE);
-        System.out.println("\n------------------------ [ Run Job ] -------------------------\n");
-        System.out.println(output);
-        System.out.println("\n--------------------------------------------------------------\n");
-        output = veEndpointController.deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", elementId, alfTicket, testServer);
-        System.out.println("\n----------------------- [ Delete Job ] -----------------------\n");
-        System.out.println(output);
-        System.out.println("\n--------------------------------------------------------------\n");
-    }
+//    @Test
+//    public void testCreateDeleteJob() {
+//        System.out.println("\n----------------------- [ VeEndpointController CreateDeleteJob ] -----------------------\n");
+//        if (!isConfigured) {
+//            configVeEndpointController();
+//        }
+//        String elementId = veEndpointController.createJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", job);
+//        assert (!elementId.contains("Unauthorized MMS"));
+//        assert (elementId.contains("PMA"));
+//        elementId = elementId.replace("HTTP/1.1 200 OK ", "");
+//        String output = veEndpointController.deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", elementId, alfTicket, testServer);
+//        assert (output.contains("200 OK"));
+//    }
+//
+//    @Test
+//    public void testRunJob() {
+//        System.out.println("\n----------------------- [ VeEndpointController RunJob ] -----------------------\n");
+//        if (!isConfigured) {
+//            configVeEndpointController();
+//        }
+//
+//        JobInstanceFromVE jobInstanceFromVE = new JobInstanceFromVE();
+//        jobInstanceFromVE.setMmsServer(testServer);
+//        jobInstanceFromVE.setArguments(null);
+//        jobInstanceFromVE.setAlfrescoToken(alfTicket);
+//
+//        String elementId = veEndpointController.createJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", job);
+//        assert (!elementId.contains("Unauthorized MMS"));
+//        assert (elementId.contains("PMA"));
+//        elementId = elementId.replace("HTTP/1.1 200 OK ", "");
+//        String output = veEndpointController.runJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", elementId, jobInstanceFromVE);
+//        System.out.println("\n------------------------ [ Run Job ] -------------------------\n");
+//        System.out.println(output);
+//        System.out.println("\n--------------------------------------------------------------\n");
+//        output = veEndpointController.deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", elementId, alfTicket, testServer);
+//        System.out.println("\n----------------------- [ Delete Job ] -----------------------\n");
+//        System.out.println(output);
+//        System.out.println("\n--------------------------------------------------------------\n");
+//    }
 }

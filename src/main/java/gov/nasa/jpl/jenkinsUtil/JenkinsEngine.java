@@ -540,9 +540,11 @@ public class JenkinsEngine implements ExecutionEngine {
 			EntityUtils.consume(response.getEntity());
 			return response.getStatusLine().toString();
 		} catch (Exception e) {
-			e.printStackTrace();
+//			e.printStackTrace();
+			logger.error(e.toString()); // job element not created on mms. 
+			System.out.println(e.toString());
+			return(e.toString());
 		}
-		return "Failed to create job";
 	}
 
 	/**
