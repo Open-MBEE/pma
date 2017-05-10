@@ -1,45 +1,22 @@
 package gov.nasa.jpl.controllers;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.tomcat.jdbc.pool.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nasa.jpl.dbUtil.DBUtil;
-import gov.nasa.jpl.mmsUtil.MMSUtil;
 
 @Controller
 public class ConfigUpdateController {
@@ -68,7 +45,12 @@ public class ConfigUpdateController {
 		return new ResponseEntity<>("Not Found", httpStatus);
 	}
 	
-
+	/**
+	 * Used for updating the credentials used to interact with Jenkins.
+	 * Expects a json with username,password,jenkins url, and jenkins agent.
+	 * @param bodyContent
+	 * @return
+	 */
 	@RequestMapping(value = "/dbUpdate", method = RequestMethod.POST)
 	@ResponseBody
 	public String dbUpdate(@RequestBody String bodyContent) 

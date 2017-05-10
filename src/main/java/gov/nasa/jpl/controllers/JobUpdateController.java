@@ -25,7 +25,20 @@ import gov.nasa.jpl.mmsUtil.MMSUtil;
 public class JobUpdateController 
 {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-		
+	
+	/**
+	 * Used for updating part property values of Job instance elements. 
+	 * 
+	 * @param projectID Magicdraw Project ID
+	 * @param refID Workspace ID
+	 * @param jobID Job element ID
+	 * @param buildNumber Jenkins build number
+	 * @param propertyName Part property name
+	 * @param value New value of part property
+	 * @param mmsServer 
+	 * @param bodyContent Alfresco ticket JSON
+	 * @return
+	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{buildNumber}/{propertyName}/{value}", method = RequestMethod.POST)
 	@ResponseBody
 	public String updateJobInstanceProperty(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String buildNumber,@PathVariable String propertyName,@PathVariable String value,@RequestParam String mmsServer,@RequestBody String bodyContent) 

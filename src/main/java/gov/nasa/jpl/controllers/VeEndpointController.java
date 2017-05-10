@@ -301,7 +301,16 @@ public class VeEndpointController {
 
 	}
 	
-	
+	/**
+	 * Deletes job on Jenkins and Job element on MMS
+	 * 
+	 * @param projectID
+	 * @param refID
+	 * @param jobSysmlID
+	 * @param alf_ticket
+	 * @param mmsServer
+	 * @return
+	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE)
 	@ResponseBody
 	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
