@@ -1,3 +1,7 @@
+/**
+ * Utility class for creating JSON PMA returns.
+ * @author hang
+ */
 package gov.nasa.jpl.pmaUtil;
 
 import java.io.IOException;
@@ -16,13 +20,6 @@ public class PMAUtil
 	public PMAUtil()
 	{
 		
-	}
-	
-	public void createJobsJSON()
-	{
-		ObjectMapper mapper = new ObjectMapper();
-		
-		ArrayNode jobs = mapper.createArrayNode();
 	}
 	
 	/**
@@ -46,21 +43,11 @@ public class PMAUtil
 		
 	}
 	
-	public ObjectNode createJobJSON(String id, String name, String command, String associatedElementID,String schedule, String arguments)
-	{
-		ObjectMapper mapper = new ObjectMapper();
-		
-		ObjectNode jobElement = mapper.createObjectNode();
-		jobElement.put("id",id);
-		jobElement.put("name",name);
-		jobElement.put("command",command);
-		jobElement.put("associatedElementID",associatedElementID);
-		jobElement.put("schedule",schedule);
-		jobElement.put("arguments",arguments);
-		return jobElement;
-		
-	}
-	
+	/**
+	 * 
+	 * @param jobInstancesMap
+	 * @return
+	 */
 	public ObjectNode createJobInstanceJSON(Map<String,String> jobInstancesMap)
 	{
 		ObjectMapper mapper = new ObjectMapper();
@@ -71,19 +58,6 @@ public class PMAUtil
 		jobInstanceElement.put("jenkinsLog",jobInstancesMap.get("jenkinsLog"));
 		jobInstanceElement.put("created",jobInstancesMap.get("created"));
 		jobInstanceElement.put("completed",jobInstancesMap.get("completed"));
-		return jobInstanceElement;
-	}
-	
-	public ObjectNode createJobInstanceJSON(String id, String jobStatus,String jenkinsLog,String created,String completed)
-	{
-		ObjectMapper mapper = new ObjectMapper();
-		
-		ObjectNode jobInstanceElement = mapper.createObjectNode();
-		jobInstanceElement.put("id",id);
-		jobInstanceElement.put("jobStatus",jobStatus);
-		jobInstanceElement.put("jenkinsLog",jenkinsLog);
-		jobInstanceElement.put("created",created);
-		jobInstanceElement.put("completed",completed);
 		return jobInstanceElement;
 	}
 	

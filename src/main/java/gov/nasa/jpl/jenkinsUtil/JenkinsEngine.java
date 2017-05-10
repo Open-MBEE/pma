@@ -316,13 +316,22 @@ public class JenkinsEngine implements ExecutionEngine {
 
 			// Will throw an error if the execution fails from either incorrect
 			// setup or if the jenkinsClient has not been instantiated.
-		} catch (IOException e) {
+		} 
+		catch(java.net.UnknownHostException e)
+		{
+			return e.toString();
+		}
+		catch (IOException e) {
 			System.out.println(
 					"JenkinsEngine.execute(): response \"" + entityString + "\" failed to parse as a JSONObject");
-			e.printStackTrace();
+			System.out.println(e.toString());
+			return e.toString();
+//			e.printStackTrace();
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+//			e.printStackTrace();
+			System.out.println(e.toString());
+			return e.toString();
 		}
 
 		return null;
@@ -559,31 +568,35 @@ public class JenkinsEngine implements ExecutionEngine {
 		JSONObject json = null;
 
 		String allJobResponse = getAllJobs();
+		System.out.println("ALLJOBRESPONSE: "+allJobResponse);
+		if (allJobResponse != null) {
+			try {
+				JSONObject allJobs = new JSONObject(allJobResponse);
 
-		try {
-			JSONObject allJobs = new JSONObject(allJobResponse);
-
-			JSONArray jobs = allJobs.optJSONArray("jobs");
-			if (jobs == null || jobs.length() <= 0)
-				return null;
-			for (int i = 0; i < jobs.length(); ++i) {
-				JSONObject job = jobs.optJSONObject(i);
-				if (job == null)
-					continue;
-				String name = job.optString("name");
-				if ((name != null && !name.isEmpty()) && name.equals(jobName)) {
-					json = job;
-					break;
+				JSONArray jobs = allJobs.optJSONArray("jobs");
+				if (jobs == null || jobs.length() <= 0)
+					return null;
+				for (int i = 0; i < jobs.length(); ++i) {
+					JSONObject job = jobs.optJSONObject(i);
+					if (job == null)
+						continue;
+					String name = job.optString("name");
+					if ((name != null && !name.isEmpty()) && name.equals(jobName)) {
+						json = job;
+						break;
+					}
 				}
+				if (json != null) {
+					return json.toString();
+				}
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				// e.printStackTrace();
+
+				System.out.println(e.toString());
 			}
-			if (json != null) {
-				return json.toString();
-			}
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		return "Job Not Found";
+		return allJobResponse;
 
 	}
 
@@ -598,6 +611,10 @@ public class JenkinsEngine implements ExecutionEngine {
 									// error
 		if (allJobs != null) {
 			return allJobs;
+		}
+		if(jsonResponse==null)
+		{
+			return null;
 		}
 		return jsonResponse.toString();
 	}

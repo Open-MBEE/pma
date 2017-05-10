@@ -280,16 +280,22 @@ public class VeEndpointController {
     	        
     			System.out.println("Job run response: "+runResponse);
     			logger.info("Run job Jenkins response: "+runResponse);
-    			return runResponse + " Jenkins";
+    			System.out.println("JOBRUN: "+runResponse);
+    			if(runResponse.equals("HTTP/1.1 201 Created"))
+    			{
+    				return "success";
+    			}
+    			mmsUtil.delete(mmsServer, projectID, refID, jobInstanceElementID);
+    			return runResponse + " Jenkins"; // jenkins response when running job
+    			
     		}
     		logger.info("MMS Element creation response: "+elementCreationResponse);
-    		return elementCreationResponse +" MMS";
+    		return elementCreationResponse +" MMS"; // mms issue when creating job instance
     	}
     	else
     	{
-    		jobResponse = "Job not found on Jenkins";
     		logger.info(jobResponse);
-    		return jobResponse;
+    		return jobResponse; 
     	}
   
 
