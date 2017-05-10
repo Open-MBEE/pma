@@ -23,3 +23,9 @@ java -jar pma.jar &
 A log file will be generated when pma starts. File will be called pma.log
 
 The endpoint /dbUpdate will need to be called to pass in jenkins credentials. 
+
+#Tests
+To run spring-boot and junit tests type into the command line:
+```bash
+mvn test
+```
