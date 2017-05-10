@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
@@ -28,6 +29,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nasa.jpl.pmaUtil.PMAUtil;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
 
 
 public class MMSUtil {
@@ -600,5 +603,41 @@ public class MMSUtil {
 //		System.out.println(mmsUtil.get(server, projectID, refID, elementID, true));
 ////		System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
 		
+	}
+
+	public String getAlfrescoToken(String server, String username, String password) {
+		server = server.replace("https://", "");
+		server = server.replace("/", "");
+		HttpClient httpClient = HttpClientBuilder.create().build();
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		ObjectNode payload = mapper.createObjectNode();
+
+		payload.put("username",username);
+		payload.put("password",password);
+
+		try {
+
+			String url = "https://"+server+"/alfresco/s/api/login";
+			System.out.println("URL: "+url);
+			HttpPost request = new HttpPost(url);
+			StringEntity params = new StringEntity(payload.toString());
+			request.addHeader("content-type", "application/json");
+			request.setEntity(params);
+			HttpResponse response = httpClient.execute(request);
+			HttpEntity entity = response.getEntity();
+
+			JSONObject result = new JSONObject(EntityUtils.toString(entity)); //Convert String to JSON Object
+
+			return result.getJSONObject("data").getString("ticket");
+		}
+		catch (java.net.UnknownHostException e) {
+			System.out.println("Unknown Host Exception");
+		}catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		return "Exception Occurred";
 	}
 }
