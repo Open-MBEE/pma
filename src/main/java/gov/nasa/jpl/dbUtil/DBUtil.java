@@ -115,8 +115,10 @@ public class DBUtil
 		JdbcTemplate jdbcTemplate = createJdbcTemplate();
 
 		String sql = "SELECT * FROM CREDENTIALS";
+		try
+		{
 		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
-		
+
 		if(!list.isEmpty())
 		{
 			/*
@@ -139,6 +141,10 @@ public class DBUtil
 				this.setJenkinsAgent((String) valueList.get(3));
 			}
 			
+			}
+		} catch (Exception e) {
+			logger.info(e.toString());
+			e.printStackTrace();
 		}
 	}
 }
