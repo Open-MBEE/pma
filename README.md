@@ -12,7 +12,7 @@ mvn spring-boot:run
 To package the project
 
 ```bash
-mvn package
+mvn package -Dmaven.test.skip=true
 ```
 The resulting files will be located inside of the target directory.
 
