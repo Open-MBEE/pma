@@ -332,11 +332,12 @@ public class MMSUtil {
 		} 
 		catch (java.net.UnknownHostException e) {
 		      System.out.println("Unknown Host Exception");
+		      return (e.toString());
 		}catch (IOException e) 
 		{
 			e.printStackTrace();
+			return (e.toString());
 		}
-		return "Exception Occured"; 
 	}
 	
 	/**

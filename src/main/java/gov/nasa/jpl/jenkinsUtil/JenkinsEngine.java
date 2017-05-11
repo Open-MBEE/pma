@@ -568,7 +568,7 @@ public class JenkinsEngine implements ExecutionEngine {
 		JSONObject json = null;
 
 		String allJobResponse = getAllJobs();
-		System.out.println("ALLJOBRESPONSE: "+allJobResponse);
+		System.out.println("ALL JOB RESPONSE: "+allJobResponse);
 		if (allJobResponse != null) {
 			try {
 				JSONObject allJobs = new JSONObject(allJobResponse);
@@ -589,11 +589,16 @@ public class JenkinsEngine implements ExecutionEngine {
 				if (json != null) {
 					return json.toString();
 				}
+				else
+				{
+					return "Job not found on Jenkins";
+				}
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
-				// e.printStackTrace();
-				logger.error("Job not found on Jenkins: "+e.toString()); // job not found on jenkins
-				System.out.println("Job not found on Jenkins: "+e.toString());
+				 e.printStackTrace();
+				logger.error("Jenkins error: "+e.toString()); // job not found on jenkins
+				System.out.println("Jenkins error:: "+e.toString());
+//				return e.toString();
 			}
 		}
 		return allJobResponse;

@@ -27,6 +27,7 @@ import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 import gov.nasa.jpl.model.JobFromClient;
 import gov.nasa.jpl.model.JobInstanceFromClient;
+import gov.nasa.jpl.pmaUtil.PMAUtil;
 
 @Controller
 public class ClientEndpointController {
@@ -66,12 +67,14 @@ public class ClientEndpointController {
 		logger.info("Get Job was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
 		
+		PMAUtil pmaUtil = new PMAUtil();
+		
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
     	String jobResponse = je.getJob(jobSysmlID);
     	System.out.println("Job Response: "+jobResponse);
     	HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-    	if(!jobResponse.equals("Job Not Found"))
+    	if(pmaUtil.isJSON(jobResponse)) // The job response will be a json if the job exists.
     	{
     		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
     		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
@@ -80,9 +83,13 @@ public class ClientEndpointController {
     	{
     		ObjectMapper mapper = new ObjectMapper();
     		ObjectNode jobJSON = mapper.createObjectNode();
-    		jobJSON.put("message", "Job not found on Jenkins");
+    		jobJSON.put("message", jobResponse);
     		jobResponse = jobJSON.toString();
-    		status = HttpStatus.NOT_FOUND;
+    		
+    		if(!jobResponse.contains("Exception"))
+    		{
+    			status = HttpStatus.NOT_FOUND;
+    		}
     	}
     	logger.info("Get Job Response: "+jobResponse); // Jenkins issue when checking if job exists
     	return new ResponseEntity<String>(jobResponse,status);
@@ -108,7 +115,8 @@ public class ClientEndpointController {
     	String jobResponse = je.getJob(jobSysmlID);
     	System.out.println("Job Response: "+jobResponse);
     	HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-    	if(!jobResponse.equals("Job Not Found"))
+    	PMAUtil pmaUtil = new PMAUtil();
+    	if(pmaUtil.isJSON(jobResponse))
     	{
     		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
     		
@@ -118,9 +126,13 @@ public class ClientEndpointController {
     	{
     		ObjectMapper mapper = new ObjectMapper();
     		ObjectNode jobJSON = mapper.createObjectNode();
-    		jobJSON.put("message", "Job not found on Jenkins");
+    		jobJSON.put("message", jobResponse);
     		jobResponse = jobJSON.toString();
-    		status = HttpStatus.NOT_FOUND;
+    		
+    		if(!jobResponse.contains("Exception"))
+    		{
+    			status = HttpStatus.NOT_FOUND;
+    		}
     	}
     	
       	logger.info("Get Job Response: "+jobResponse); // Jenkins issue when checking if job exists
@@ -335,6 +347,8 @@ public class ClientEndpointController {
 		logger.info("Delete Job was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
 		
+		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
 		// Delete job element on MMS.
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
@@ -358,6 +372,9 @@ public class ClientEndpointController {
     		logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
 			return jenkinsDeleteResponse+" Jenkins";
 		}
+    	
+    	status = HttpStatus.OK; 
+    	
     	logger.info("Delete Succesfull");
 		return "HTTP/1.1 200 OK";
 	}
