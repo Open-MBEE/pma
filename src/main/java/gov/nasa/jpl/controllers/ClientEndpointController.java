@@ -25,11 +25,12 @@ import gov.nasa.jpl.dbUtil.DBUtil;
 import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
-import gov.nasa.jpl.model.JobFromVE;
-import gov.nasa.jpl.model.JobInstanceFromVE;
+import gov.nasa.jpl.model.JobFromClient;
+import gov.nasa.jpl.model.JobInstanceFromClient;
+import gov.nasa.jpl.pmaUtil.PMAUtil;
 
 @Controller
-public class VeEndpointController {
+public class ClientEndpointController {
 	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
@@ -41,7 +42,7 @@ public class VeEndpointController {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public String getJobs(@PathVariable String projectID, @PathVariable String refID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
+	public ResponseEntity<String> getJobs(@PathVariable String projectID, @PathVariable String refID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		
 		logger.info("Get Jobs was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
@@ -66,27 +67,31 @@ public class VeEndpointController {
 		logger.info("Get Job was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
 		
+		PMAUtil pmaUtil = new PMAUtil();
+		
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
     	String jobResponse = je.getJob(jobSysmlID);
     	System.out.println("Job Response: "+jobResponse);
     	HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-    	if(!jobResponse.equals("Job Not Found"))
+    	if(pmaUtil.isJSON(jobResponse)) // The job response will be a json if the job exists.
     	{
     		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-    		jobResponse = mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
-    		status = HttpStatus.OK;
+    		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
     	}
     	else
     	{
     		ObjectMapper mapper = new ObjectMapper();
     		ObjectNode jobJSON = mapper.createObjectNode();
-    		jobJSON.put("message", "Job not found on Jenkins");
+    		jobJSON.put("message", jobResponse);
     		jobResponse = jobJSON.toString();
-    		status = HttpStatus.NOT_FOUND;
-    				
+    		
+    		if(!jobResponse.contains("Exception"))
+    		{
+    			status = HttpStatus.NOT_FOUND;
+    		}
     	}
-    	logger.info("Get Job Response: "+jobResponse);
+    	logger.info("Get Job Response: "+jobResponse); // Jenkins issue when checking if job exists
     	return new ResponseEntity<String>(jobResponse,status);
 		
 	}
@@ -100,7 +105,7 @@ public class VeEndpointController {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, @RequestParam String alf_ticket, @RequestParam String mmsServer) {
+	public ResponseEntity<String> getJobInstances(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID, @RequestParam String alf_ticket, @RequestParam String mmsServer) {
 		
 		logger.info("Get Job Instances was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
@@ -110,23 +115,27 @@ public class VeEndpointController {
     	String jobResponse = je.getJob(jobSysmlID);
     	System.out.println("Job Response: "+jobResponse);
     	HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-    	if(!jobResponse.equals("Job Not Found"))
+    	PMAUtil pmaUtil = new PMAUtil();
+    	if(pmaUtil.isJSON(jobResponse))
     	{
     		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
     		
-    		jobResponse = mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
-    		status = HttpStatus.OK;
+    		return mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
     	}
     	else
     	{
     		ObjectMapper mapper = new ObjectMapper();
     		ObjectNode jobJSON = mapper.createObjectNode();
-    		jobJSON.put("message", "Job not found on Jenkins");
+    		jobJSON.put("message", jobResponse);
     		jobResponse = jobJSON.toString();
-    		status = HttpStatus.NOT_FOUND;
+    		
+    		if(!jobResponse.contains("Exception"))
+    		{
+    			status = HttpStatus.NOT_FOUND;
+    		}
     	}
     	
-      	logger.info("Get Job Response: "+jobResponse);
+      	logger.info("Get Job Response: "+jobResponse); // Jenkins issue when checking if job exists
     	return new ResponseEntity<String>(jobResponse,status);
 
 	}
@@ -139,9 +148,9 @@ public class VeEndpointController {
 	 * @param jobjobFromVE 
 	 * @return
 	 */
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.POST)
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public String createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromVE jobFromVE) {
+	public ResponseEntity<String> createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromClient jobFromVE) {
 		
 		logger.info("Create Job was called");
 		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Job Name: "
@@ -159,6 +168,8 @@ public class VeEndpointController {
 		String schedule = jobFromVE.getSchedule();
 		String command = jobFromVE.getCommand();
 		String arguments = Arrays.toString(jobFromVE.getArguments());
+		
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		
@@ -208,27 +219,49 @@ public class VeEndpointController {
 	        if(jobCreationResponse.equals("HTTP/1.1 200 OK"))
 	        {
 	        	logger.info("Return message: "+jobCreationResponse + " " + jobElementID);
-	        	return jobCreationResponse + " " + jobElementID;
+	    		
+	        	return mmsUtil.getJobElement(mmsServer, projectID, refID, jobElementID);
 	        }
-	        logger.info("Return message: "+jobCreationResponse +" Jenkins");
-	        return jobCreationResponse +" Jenkins";
+	        
+	        mmsUtil.delete(mmsServer, projectID, refID, jobElementID); // Delete the job element since the job wasn't created on Jenkins.
+	        
+	        logger.info("Return message: "+jobCreationResponse +" Jenkins"); // job not created on jenkins 
+	        System.out.println("jobCreationResponse");
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", jobCreationResponse+" Jenkins");
+    		jobCreationResponse = responseJSON.toString();
+	        return new ResponseEntity<String>(jobCreationResponse,status);
 		}
 		else {
-			logger.info("Return message: "+elementCreationResponse+" MMS");
-			return elementCreationResponse+" MMS";
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", elementCreationResponse+" MMS");
+    		elementCreationResponse = responseJSON.toString();
+    		System.out.println("Return message: "+elementCreationResponse);
+			logger.info("Return message: "+elementCreationResponse+" MMS"); // job element not created on mms. 
+			return new ResponseEntity<String>(elementCreationResponse,status);
 		}
 	}
 	
-	// This will run the job on jenkins and create an instance of a job
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.POST)
+	/**
+	 * This will run the job on jenkins and create an instance of a job
+	 * @param projectID
+	 * @param refID
+	 * @param jobSysmlID
+	 * @param jobInstance
+	 * @return
+	 */
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}/instances", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public String runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final JobInstanceFromVE jobInstance) {
+	public ResponseEntity<String> runJob(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobSysmlID, @RequestBody final JobInstanceFromClient jobInstance) {
 		
 		logger.info("Run job was called");
 		
 		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Arguments: "
 				+ jobInstance.getArguments() + "\n" + "MMS Server: " + jobInstance.getMmsServer() + "\n"
 				+ "Alfresco Token: " + jobInstance.getAlfrescoToken());
+		
+		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
@@ -263,30 +296,59 @@ public class VeEndpointController {
     	        
     			System.out.println("Job run response: "+runResponse);
     			logger.info("Run job Jenkins response: "+runResponse);
-    			return runResponse + " Jenkins";
+    			System.out.println("JOBRUN: "+runResponse);
+    			if(runResponse.equals("HTTP/1.1 201 Created"))
+    			{
+    				status = HttpStatus.OK;
+    				
+    				String jobInstanceJSON = mmsUtil.getJobInstanceElement(mmsServer, projectID, refID, jobInstanceElementID);
+    				
+    		        return new ResponseEntity<String>(jobInstanceJSON,status);
+    			}
+    			mmsUtil.delete(mmsServer, projectID, refID, jobInstanceElementID);
+	    		ObjectNode responseJSON = mapper.createObjectNode();
+	    		responseJSON.put("message", runResponse + " Jenkins"); // jenkins error when running job
+	    		runResponse = responseJSON.toString();
+		        return new ResponseEntity<String>(runResponse,status);
+    			
     		}
     		logger.info("MMS Element creation response: "+elementCreationResponse);
-    		return elementCreationResponse +" MMS";
+    		
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", elementCreationResponse + " MMS"); // mms issue when creating job instance
+    		elementCreationResponse = responseJSON.toString();
+	        return new ResponseEntity<String>(elementCreationResponse,status);
+	        
     	}
     	else
-    	{
-    		jobResponse = "Job not found on Jenkins";
-    		logger.info(jobResponse);
-    		return jobResponse;
+    	{	
+        	logger.info("Run Job Response: "+jobResponse); // Jenkins issue when checking if job exists.
+        	return new ResponseEntity<String>(jobResponse,status);
     	}
   
 
 	}
 	
-	
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE)
+	/**
+	 * Deletes job on Jenkins and Job element on MMS
+	 * 
+	 * @param projectID
+	 * @param refID
+	 * @param jobSysmlID
+	 * @param alf_ticket
+	 * @param mmsServer
+	 * @return
+	 */
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE, produces = "application/json")
 	@ResponseBody
-	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
+	public ResponseEntity<String> deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
 		
 		logger.info("Delete Job was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
 		
+		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
 		// Delete job element on MMS.
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
@@ -296,22 +358,38 @@ public class VeEndpointController {
 		
 		if(!elementDeleteResponse.equals("HTTP/1.1 200 OK"))
 		{
-			logger.info( "MMS Element delete response: "+elementDeleteResponse);
-			return elementDeleteResponse+" MMS";
+			
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", elementDeleteResponse + " MMS"); // mms issue when creating job instance
+	        return new ResponseEntity<String>(responseJSON.toString(),status);
+//			return elementDeleteResponse+" MMS";
 		}
 		
 		// delete job on jenkins
     	JenkinsEngine je = login();
     	String jenkinsDeleteResponse = je.deleteJob(jobSysmlID);
     	System.out.println("Jenkins delete response: "+jenkinsDeleteResponse);
-    	
+    	logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
     	if(!jenkinsDeleteResponse.equals("HTTP/1.1 302 Found"))
 		{
-    		logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
-			return jenkinsDeleteResponse+" Jenkins";
+			if (jenkinsDeleteResponse.equals("HTTP/1.1 404 Not Found")) 
+			{
+				status = HttpStatus.NOT_FOUND; 
+				jenkinsDeleteResponse="Job Not Found";
+			}
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", jenkinsDeleteResponse); 
+    		return new ResponseEntity<String>(responseJSON.toString(),status);
+//			return jenkinsDeleteResponse+" Jenkins";
 		}
+    	
+    	status = HttpStatus.OK; 
+    	
     	logger.info("Delete Succesfull");
-		return "HTTP/1.1 200 OK";
+		ObjectNode responseJSON = mapper.createObjectNode();
+		responseJSON.put("message", "Delete Succesfull"); 
+        return new ResponseEntity<String>(responseJSON.toString(),status);
+//		return "HTTP/1.1 200 OK";
 	}
 	
     public JenkinsEngine login()

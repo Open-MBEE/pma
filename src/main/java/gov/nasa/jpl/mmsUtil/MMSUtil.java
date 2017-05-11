@@ -9,9 +9,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.HttpResponse;
@@ -21,6 +18,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,8 +33,11 @@ import gov.nasa.jpl.pmaUtil.PMAUtil;
 
 
 public class MMSUtil {
+	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	String alfrescoToken = "";
-
+	
+	
 	public MMSUtil(String alfToken) {
 		alfrescoToken = alfToken;
 	}
@@ -298,11 +303,12 @@ public class MMSUtil {
 		} 
 		catch (java.net.UnknownHostException e) {
 		      System.out.println("Unknown Host Exception");
+		      return e.toString();
 		}catch (IOException e) 
 		{
 			e.printStackTrace();
+			return e.toString();
 		}
-		return "Exception Occured"; 
 	}
 	
 	/**
@@ -326,11 +332,12 @@ public class MMSUtil {
 		} 
 		catch (java.net.UnknownHostException e) {
 		      System.out.println("Unknown Host Exception");
+		      return (e.toString());
 		}catch (IOException e) 
 		{
 			e.printStackTrace();
+			return (e.toString());
 		}
-		return "Exception Occured"; 
 	}
 	
 	/**
@@ -371,15 +378,15 @@ public class MMSUtil {
 			
 		}
 		catch (java.net.UnknownHostException e) {
-		      System.out.println("Unknown Host Exception");
-		      return "MMS Unknown Host exception: "+e.toString();
+		      System.out.println("Unknown Host Exception During Get");
+		      return e.toString();
 		}
 		catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return e.toString();
 		}
 
-		return "Exception occured ";
 	}
 
 	
@@ -480,17 +487,43 @@ public class MMSUtil {
 	}
 	
 	// finds all the job elements in a project
-	public String getJobElements(String server,String projectID,String refID)
+	public ResponseEntity<String> getJobElements(String server,String projectID,String refID)
 	{
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+		String returnJSONString = "";
 		// find all elements inside the jobs bin package
 		// recursive get job sysmlid
 		String jsonString = get(server, projectID,refID, "jobs_bin_"+projectID, true);
+		
+		System.out.println("Get job elements string: "+jsonString);
+		
 		PMAUtil pmaUtil = new PMAUtil();
-		return pmaUtil.generateJobArrayJSON(jsonString);
+		if(isElementJSON(jsonString)) // It will be an error if the json string is not an element JSON.
+		{
+			System.out.println("is element json");
+			status = HttpStatus.OK;
+			return new ResponseEntity<String>(pmaUtil.generateJobArrayJSON(jsonString),status);
+		}
+		
+		if (pmaUtil.isJSON(jsonString)) 
+		{
+			returnJSONString = jsonString;
+		} 
+		else 
+		{
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode returnJSON = mapper.createObjectNode();
+			returnJSON.put("message", jsonString);
+			returnJSONString = returnJSON.toString();
+		}
+		
+		logger.info("Get Job element return JSON: "+returnJSONString);
+		System.out.println("Get Job element return JSON: "+returnJSONString);
+		return new ResponseEntity<String>(returnJSONString,status); // Returning the error
 	}
 	
 	/**
-	 * Gets a job element from MMS. Recursively gets the element to include all the part properties and job instances.
+	 * Gets a job element from MMS. Recursively gets the element to include all the part properties. Returns the element as a job json.
 	 * 
 	 * @param server mms server
 	 * @param project magic draw project ID
@@ -498,22 +531,80 @@ public class MMSUtil {
 	 * @param jobElementID element ID of job. 
 	 * @return
 	 */
-	public String getJobElement(String server, String project,String refID,String jobElementID)
+	public ResponseEntity<String> getJobElement(String server, String project,String refID,String jobElementID)
 	{
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 		String jsonString = get(server,project,refID,jobElementID,true); //should contain job element information from mms
+		System.out.println("Get job elements string: "+jsonString);
+		String returnJSONString = "";
+		
 		PMAUtil pmaUtil = new PMAUtil();
-		return pmaUtil.generateJobArrayJSON(jsonString);
+		if(isElementJSON(jsonString)) // It will be an error if the json string is not an element JSON.
+		{
+			System.out.println("is element json");
+			status = HttpStatus.OK;
+			return new ResponseEntity<String>(pmaUtil.generateJobArrayJSON(jsonString),status);
+		}
+		
+		if (pmaUtil.isJSON(jsonString)) 
+		{
+			returnJSONString = jsonString;
+		} 
+		else 
+		{
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode returnJSON = mapper.createObjectNode();
+			returnJSON.put("message", jsonString);
+			returnJSONString = returnJSON.toString();
+		}
+		
+		logger.info("Get Job element return JSON: "+returnJSONString);
+		System.out.println("Get Job element return JSON: "+returnJSONString);
+		return new ResponseEntity<String>(returnJSONString,status); // Returning the error
 	}
 	
-	
-	public String getJobInstanceElements(String server, String project, String refID, String jobElementID)
+	public String getJobInstanceElement(String server, String project, String refID, String jobInstanceElementID)
 	{
 		// recursive get job sysmlid
 		
-		String jsonString = get(server, project,refID, jobElementID, true);
+		String jsonString = get(server, project,refID, jobInstanceElementID, true);
 		
 		PMAUtil pmaUtil = new PMAUtil();
 		return pmaUtil.generateJobInstanceArrayJSON(jsonString);
+	}
+	
+	public ResponseEntity<String> getJobInstanceElements(String server, String project, String refID, String jobElementID)
+	{
+		
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+		String returnJSONString = "";
+		
+		String jsonString = get(server, project,refID, jobElementID, true); // recursive get job sysmlid
+		
+		PMAUtil pmaUtil = new PMAUtil();
+		if(isElementJSON(jsonString)) // It will be an error if the json string is not an element JSON.
+		{
+			System.out.println("is element json");
+			status = HttpStatus.OK;
+			return new ResponseEntity<String>(pmaUtil.generateJobInstanceArrayJSON(jsonString),status);
+		}
+		
+		if (pmaUtil.isJSON(jsonString)) 
+		{
+			returnJSONString = jsonString;
+		} 
+		else 
+		{
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode returnJSON = mapper.createObjectNode();
+			returnJSON.put("message", jsonString);
+			returnJSONString = returnJSON.toString();
+		}
+		
+		logger.info("Get Job element return JSON: "+returnJSONString);
+		System.out.println("Get Job element return JSON: "+returnJSONString);
+		return new ResponseEntity<String>(returnJSONString,status); // Returning the error
+//		return pmaUtil.generateJobInstanceArrayJSON(jsonString);
 	}
 	
     public String createId() {
@@ -554,6 +645,37 @@ public class MMSUtil {
 			return false;
 		}
 		return true;
+	}
+	
+	/**
+	 * Checks if a string is an element JSON
+	 * @param jsonString
+	 * @return
+	 */
+	public Boolean isElementJSON(String jsonString)
+	{
+		if(jsonString.equals("{}"))
+		{
+			return true;
+		}
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode fullJson = mapper.readTree(jsonString);
+			JsonNode elements = fullJson.get("elements");
+			if(elements!=null)
+			{
+				return true;
+			}
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		return false;
 	}
 	
 	public static void main(String[] args) 
