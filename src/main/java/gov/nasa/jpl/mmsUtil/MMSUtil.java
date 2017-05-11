@@ -487,7 +487,7 @@ public class MMSUtil {
 	}
 	
 	/**
-	 * Gets a job element from MMS. Recursively gets the element to include all the part properties and job instances.
+	 * Gets a job element from MMS. Recursively gets the element to include all the part properties. Returns the element as a job json.
 	 * 
 	 * @param server mms server
 	 * @param project magic draw project ID
@@ -502,6 +502,15 @@ public class MMSUtil {
 		return pmaUtil.generateJobArrayJSON(jsonString);
 	}
 	
+	public String getJobInstanceElement(String server, String project, String refID, String jobInstanceElementID)
+	{
+		// recursive get job sysmlid
+		
+		String jsonString = get(server, project,refID, jobInstanceElementID, true);
+		
+		PMAUtil pmaUtil = new PMAUtil();
+		return pmaUtil.generateJobInstanceArrayJSON(jsonString);
+	}
 	
 	public String getJobInstanceElements(String server, String project, String refID, String jobElementID)
 	{

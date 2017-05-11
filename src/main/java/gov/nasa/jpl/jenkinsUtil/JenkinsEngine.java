@@ -592,8 +592,8 @@ public class JenkinsEngine implements ExecutionEngine {
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				// e.printStackTrace();
-
-				System.out.println(e.toString());
+				logger.error("Job not found on Jenkins: "+e.toString()); // job not found on jenkins
+				System.out.println("Job not found on Jenkins: "+e.toString());
 			}
 		}
 		return allJobResponse;
@@ -811,7 +811,7 @@ public class JenkinsEngine implements ExecutionEngine {
 				
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 		}
 
 		return null;

@@ -1,9 +1,9 @@
 package gov.nasa.jpl;
 
-import gov.nasa.jpl.controllers.VeEndpointController;
+import gov.nasa.jpl.controllers.ClientEndpointController;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
-import gov.nasa.jpl.model.JobFromVE;
-import gov.nasa.jpl.model.JobInstanceFromVE;
+import gov.nasa.jpl.model.JobFromClient;
+import gov.nasa.jpl.model.JobInstanceFromClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,19 +19,19 @@ import javax.validation.constraints.Null;
 public class VeEndpointControllerTests {
 
 
-    private VeEndpointController veEndpointController = new VeEndpointController();
+    private ClientEndpointController veEndpointController = new ClientEndpointController();
     JenkinsEngine je = new JenkinsEngine();
     private String alfTicket = "TICKET_966561726f35a382c76fa36d3a0a53b471f2db0b";
     private String testServer = "https://opencae-int.jpl.nasa.gov";
     private String jobName = "PMA_1493825038894_5fcafd6e-6e5a-4d03-a6e2-f47ff29286de";
-    private JobFromVE job;
+    private JobFromClient job;
     private boolean isConfigured = false;
 
     private void configVeEndpointController()
     {
         je.setCredentials();
         je.login();
-        job = new JobFromVE();
+        job = new JobFromClient();
         job.setMmsServer(testServer);
         job.setJobName(jobName);
         job.setAlfrescoToken(alfTicket);
