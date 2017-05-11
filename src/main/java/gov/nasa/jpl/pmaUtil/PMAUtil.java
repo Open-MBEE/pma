@@ -54,6 +54,7 @@ public class PMAUtil
 		
 		ObjectNode jobInstanceElement = mapper.createObjectNode();
 		jobInstanceElement.put("id",jobInstancesMap.get("id"));
+		jobInstanceElement.put("buildNumber",jobInstancesMap.get("buildNumber"));
 		jobInstanceElement.put("jobStatus",jobInstancesMap.get("jobStatus"));
 		jobInstanceElement.put("jenkinsLog",jobInstancesMap.get("jenkinsLog"));
 		jobInstanceElement.put("created",jobInstancesMap.get("created"));
@@ -194,4 +195,30 @@ public class PMAUtil
 		
 		return jobJSON.toString();
 	}
+	
+	
+	/**
+	 * Checks if a string is a JSON
+	 * @param jsonString
+	 * @return
+	 */
+	public Boolean isJSON(String jsonString)
+	{
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode fullJson = mapper.readTree(jsonString);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
+	
+
 }

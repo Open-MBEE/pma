@@ -41,7 +41,7 @@ public class ClientEndpointController {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public String getJobs(@PathVariable String projectID, @PathVariable String refID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
+	public ResponseEntity<String> getJobs(@PathVariable String projectID, @PathVariable String refID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		
 		logger.info("Get Jobs was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
@@ -74,8 +74,7 @@ public class ClientEndpointController {
     	if(!jobResponse.equals("Job Not Found"))
     	{
     		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-    		jobResponse = mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
-    		status = HttpStatus.OK;
+    		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
     	}
     	else
     	{
@@ -84,7 +83,6 @@ public class ClientEndpointController {
     		jobJSON.put("message", "Job not found on Jenkins");
     		jobResponse = jobJSON.toString();
     		status = HttpStatus.NOT_FOUND;
-    				
     	}
     	logger.info("Get Job Response: "+jobResponse); // Jenkins issue when checking if job exists
     	return new ResponseEntity<String>(jobResponse,status);
@@ -114,8 +112,7 @@ public class ClientEndpointController {
     	{
     		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
     		
-    		jobResponse = mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
-    		status = HttpStatus.OK;
+    		return mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
     	}
     	else
     	{
@@ -211,9 +208,7 @@ public class ClientEndpointController {
 	        {
 	        	logger.info("Return message: "+jobCreationResponse + " " + jobElementID);
 	    		
-	    		String response = mmsUtil.getJobElement(mmsServer, projectID, refID, jobElementID);
-	    		status = HttpStatus.OK;
-	        	return new ResponseEntity<String>(response,status);
+	        	return mmsUtil.getJobElement(mmsServer, projectID, refID, jobElementID);
 	        }
 	        
 	        mmsUtil.delete(mmsServer, projectID, refID, jobElementID); // Delete the job element since the job wasn't created on Jenkins.
@@ -315,7 +310,7 @@ public class ClientEndpointController {
     	}
     	else
     	{	
-        	logger.info("Get Job Response: "+jobResponse); // Jenkins issue when checking if job exists.
+        	logger.info("Run Job Response: "+jobResponse); // Jenkins issue when checking if job exists.
         	return new ResponseEntity<String>(jobResponse,status);
     	}
   
