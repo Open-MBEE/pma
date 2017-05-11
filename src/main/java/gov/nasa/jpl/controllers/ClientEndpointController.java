@@ -339,9 +339,9 @@ public class ClientEndpointController {
 	 * @param mmsServer
 	 * @return
 	 */
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE, produces = "application/json")
 	@ResponseBody
-	public String deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
+	public ResponseEntity<String> deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
 		
 		logger.info("Delete Job was called");
@@ -358,25 +358,38 @@ public class ClientEndpointController {
 		
 		if(!elementDeleteResponse.equals("HTTP/1.1 200 OK"))
 		{
-			logger.info( "MMS Element delete response: "+elementDeleteResponse);
-			return elementDeleteResponse+" MMS";
+			
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", elementDeleteResponse + " MMS"); // mms issue when creating job instance
+	        return new ResponseEntity<String>(responseJSON.toString(),status);
+//			return elementDeleteResponse+" MMS";
 		}
 		
 		// delete job on jenkins
     	JenkinsEngine je = login();
     	String jenkinsDeleteResponse = je.deleteJob(jobSysmlID);
     	System.out.println("Jenkins delete response: "+jenkinsDeleteResponse);
-    	
+    	logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
     	if(!jenkinsDeleteResponse.equals("HTTP/1.1 302 Found"))
 		{
-    		logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
-			return jenkinsDeleteResponse+" Jenkins";
+			if (jenkinsDeleteResponse.equals("HTTP/1.1 404 Not Found")) 
+			{
+				status = HttpStatus.NOT_FOUND; 
+				jenkinsDeleteResponse="Job Not Found";
+			}
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", jenkinsDeleteResponse); 
+    		return new ResponseEntity<String>(responseJSON.toString(),status);
+//			return jenkinsDeleteResponse+" Jenkins";
 		}
     	
     	status = HttpStatus.OK; 
     	
     	logger.info("Delete Succesfull");
-		return "HTTP/1.1 200 OK";
+		ObjectNode responseJSON = mapper.createObjectNode();
+		responseJSON.put("message", "Delete Succesfull"); 
+        return new ResponseEntity<String>(responseJSON.toString(),status);
+//		return "HTTP/1.1 200 OK";
 	}
 	
     public JenkinsEngine login()
