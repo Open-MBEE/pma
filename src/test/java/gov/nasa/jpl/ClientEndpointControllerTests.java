@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.persistence.Id;
 import javax.validation.constraints.Null;
 
 /**
@@ -43,16 +44,12 @@ public class ClientEndpointControllerTests {
         job.setSchedule("");
     }
 
-    @Test
-    public void testCreateDeleteJob() {
-        System.out.println("\n----------------------- [ VeEndpointController CreateDeleteJob ] -----------------------\n");
+    private String createJobGetId(String projectId, String refId) {
         String id = null;
         JSONObject responseBody;
-        if (!isConfigured) {
-            configVeEndpointController();
-        }
 
-        ResponseEntity<String> response = clientEndpointController.createJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", job);
+        ResponseEntity<String> response = clientEndpointController.createJob(projectId, refId, job);
+        assert (response.toString().contains("200 OK"));
         try {
             responseBody = new JSONObject(response.getBody());
             id = responseBody.getJSONArray("jobs").getJSONObject(0).getString("id");
@@ -61,12 +58,12 @@ public class ClientEndpointControllerTests {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+        return id;
+    }
 
-
-        assert (response.toString().contains("200 OK"));
-        assert (id != null);
-
-        response = clientEndpointController.deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", id, alfTicket, testServer);
+    private String deleteJob(String projectId, String refId, String elementId) {
+        JSONObject responseBody = null;
+        ResponseEntity<String> response = clientEndpointController.deleteJob(projectId, refId, elementId, alfTicket, testServer);
         try {
             responseBody = new JSONObject(response.getBody());
             assert(responseBody.getString("message").contains("Delete Succesfull"));
@@ -75,31 +72,39 @@ public class ClientEndpointControllerTests {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+        return responseBody.toString();
     }
-//
-//    @Test
-//    public void testRunJob() {
-//        System.out.println("\n----------------------- [ VeEndpointController RunJob ] -----------------------\n");
-//        if (!isConfigured) {
-//            configVeEndpointController();
-//        }
-//
-//        JobInstanceFromVE jobInstanceFromVE = new JobInstanceFromVE();
-//        jobInstanceFromVE.setMmsServer(testServer);
-//        jobInstanceFromVE.setArguments(null);
-//        jobInstanceFromVE.setAlfrescoToken(alfTicket);
-//
-//        String elementId = veEndpointController.createJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", job);
-//        assert (!elementId.contains("Unauthorized MMS"));
-//        assert (elementId.contains("PMA"));
-//        elementId = elementId.replace("HTTP/1.1 200 OK ", "");
-//        String output = veEndpointController.runJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", elementId, jobInstanceFromVE);
-//        System.out.println("\n------------------------ [ Run Job ] -------------------------\n");
-//        System.out.println(output);
-//        System.out.println("\n--------------------------------------------------------------\n");
-//        output = veEndpointController.deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", elementId, alfTicket, testServer);
-//        System.out.println("\n----------------------- [ Delete Job ] -----------------------\n");
-//        System.out.println(output);
-//        System.out.println("\n--------------------------------------------------------------\n");
-//    }
+    @Test
+    public void testCreateDeleteJob() {
+        System.out.println("\n----------------------- [ VeEndpointController CreateDeleteJob ] -----------------------\n");
+        if (!isConfigured) {
+            configVeEndpointController();
+        }
+
+        String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
+
+        assert (id != null);
+
+        deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", id);
+    }
+
+    @Test
+    public void testRunJob() {
+        System.out.println("\n----------------------- [ VeEndpointController RunJob ] -----------------------\n");
+        if (!isConfigured) {
+            configVeEndpointController();
+        }
+
+        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
+        jobInstanceFromClient.setMmsServer(testServer);
+        jobInstanceFromClient.setArguments(null);
+        jobInstanceFromClient.setAlfrescoToken(alfTicket);
+
+        String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
+        clientEndpointController.runJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", id, jobInstanceFromClient);
+
+        assert (id != null);
+        System.out.println("\n--------------------------------------------------------------\n");
+        deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", id);
+    }
 }
