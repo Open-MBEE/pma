@@ -207,7 +207,7 @@ public class PMAUtil
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode fullJson = mapper.readTree(jsonString);
-			System.out.println("jerbs "+fullJson.get("jobs"));
+			System.out.println("jobs "+fullJson.get("jobs"));
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

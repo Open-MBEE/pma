@@ -323,6 +323,11 @@ public class ClientEndpointController {
     	else
     	{	
         	logger.info("Run Job Response: "+jobResponse); // Jenkins issue when checking if job exists.
+        	if (jobResponse.equals("HTTP/1.1 404 Not Found")) 
+			{
+				status = HttpStatus.NOT_FOUND; 
+				jobResponse="Job Not Found on Jenkins";
+			}
         	return new ResponseEntity<String>(jobResponse,status);
     	}
   

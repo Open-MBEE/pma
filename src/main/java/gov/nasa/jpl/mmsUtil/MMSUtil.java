@@ -262,11 +262,13 @@ public class MMSUtil {
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = buildClassElement(id,ownerID,name);
 		
+		String currentTimestamp = new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date());
+		
 		elements.add(buildPropertyNode(id,"buildNumber",buildNumber));
 		elements.add(buildPropertyNode(id,"jobStatus",jobStatus));
 		elements.add(buildPropertyNode(id,"jenkinsLog",""));
-		elements.add(buildPropertyNode(id,"timeCreated",""));
-		elements.add(buildPropertyNode(id,"completionTime",""));
+		elements.add(buildPropertyNode(id,"created",currentTimestamp));
+		elements.add(buildPropertyNode(id,"completed",""));
 		
 		payload.put("elements",elements);
 		payload.put("source","pma");

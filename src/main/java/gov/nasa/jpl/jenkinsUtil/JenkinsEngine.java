@@ -317,6 +317,14 @@ public class JenkinsEngine implements ExecutionEngine {
 			// Will throw an error if the execution fails from either incorrect
 			// setup or if the jenkinsClient has not been instantiated.
 		} 
+		catch(java.lang.IllegalStateException e)
+		{
+			if(e.toString().equals("java.lang.IllegalStateException: Target host is null"))
+			{
+				return "Jenkins url in configuration invalid.";
+			}
+			return e.toString();
+		}
 		catch(java.net.UnknownHostException e)
 		{
 			return e.toString();
@@ -566,10 +574,10 @@ public class JenkinsEngine implements ExecutionEngine {
 	 */
 	public String getJob(String jobName) {
 		JSONObject json = null;
-
+		System.out.println("jenkins get job");
 		String allJobResponse = getAllJobs();
 		System.out.println("ALL JOB RESPONSE: "+allJobResponse);
-		if (allJobResponse != null) {
+		if (allJobResponse != null&&allJobResponse.startsWith("{")) {
 			try {
 				JSONObject allJobs = new JSONObject(allJobResponse);
 
@@ -612,8 +620,10 @@ public class JenkinsEngine implements ExecutionEngine {
 	 */
 	public String getAllJobs() {
 		constructAllJobs();
+		System.out.println("before execute");
 		String allJobs = execute(); // execute returns not null when theres an
 									// error
+		System.out.println("all jobs inside getAllJobs");
 		if (allJobs != null) {
 			return allJobs;
 		}
