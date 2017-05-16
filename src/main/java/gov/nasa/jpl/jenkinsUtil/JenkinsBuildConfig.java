@@ -16,6 +16,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import gov.nasa.jpl.pmaUtil.PMAUtil;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,22 +33,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class JenkinsBuildConfig {
 
 	static final String outputEncoding = "UTF-8";
 	private static final boolean DEBUG = true;
 	private String jobID = "job0000";
-	private String documentID = "_18_1111_111_111";
+	private String targetElement = "_18_1111_111_111";
 	// jdk might have to be (Default)
 	private String jdkVersion = "jdk1.8.0_45";
 	private String gitBranch = "*/develop";
-	private String workspace = "master";
+	private String workspace = "master"; // Also known as refId
 	// Teamwork projects can be found in any Teamwork Server and should be case
 	// sensitive
-	private String teamworkProject = null;
-	private String schedule = null;
-	private String magicdrawSchedulingCommand = null;
+	private String teamworkProject = ""; // Also known as projectId
+	private String schedule = "";
+	private String magicdrawSchedulingCommand = "";
 	private String mmsUser = "mmsUser";
 	private String mmsPassword = "mmsPassword";
 	private String mmsServer = "mmsServer";
@@ -60,6 +63,21 @@ public class JenkinsBuildConfig {
 	private String buildAgent = "buildAgent";
 	private String timeOutForJob = "60";
 
+	private String jenkinsShellFile = "pmaTestJenkins.sh";
+	private String artifactFile = "test.txt";
+	private String jobType = "docgen";
+	private String environmentVariables = "";
+	
+	
+//	this.environmentVariables = "JOB_ID=" + this.jobID + "\n"+
+//			"DOCUMENTS=" + this.documentID + "\n"+
+//			"CREDENTIALS=/opt/local/jenkins/credentials/mms.properties\n"+
+//			"TEAMWORK_PROJECT=" + this.teamworkProject + "\n"+
+//			"MMS_SERVER=" + this.mmsServer + "\n"+
+//			"MMS_WORKSPACE=" + this.workspace + "\n";
+	
+
+	
 	public JenkinsBuildConfig() {
 		// TODO Auto-generated constructor stub
 	}
@@ -209,10 +227,12 @@ public class JenkinsBuildConfig {
 			// jenkins execute shell.
 			String content = null;
 			
+			setEnvironmentVariables();
+			
 			try {
 
 				ResourceLoader resourceLoader = new DefaultResourceLoader();
-				InputStream is = resourceLoader.getResource("classpath:templates/pmaTestJenkins2.sh").getInputStream();
+				InputStream is = resourceLoader.getResource("classpath:templates/"+this.jenkinsShellFile).getInputStream();
 				BufferedReader br = null;
 				StringBuilder sb = new StringBuilder();
 
@@ -331,13 +351,16 @@ public class JenkinsBuildConfig {
 			Element propertiesContent = doc.createElement("propertiesContent");
 			Element injectEnvironmentVar = doc.createElement("EnvInjectBuildWrapper");
 			propertiesContent.appendChild(doc.createTextNode("\n"));
-			propertiesContent.appendChild(doc.createTextNode("JOB_ID=" + this.jobID + "\n"));
-			propertiesContent.appendChild(doc.createTextNode("DOCUMENTS=" + this.documentID + "\n"));
-			propertiesContent
-					.appendChild(doc.createTextNode("CREDENTIALS=/opt/local/jenkins/credentials/mms.properties\n"));
-			propertiesContent.appendChild(doc.createTextNode("TEAMWORK_PROJECT=" + this.teamworkProject + "\n"));
-			propertiesContent.appendChild(doc.createTextNode("MMS_SERVER=" + this.mmsServer + "\n"));
-			propertiesContent.appendChild(doc.createTextNode("MMS_WORKSPACE=" + this.workspace + "\n"));
+			
+			propertiesContent.appendChild(doc.createTextNode(this.environmentVariables));
+			
+//			propertiesContent.appendChild(doc.createTextNode("JOB_ID=" + this.jobID + "\n"));
+//			propertiesContent.appendChild(doc.createTextNode("DOCUMENTS=" + this.documentID + "\n"));
+//			propertiesContent
+//					.appendChild(doc.createTextNode("CREDENTIALS=/opt/local/jenkins/credentials/mms.properties\n"));
+//			propertiesContent.appendChild(doc.createTextNode("TEAMWORK_PROJECT=" + this.teamworkProject + "\n"));
+//			propertiesContent.appendChild(doc.createTextNode("MMS_SERVER=" + this.mmsServer + "\n"));
+//			propertiesContent.appendChild(doc.createTextNode("MMS_WORKSPACE=" + this.workspace + "\n"));
 
 			Element hudsonTimeout = doc.createElement("hudson.plugins.build__timeout.BuildTimeoutWrapper");
 			Element strategy = doc.createElement("strategy");
@@ -365,7 +388,9 @@ public class JenkinsBuildConfig {
 			Element artifactArchiver = doc.createElement("hudson.tasks.ArtifactArchiver");
 			Element secondTempElem = doc.createElement("artifacts");
 
-			secondTempElem.appendChild(doc.createTextNode("MDNotificationWindowText.html"));
+//			secondTempElem.appendChild(doc.createTextNode("MDNotificationWindowText.html"));
+			secondTempElem.appendChild(doc.createTextNode(this.artifactFile));
+			
 			artifactArchiver.appendChild(secondTempElem);
 
 			secondTempElem = doc.createElement("allowEmptyArchive");
@@ -451,19 +476,47 @@ public class JenkinsBuildConfig {
 		return null;
 	}
 
+	public void setEnvironmentVariables()
+	{
+		if(this.jobType.equals("docweb"))
+		{
+			String pmaHost = "";
+			try {
+				pmaHost = InetAddress.getLocalHost().getHostName();
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			setJenkinsShellFile("docweb.sh");
+			setEnvironmentVariables("JOB_ID=" + this.jobID + "\n" + 
+			"TARGET_VIEW_ID=" + this.targetElement + "\n"+ 
+			"PROJECT_ID="+ this.teamworkProject + "\n" + 
+			"MMS_HOST=" + this.mmsServer + "\n" + 
+			"REF_ID="+ this.workspace + "\n" + 
+			"PMA_HOST=" + pmaHost+":8080"+ "\n");
+		}
+		else
+		{
+			setEnvironmentVariables("JOB_ID=" + this.jobID + "\n" + "DOCUMENTS=" + this.targetElement + "\n"
+					+ "CREDENTIALS=/opt/local/jenkins/credentials/mms.properties\n" + "TEAMWORK_PROJECT="
+					+ this.teamworkProject + "\n" + "MMS_SERVER=" + this.mmsServer + "\n" + "MMS_WORKSPACE="
+					+ this.workspace + "\n");
+		}
+	}
+	
 	/**
 	 * @return the documentID
 	 */
-	public String getDocumentID() {
-		return documentID;
+	public String getTargetElementID() {
+		return targetElement;
 	}
 
 	/**
-	 * @param documentID
-	 *            the documentID to set
+	 * @param targetElement
+	 *            the targetElement to set
 	 */
-	public void setDocumentID(String documentID) {
-		this.documentID = documentID;
+	public void setTargetElementID(String targetElement) {
+		this.targetElement = targetElement;
 	}
 
 	/**
@@ -634,4 +687,52 @@ public class JenkinsBuildConfig {
 	public void setSchedule(String schedule) {
 		this.schedule = schedule;
 	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public String getJobType() {
+		return this.jobType;
+	}
+
+	/**
+	 * @param jobType 
+	 */
+	public void setJobType(String jobType) {
+		this.jobType = jobType;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public String getEnvironmentVariables() {
+		return this.environmentVariables;
+	}
+
+	/**
+	 * 
+	 * @param environmentVariables
+	 */
+	public void setEnvironmentVariables(String environmentVariables) {
+		this.environmentVariables = environmentVariables;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public String getJenkinsShellFile() {
+		return this.jenkinsShellFile;
+	}
+
+	/**
+	 * 
+	 * @param environmentVariables
+	 */
+	public void setJenkinsShellFile(String jenkinsShellFile) {
+		this.jenkinsShellFile = jenkinsShellFile;
+	}
+	
 }

@@ -204,11 +204,13 @@ public class ClientEndpointController {
 	        
 	        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
 	        jbc.setBuildAgent(jenkinsAgent);
-	        jbc.setDocumentID(associatedElementID);
+	        jbc.setTargetElementID(associatedElementID);
 	        jbc.setMmsServer(mmsServer);
 	        jbc.setTeamworkProject(projectID);
+	        jbc.setWorkspace(refID);
 	        jbc.setJobID(jobElementID);
 	        jbc.setSchedule(schedule); 
+	        jbc.setJobType(command);
 //	        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
 	        
 	        JenkinsEngine je = login();
