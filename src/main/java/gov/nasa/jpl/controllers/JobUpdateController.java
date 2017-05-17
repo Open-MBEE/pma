@@ -79,7 +79,13 @@ public class JobUpdateController
 		 */
 		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token);
 		logger.info("MMS Response: "+mmsResponse);
-		return mmsResponse;	
+		if (propertyName.equals("jobStatus") && value.equals("completed")) {
+			String currentTimestamp = new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date());
+			mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, token);
+			System.out.println("\n------------------------------------------------------\n"+mmsResponse + "\n------------------------------------------------------\n");
+		}
+
+		return mmsResponse;
 	}
 
 }
