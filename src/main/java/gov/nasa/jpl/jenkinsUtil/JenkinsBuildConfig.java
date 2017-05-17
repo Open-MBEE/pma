@@ -16,8 +16,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import gov.nasa.jpl.pmaUtil.PMAUtil;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -64,7 +62,7 @@ public class JenkinsBuildConfig {
 	private String timeOutForJob = "60";
 
 	private String jenkinsShellFile = "pmaTestJenkins.sh";
-	private String artifactFile = "test.txt";
+	private String artifactFile = "";
 	private String jobType = "docgen";
 	private String environmentVariables = "";
 	
@@ -227,7 +225,7 @@ public class JenkinsBuildConfig {
 			// jenkins execute shell.
 			String content = null;
 			
-			setEnvironmentVariables();
+			setEnvironmentVariables(); // Sets Jenkins environment variables based on type of job.
 			
 			try {
 
@@ -476,6 +474,10 @@ public class JenkinsBuildConfig {
 		return null;
 	}
 
+	/**
+	 * Sets Jenkins environment variables based on type of job.
+	 * 
+	 */
 	public void setEnvironmentVariables()
 	{
 		if(this.jobType.equals("docweb"))
@@ -503,6 +505,12 @@ public class JenkinsBuildConfig {
 					+ this.workspace + "\n");
 		}
 	}
+	
+	/*
+	 * Setters and getters
+	 * 
+	 */
+	
 	
 	/**
 	 * @return the documentID
@@ -735,4 +743,19 @@ public class JenkinsBuildConfig {
 		this.jenkinsShellFile = jenkinsShellFile;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
+	public String getArtifactFile() {
+		return this.artifactFile;
+	}
+
+	/**
+	 * 
+	 * @param artifactFile
+	 */
+	public void setArtifactFile(String artifactFile) {
+		this.artifactFile = artifactFile;
+	}
 }
