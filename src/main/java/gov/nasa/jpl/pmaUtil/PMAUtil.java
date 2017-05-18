@@ -118,6 +118,13 @@ public class PMAUtil
 			}
 			else
 			{
+				System.out.println("Error or empty mms JSON String: "+mmsJSONString);
+				if(mmsJSONString.equals("{}"))
+				{
+					jobJSON.put("jobs",jobElements);
+					
+					return jobJSON.toString();
+				}
 				return mmsJSONString; // Returns status from mms. Should be an error or empty if the elements were null.
 			}
 		} catch (JsonProcessingException e) {

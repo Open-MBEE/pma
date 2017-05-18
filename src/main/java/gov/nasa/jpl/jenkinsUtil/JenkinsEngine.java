@@ -1273,7 +1273,7 @@ public class JenkinsEngine implements ExecutionEngine {
         
         JenkinsBuildConfig jbc = new JenkinsBuildConfig();
         jbc.setBuildAgent(buildAgent);
-        jbc.setDocumentID(associatedElementID);
+        jbc.setTargetElementID(associatedElementID);
         jbc.setMmsServer(mmsServer);
         jbc.setTeamworkProject(projectID);
         jbc.setJobID(jobElementID);

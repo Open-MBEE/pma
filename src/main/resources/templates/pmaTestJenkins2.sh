@@ -1,3 +1,4 @@
+# Example test job
 set +x
 
 # Tell PMA that this job has started
