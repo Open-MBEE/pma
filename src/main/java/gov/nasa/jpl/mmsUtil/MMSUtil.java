@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -32,6 +33,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nasa.jpl.pmaUtil.PMAUtil;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 
@@ -729,7 +731,7 @@ public class MMSUtil {
 		
 	}
 
-	public String getAlfrescoToken(String server, String username, String password) {
+	 public static String getAlfrescoToken(String server, String username, String password) {
 		server = server.replace("https://", "");
 		server = server.replace("/", "");
 		HttpClient httpClient = HttpClientBuilder.create().build();
@@ -743,24 +745,39 @@ public class MMSUtil {
 
 		try {
 
-			String url = "https://"+server+"/alfresco/s/api/login";
-			System.out.println("URL: "+url);
+			String url = "https://"+server+"/alfresco/service/api/login";
 			HttpPost request = new HttpPost(url);
 			StringEntity params = new StringEntity(payload.toString());
-			request.addHeader("content-type", "application/json");
+			request.addHeader("Content-Type", "application/json");
 			request.setEntity(params);
 			HttpResponse response = httpClient.execute(request);
 			HttpEntity entity = response.getEntity();
 
-			JSONObject result = new JSONObject(EntityUtils.toString(entity)); //Convert String to JSON Object
+			JSONObject result = new JSONObject();
+			try {
+				result = new JSONObject(EntityUtils.toString(entity));
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} //Convert String to JSON Object
 
-			return result.getJSONObject("data").getString("ticket");
+			try {
+				return result.getJSONObject("data").getString("ticket");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		catch (java.net.UnknownHostException e) {
 			System.out.println("Unknown Host Exception");
+			return e.toString();
 		}catch (IOException e)
 		{
 			e.printStackTrace();
+			return e.toString();
 		}
 		return "Exception Occurred";
 	}

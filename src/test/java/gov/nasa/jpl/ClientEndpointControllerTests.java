@@ -1,7 +1,9 @@
 package gov.nasa.jpl;
 
 import gov.nasa.jpl.controllers.ClientEndpointController;
+import gov.nasa.jpl.dbUtil.DBUtil;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
+import gov.nasa.jpl.mmsUtil.MMSUtil;
 import gov.nasa.jpl.model.JobFromClient;
 import gov.nasa.jpl.model.JobInstanceFromClient;
 import org.json.JSONArray;
@@ -24,15 +26,37 @@ import javax.validation.constraints.Null;
 public class ClientEndpointControllerTests {
 
     private ClientEndpointController clientEndpointController = new ClientEndpointController();
-    JenkinsEngine je = new JenkinsEngine();
-    private String alfTicket = "TICKET_ab8259b2cafd61e03db736721df7b0b953533d8a";
-    private String testServer = "https://opencae-int.jpl.nasa.gov";
+    private JenkinsEngine je = new JenkinsEngine();
+    
+    MMSUtil mmsUtil = new MMSUtil("");
+    
+    private String alfTicket = "tempTicket";
+    private String testServer = "opencae-int.jpl.nasa.gov";
     private String jobName = "PMA_1493825038894_5fcafd6e-6e5a-4d03-a6e2-f47ff29286de";
     private JobFromClient job;
     private boolean isConfigured = false;
+    private DBUtil dbUtil = new DBUtil();
 
     private void configVeEndpointController() {
-        je.setCredentials();
+    	
+        String user = System.getenv("JENKINS_TEST_USER");
+        if (user == null) {
+            je.setCredentials();
+        }
+        else {
+            System.out.println("\n=======================================================\n FOUND ENV USER \n");
+            String password = System.getenv("JENKINS_TEST_PASSWORD");
+            je.setUsername(user);
+            je.setPassword(password);
+            dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int");
+            je.setURL("cae-jenkins2-int.jpl.nasa.gov");
+        }
+        System.out.println("GETTING ALF TICKET");
+        String mmsUser = System.getenv("ADMIN_USER");
+        String mmsPass = System.getenv("ADMIN_PASS");
+        this.alfTicket = MMSUtil.getAlfrescoToken(testServer, mmsUser, mmsPass);
+        System.out.println("ALF TICKET: "+alfTicket);
+        
         je.login();
         job = new JobFromClient();
         job.setMmsServer(testServer);
@@ -42,6 +66,12 @@ public class ClientEndpointControllerTests {
         job.setAssociatedElementID("");
         job.setCommand("");
         job.setSchedule("");
+        isConfigured = true;
+
+//        System.out.println("TEST SERVER: "+testServer);
+//        System.out.println("MMS USER: "+mmsUser);
+//        System.out.println("MMS PASSWORD"+mmsPass);
+
     }
 
     private String createJobGetId(String projectId, String refId) {
@@ -78,9 +108,9 @@ public class ClientEndpointControllerTests {
     @Test
     public void testCreateDeleteJob() {
         System.out.println("\n----------------------- [ VeEndpointController CreateDeleteJob ] -----------------------\n");
-        if (!isConfigured) {
-            configVeEndpointController();
-        }
+        System.out.println("BEFORE: "+this.alfTicket);
+        configVeEndpointController();
+        System.out.println("AFTER: "+this.alfTicket);
 
         String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
         assert (id != null);
@@ -91,9 +121,7 @@ public class ClientEndpointControllerTests {
     @Test
     public void testRunJob() {
         System.out.println("\n----------------------- [ VeEndpointController RunJob ] -----------------------\n");
-        if (!isConfigured) {
-            configVeEndpointController();
-        }
+        configVeEndpointController();
 
         JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
         jobInstanceFromClient.setMmsServer(testServer);
@@ -111,9 +139,7 @@ public class ClientEndpointControllerTests {
     @Test
     public void testGetJobsInfo() {
         System.out.println("\n----------------------- [ VeEndpointController Get Jobs Info ] -----------------------\n");
-        if (!isConfigured) {
-            configVeEndpointController();
-        }
+        configVeEndpointController();
 
         JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
         jobInstanceFromClient.setMmsServer(testServer);
