@@ -140,11 +140,25 @@ public class DBUtil
 				this.setJenkinsURL((String) valueList.get(2));
 				this.setJenkinsAgent((String) valueList.get(3));
 			}
-			
+
 			}
 		} catch (Exception e) {
 			logger.info(e.toString());
 			e.printStackTrace();
 		}
+	}
+
+	public void updateDbCredentials(String username, String password, String url, String agent)
+	{
+		JdbcTemplate jdbcTemplate = createJdbcTemplate();
+
+		jdbcTemplate.execute("drop table if exists credentials"); // deletes the previous table if there is one.
+		jdbcTemplate.execute("CREATE TABLE if not exists credentials (username TEXT, password TEXT, server TEXT, agent TEXT)"); //creates the table that will store the credentials
+		jdbcTemplate.execute("insert into CREDENTIALS (username, password, server, agent) values ('tempUSER', 'tempPassword', 'tempURL' ,'tempAgent')"); // inserts temp values for first row
+
+		jdbcTemplate.execute("UPDATE CREDENTIALS SET username='"+username+"'");
+		jdbcTemplate.execute("UPDATE CREDENTIALS SET password='"+password+"'");
+		jdbcTemplate.execute("UPDATE CREDENTIALS SET server='"+url+"'");
+		jdbcTemplate.execute("UPDATE CREDENTIALS SET agent='"+agent+"'");
 	}
 }
