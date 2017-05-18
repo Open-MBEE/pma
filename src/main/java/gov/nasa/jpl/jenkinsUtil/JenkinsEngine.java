@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -81,7 +80,7 @@ import gov.nasa.jpl.dbUtil.DBUtil;
  * </ul>
  *
  */
-public class JenkinsEngine implements ExecutionEngine {
+public class JenkinsEngine {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
@@ -276,13 +275,11 @@ public class JenkinsEngine implements ExecutionEngine {
 	/**
 	 * Creates an instance of the Jenkins Engine
 	 */
-	@Override
 	public JenkinsEngine createEngine() {
 		JenkinsEngine instance = new JenkinsEngine();
 		return instance;
 	}
 
-	@Override
 	public String execute() {
 		// This sets the URL to an Object specifically for making GET calls
 		HttpGet get = new HttpGet(this.executeUrl);
@@ -348,13 +345,14 @@ public class JenkinsEngine implements ExecutionEngine {
 	public String build() {
 		// This sets the URL to an Object specifically for making GET calls
 		HttpPost post = new HttpPost(this.executeUrl);
-
+		System.out.println("Execute URL: "+this.executeUrl);
 		try {
 			HttpResponse response = this.jenkinsClient.execute(post, this.context);
 
 			EntityUtils.consume(response.getEntity());
 			// Will throw an error if the execution fails from either incorrect
 			// setup or if the jenkinsClient has not been instantiated.
+			System.out.println("Response to string: "+response.toString());
 			return response.getStatusLine().toString();
 		} catch (IOException e) {
 			return e.toString();
@@ -1212,53 +1210,30 @@ public class JenkinsEngine implements ExecutionEngine {
 		}
 		return null;
 	}
+	
+	public String createFolder(String folderName)
+	{
+		try {
+			this.executeUrl = this.url + "/job/PMA/"+"createItem?name=TEMPFOLDER&mode=com.cloudbees.hudson.plugins.folder.Folder&from=&json=%7B%22name%22%3A%22FolderName%22%2C%22mode%22%3A%22com.cloudbees.hudson.plugins.folder.Folder%22%2C%22from%22%3A%22%22%2C%22Submit%22%3A%22OK%22%7D&Submit=OK";
+			System.out.println("Create Folder url: "+executeUrl);
+			HttpPost post = new HttpPost(this.executeUrl);
+			post.setHeader("Content-Type", "application/x-www-form-urlencoded");
+			System.out.println("Execute URL: "+this.executeUrl);
+			try {
+				HttpResponse response = this.jenkinsClient.execute(post, this.context);
 
-	/**
-	 * DO NOT USE --- Exception Handling Not Implemented!
-	 *
-	 * @param detailName
-	 * @return
-	 */
-	public String getEventDetails(List<String> detailName) {
-		String returnString = "";
-		// if ( !detailName.isEmpty() && jsonResponse != null ) {
-		// for ( String det : detailName ) {
-		// System.out.println( "Detail name : "
-		// + jsonResponse.get( det ).toString() );
-		// detailResultMap.put( det, jsonResponse.get( det ).toString() );
-		// returnString += jsonResponse.getString( det ).toString() + ", ";
-		// }
-		// }
-		return returnString;
-	}
-
-	@Override
-	public void setEvent(String event) {
-	}
-
-	@Override
-	public void setEvents(List<String> events) {
-
-	}
-
-	@Override
-	public boolean stopExecution() {
-		return false;
-	}
-
-	@Override
-	public boolean removeEvent(String event) {
-		return false;
-	}
-
-	@Override
-	public void updateEvent(String event) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public long getExecutionTime() {
-		return executionTime;
+				EntityUtils.consume(response.getEntity());
+				// Will throw an error if the execution fails from either incorrect
+				// setup or if the jenkinsClient has not been instantiated.
+				System.out.println("Response to string: "+response.toString());
+				return response.getStatusLine().toString();
+			} catch (IOException e) {
+				return e.toString();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return e.toString();
+		}
 	}
 	
 	public static void main(String[] args) 
@@ -1283,121 +1258,18 @@ public class JenkinsEngine implements ExecutionEngine {
         je.setCredentials();
         je.login();
 
-        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
-        je.postConfigXml(jbc, jobElementID, true);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.deleteJob(jobElementID);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.postConfigXml(jbc, jobElementID, true);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.deleteJob(jobElementID);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.postConfigXml(jbc, jobElementID, true);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.deleteJob(jobElementID);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.postConfigXml(jbc, jobElementID, true);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.deleteJob(jobElementID);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.postConfigXml(jbc, jobElementID, true);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.deleteJob(jobElementID);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.postConfigXml(jbc, jobElementID+"a", true);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.postConfigXml(jbc, jobElementID+"b", true);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.postConfigXml(jbc, jobElementID+"c", true);
-        try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.deleteJob(jobElementID+"a");
-        try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.deleteJob(jobElementID+"b");
-        try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        je.deleteJob(jobElementID+"c");
-        try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
+        System.out.println(je.createFolder("merp"));
+        
+//        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
+//        je.postConfigXml(jbc, jobElementID, true);
+//        try {
+//			Thread.sleep(20000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 //        je.deleteJob(jobElementID);
+
         
 	}
 }
