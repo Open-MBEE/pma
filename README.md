@@ -37,7 +37,8 @@ To run spring-boot and junit tests type into the command line:
 mvn test
 ```
 These environment variables have to be set for the tests to be ran locally.
-ADMIN_USER (mms admin username)
-ADMIN_PASS (mms admin password)
-JENKINS_TEST_USER (Jenkins admin account)
-JENKINS_TEST_PASSWORD (Jenkins admin password)
+
+* ADMIN_USER (mms admin username)
+* ADMIN_PASS (mms admin password)
+* JENKINS_TEST_USER (Jenkins admin account)
+* JENKINS_TEST_PASSWORD (Jenkins admin password)
