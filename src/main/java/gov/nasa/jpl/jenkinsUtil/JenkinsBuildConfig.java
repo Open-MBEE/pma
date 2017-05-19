@@ -61,7 +61,7 @@ public class JenkinsBuildConfig {
 	private String buildAgent = "buildAgent";
 	private String timeOutForJob = "60";
 
-	private String jenkinsShellFile = "pmaTestJenkins.sh";
+	private String jenkinsShellFile = "pmaTestJenkins2.sh";
 	private String artifactFile = "artifact.txt";
 	private String jobType = "docgen";
 	private String environmentVariables = "";
