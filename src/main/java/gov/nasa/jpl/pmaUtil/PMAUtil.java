@@ -227,6 +227,49 @@ public class PMAUtil
 		return true;
 	}
 	
+	// Accepts the get job instances json and returns the most recent instance.
+	// looks for the job instance with the highest build number
+	public static void getLatestJobInstance(String jsonString)
+	{
+		ObjectMapper mapper = new ObjectMapper();
 	
-
+		int highestBuildNumber = 0;
+		
+		JsonNode latestJobInstance = mapper.createObjectNode();
+		
+		try {
+			JsonNode fullJson = mapper.readTree(jsonString);
+			JsonNode jobInstances = fullJson.get("jobInstances");
+			
+			if(jobInstances.get(0)!=null)
+			{
+				latestJobInstance = jobInstances.get(0);
+				highestBuildNumber = Integer.parseInt(jobInstances.get(0).get("buildNumber").toString().replace("\"", ""));
+			}
+			int buildNumber = 0;
+			for (JsonNode jobInstance : jobInstances) {
+				buildNumber = Integer.parseInt(jobInstance.get("buildNumber").toString().replace("\"", ""));
+				if(buildNumber>highestBuildNumber)
+				{
+					highestBuildNumber = buildNumber;
+					latestJobInstance = jobInstance;
+				}
+			}
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println(latestJobInstance.toString());
+			
+	}
+	
+	public static void main(String args[])
+	{
+		String jsonString = "{\"jobInstances\": [{\"id\": \"PMA_1493929692690_e9c15e52-1a21-4dd2-8c14-413ebd519c18\",\"buildNumber\": \"2\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null},{\"id\": \"PMA_1493929332779_c035124d-06af-40b7-ad7f-ce7781b08a3e\",\"buildNumber\": \"1\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null}]}";
+//		String jsonString = "{\"jobInstances\": []}";
+		getLatestJobInstance(jsonString);
+	}
 }
