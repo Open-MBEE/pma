@@ -27,9 +27,9 @@ public class ClientEndpointControllerTests {
 
     private ClientEndpointController clientEndpointController = new ClientEndpointController();
     private JenkinsEngine je = new JenkinsEngine();
-    
+
     MMSUtil mmsUtil = new MMSUtil("");
-    
+
     private String alfTicket = "tempTicket";
     private String testServer = "opencae-int.jpl.nasa.gov";
     private String jobName = "PMA_1493825038894_5fcafd6e-6e5a-4d03-a6e2-f47ff29286de";
@@ -38,12 +38,15 @@ public class ClientEndpointControllerTests {
     private DBUtil dbUtil = new DBUtil();
 
     private void configVeEndpointController() {
-    	
+        configVeEndpointController(null,null);
+    }
+
+    private void configVeEndpointController(String mmsUser, String mmsPass) {
+
         String user = System.getenv("JENKINS_TEST_USER");
         if (user == null) {
             je.setCredentials();
-        }
-        else {
+        } else {
             System.out.println("\n=======================================================\n FOUND ENV USER \n");
             String password = System.getenv("JENKINS_TEST_PASSWORD");
             je.setUsername(user);
@@ -51,12 +54,24 @@ public class ClientEndpointControllerTests {
             dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int");
             je.setURL("cae-jenkins2-int.jpl.nasa.gov");
         }
+        if(mmsUser == null || mmsPass == null)
+        {
+            System.out.println("MMSUser or Pass is null");
+            mmsUser = System.getenv("ADMIN_USER");
+            mmsPass = System.getenv("ADMIN_PASS");
+            System.out.println("User : " + mmsUser);
+            System.out.println("Pass : " + mmsPass);
+            if (mmsUser == null || mmsPass == null) {
+                mmsUser = System.getProperty("ADMIN_USER");
+                mmsPass = System.getProperty("ADMIN_PASS");
+                System.out.println("User : " + mmsUser);
+                System.out.println("Pass : " + mmsPass);
+            }
+        }
         System.out.println("GETTING ALF TICKET");
-        String mmsUser = System.getenv("ADMIN_USER");
-        String mmsPass = System.getenv("ADMIN_PASS");
         this.alfTicket = MMSUtil.getAlfrescoToken(testServer, mmsUser, mmsPass);
-        System.out.println("ALF TICKET: "+alfTicket);
-        
+        System.out.println("ALF TICKET: " + alfTicket);
+
         je.login();
         job = new JobFromClient();
         job.setMmsServer(testServer);
@@ -84,9 +99,9 @@ public class ClientEndpointControllerTests {
             responseBody = new JSONObject(response.getBody());
             id = responseBody.getJSONArray("jobs").getJSONObject(0).getString("id");
         } catch (JSONException e) {
-            System.out.println(e.getMessage());
+            System.out.println("[ JSONException ] "+ e.getMessage());
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("[ Exception ] "+ e.getMessage());
         }
         return id;
     }
@@ -108,9 +123,9 @@ public class ClientEndpointControllerTests {
     @Test
     public void testCreateDeleteJob() {
         System.out.println("\n----------------------- [ VeEndpointController CreateDeleteJob ] -----------------------\n");
-        System.out.println("BEFORE: "+this.alfTicket);
+        System.out.println("BEFORE: " + this.alfTicket);
         configVeEndpointController();
-        System.out.println("AFTER: "+this.alfTicket);
+        System.out.println("AFTER: " + this.alfTicket);
 
         String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
         assert (id != null);
@@ -155,7 +170,7 @@ public class ClientEndpointControllerTests {
             JSONArray jsonArray = jsonObject.getJSONArray("jobs");
             int len = jsonArray.length();
             boolean found = false;
-            for(int i = 0; i < len; ++i) {
+            for (int i = 0; i < len; ++i) {
                 if (jsonArray.getJSONObject(i).getString("id").equals(id)) {
                     found = true;
                     break;
@@ -171,5 +186,24 @@ public class ClientEndpointControllerTests {
         deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", id);
         System.out.println("\n-------------------------------------------------------------------------------\n");
 
+    }
+
+    @Test
+    public void testIncorrectMMSAuthentication() {
+        System.out.println("\n----------------------- [ Incorrect MMS Authentication ] -----------------------\n");
+        configVeEndpointController("wrongUser", "wrongPass");
+        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
+        jobInstanceFromClient.setMmsServer(testServer);
+        jobInstanceFromClient.setArguments(null);
+        jobInstanceFromClient.setAlfrescoToken(alfTicket);
+
+        try {
+            String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
+            assert(false);
+        } catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("\n-------------------------------------------------------------------------------\n");
     }
 }

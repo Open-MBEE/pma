@@ -768,7 +768,7 @@ public class MMSUtil {
 				return result.getJSONObject("data").getString("ticket");
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				return e.toString();
 			}
 		}
 		catch (java.net.UnknownHostException e) {
@@ -779,6 +779,6 @@ public class MMSUtil {
 			e.printStackTrace();
 			return e.toString();
 		}
-		return "Exception Occurred";
+//		return "Exception Occurred";
 	}
 }
