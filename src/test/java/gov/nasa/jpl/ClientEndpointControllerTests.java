@@ -216,8 +216,6 @@ public class ClientEndpointControllerTests {
         String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
 
         assert (id == null);
-//        deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", "master", id);
-
         System.out.println("\n-------------------------------------------------------------------------------\n");
     }
 }
