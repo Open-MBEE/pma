@@ -480,7 +480,7 @@ public class JenkinsBuildConfig {
 	 */
 	public void setEnvironmentVariables()
 	{
-		if(this.jobType.equals("docweb"))
+		if(this.jobType.equals("docgen"))
 		{
 			String pmaHost = "";
 			try {
@@ -489,7 +489,7 @@ public class JenkinsBuildConfig {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			setJenkinsShellFile("docweb.sh");
+			setJenkinsShellFile("docgen.sh");
 			setEnvironmentVariables("JOB_ID=" + this.jobID + "\n" + 
 			"TARGET_VIEW_ID=" + this.targetElement + "\n"+ 
 			"PROJECT_ID="+ this.teamworkProject + "\n" + 
