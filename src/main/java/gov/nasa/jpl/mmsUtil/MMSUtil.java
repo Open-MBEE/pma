@@ -32,6 +32,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nasa.jpl.pmaUtil.PMAUtil;
+import gov.nasa.jpl.util.JmsConnection;
+
 import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -409,7 +411,7 @@ public class MMSUtil {
 	 * @param token Alfresco token.
 	 * @return Status code returned from mms.
 	 */
-	public String modifyPartPropertyValue(String server,String projectID,String refID,String elementID,String buildNumber,String propertyName,String newPropertyValue,String token)
+	public String modifyPartPropertyValue(String server,String projectID,String refID,String elementID,String buildNumber,String propertyName,String newPropertyValue,String token , String jobId)
 	{
 		
 		// finding the part property
@@ -464,6 +466,20 @@ public class MMSUtil {
 					System.out.println("Payload: "+payload);
 					String response = mmsUtil.post(server, projectID, refID, payload); // sending element to MMS . Expecting 200 OK response
 					System.out.println("Response: "+response);
+					
+			    	try
+			    	{
+				    	JmsConnection jmc = new JmsConnection();
+				    	String jobInstanceString = getJobInstanceElement(server, projectID, refID, jobInstanceId,jobId);
+				    	JSONObject temp = new JSONObject(jobInstanceString);
+				    	jmc.publish(temp, jmc.TYPE_DELTA, refID, projectID);
+			    	}
+			    	catch(JSONException e)
+			    	{
+			    		e.printStackTrace();
+			    		logger.info(e.toString());
+			    	}
+			    	
 					return response;
 				}
 				else 
@@ -475,6 +491,20 @@ public class MMSUtil {
 			          	String jobInstanceElementID = createId();
 			    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, elementID, elementID+"_instance_"+timestamp.getTime(),buildNumber,newPropertyValue); //job element will be the owner of the instance element
 			    		String elementCreationResponse = mmsUtil.post(server, projectID, refID, on);
+			    		
+				    	try
+				    	{
+					    	JmsConnection jmc = new JmsConnection();
+					    	String jobInstanceString = getJobInstanceElement(server, projectID, refID, jobInstanceId,jobId);
+					    	JSONObject temp = new JSONObject(jobInstanceString);
+					    	jmc.publish(temp, jmc.TYPE_DELTA, refID, projectID);
+				    	}
+				    	catch(JSONException e)
+				    	{
+				    		e.printStackTrace();
+				    		logger.info(e.toString());
+				    	}
+			    		
 			    		return elementCreationResponse;
 					}
 				}
