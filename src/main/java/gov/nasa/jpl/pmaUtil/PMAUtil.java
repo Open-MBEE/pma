@@ -54,6 +54,7 @@ public class PMAUtil
 		
 		ObjectNode jobInstanceElement = mapper.createObjectNode();
 		jobInstanceElement.put("id",jobInstancesMap.get("id"));
+		jobInstanceElement.put("jobId",jobInstancesMap.get("jobId"));
 		jobInstanceElement.put("buildNumber",jobInstancesMap.get("buildNumber"));
 		jobInstanceElement.put("jobStatus",jobInstancesMap.get("jobStatus"));
 		jobInstanceElement.put("jenkinsLog",jobInstancesMap.get("jenkinsLog"));
@@ -144,7 +145,7 @@ public class PMAUtil
 	 * @param mmsJSONString Element data from MMS.
 	 * @return
 	 */
-	public String generateJobInstanceArrayJSON(String mmsJSONString)
+	public String generateJobInstanceArrayJSON(String mmsJSONString,String jobID)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode jobJSON = mapper.createObjectNode();
@@ -172,6 +173,7 @@ public class PMAUtil
 				{
 					Map<String,String> jobInstanceMap = new HashMap();
 					jobInstanceMap.put("id", jobInstanceID);
+					jobInstanceMap.put("jobId", jobID);
 					for (JsonNode element : elements) 
 					{	
 						String elementOwner = element.get("ownerId").toString().replace("\"", "");
