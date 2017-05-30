@@ -23,6 +23,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import gov.nasa.jpl.mmsUtil.MMSUtil;
+
 /**
  * @author cinyoung
  *
@@ -34,21 +36,16 @@ public class JmsConnection {
     private String projectId = null;
 
     private static ServiceRegistry services;
-    private static Map<String, ConnectionInfo> connectionMap = null;
+    private static Map<String, ConnectionInfo> connectionMap = new HashMap<String, ConnectionInfo>();
 
 	public static final String TYPE_BRANCH = "BRANCH";
 	public static final String TYPE_COMMIT = "COMMIT";
 	public static final String TYPE_DELTA = "DELTA";
 	public static final String TYPE_MERGE = "MERGE";
 	
-	String hostName = "cae-ems-int.jpl.nasa.gov";
+	String hostName = "";
 	
 	protected static Map<String, ConnectionInfo> getConnectionMap() {
-
-		connectionMap = new HashMap<String, ConnectionInfo>();
-		initConnectionInfo(TYPE_COMMIT);
-		initConnectionInfo(TYPE_DELTA);
-		initConnectionInfo(TYPE_MERGE);
 
 		return connectionMap;
 	}
@@ -65,7 +62,7 @@ public class JmsConnection {
         public String username = null;
         public String password = null;
         public String destName = "master";
-        public String uri = "tcp://cae-ems-alf5int.jpl.nasa.gov:61616";
+        public String uri = "tcp://localhost:61616";
         public ConnectionFactory connectionFactory  = new ActiveMQConnectionFactory(uri);
         public DestinationType destType = DestinationType.TOPIC;
     }
@@ -105,7 +102,6 @@ public class JmsConnection {
     
     public boolean publish(JSONObject json, String eventType, String workspaceId, String projectId) {
         boolean result = false;
-        //            json.put( "sequence", sequenceId++ );
 		            this.workspace = workspaceId;
 		            this.projectId = projectId;
 		            result = publishMessage(json.toString(), eventType);
@@ -124,26 +120,25 @@ public class JmsConnection {
     
     
     public boolean publishMessage(String msg, String eventType) {
+    	
+    	logger.info("publish event type: "+eventType);
+    	
         ConnectionInfo ci = getConnectionMap().get( eventType );
-            
+        logger.info("CI URI: "+ci.uri);
         if ( ci.uri == null) return false;
 
         if (init(eventType) == false) return false;
         
         boolean status = true;
         try {
-        	logger.info("before connection");
             // Create a Connection
             Connection connection = ci.connectionFactory.createConnection();
             
-            logger.info("before Start");
             connection.start();
 
-            logger.info("before session");
             // Create a Session
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            logger.info("before destination");
             // lookup the destination
             
             
@@ -165,12 +160,10 @@ public class JmsConnection {
 //                }
 //            }
 
-            logger.info("before producer");
             // Create a MessageProducer from the Session to the Topic or Queue
             MessageProducer producer = session.createProducer(destination);
             producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
-            logger.info("create a message");
             // Create a message
             TextMessage message = session.createTextMessage(msg);
             if (workspace != null) {
@@ -189,14 +182,14 @@ public class JmsConnection {
             logger.info("before send");
             // Tell the producer to send the message
             producer.send(message);
-            
+            logger.info("Message sent: "+message);
             // Clean up
             session.close();
             connection.close();
         }
         catch (Exception e) {
     		e.printStackTrace();
-    		logger.info(e.toString());
+    		logger.info("JMS exception caught, probably means JMS broker not up "+e.toString());
             System.out.println( "JMS exception caught, probably means JMS broker not up");
             status = false;
         }
@@ -279,6 +272,7 @@ public class JmsConnection {
     public void ingestConnectionJson(JSONObject json) {
     	try
     	{
+    		logger.info("ingest json");
 	        String eventType = null;
 	        if (json.has( "eventType" )) {
 	            eventType = json.isNull( "eventType" ) ? null : json.getString( "eventType" );
@@ -295,6 +289,8 @@ public class JmsConnection {
 	        }
 	        
 	        if (json.has( "uri" )) {
+//	        	System.out.println("IS NULL: "+json.isNull( "uri" ) );
+//	        	System.out.println("JSON URI: "+json.getString( "uri" ));
 	            ci.uri = json.isNull( "uri" ) ? null : json.getString( "uri" );
 	        }
 	        if (json.has( "connFactory" )) {
@@ -326,9 +322,13 @@ public class JmsConnection {
 	                }
 	            }
 	        }
-	        
-	        getConnectionMap().put( eventType, ci );
-		} catch (JSONException e) {
+	        logger.info("ingested eventType: "+eventType);
+	        logger.info("ingested ci uri: "+ci.uri);
+	        logger.info("ingested ci dest: "+ci.destName);
+	       	this.connectionMap.put( eventType, ci );
+	       	
+	    	
+		} catch (JSONException e) { 
 			e.printStackTrace();
 			logger.info(e.toString());
 		}
@@ -342,13 +342,20 @@ public class JmsConnection {
     {
     	try
     	{
+    		String mmsServer = "opencae-int.jpl.nasa.gov";
 	    	JmsConnection jmc = new JmsConnection();
-	    	jmc.init(TYPE_DELTA);
-	//    	JSONObject connectionJson = new JSONObject("{\"connections\": [{\"destName\": \"master\",\"ctxFactory\": \"org.apache.activemq.jndi.ActiveMQInitialContextFactory\",\"connFactory\": \"ConnectionFactory\",\"eventType\": \"DELTA\",\"uri\": \"tcp://cae-ems-int-origin.jpl.nasa.gov:61616\",\"destType\": \"TOPIC\"},{\"destName\": \"master\",\"ctxFactory\": \"org.apache.activemq.jndi.ActiveMQInitialContextFactory\",\"connFactory\": \"ConnectionFactory\",\"eventType\": \"MERGE\",\"uri\": \"tcp://cae-ems-int-origin.jpl.nasa.gov:61616\",\"destType\": \"TOPIC\"},{\"destName\": \"master\",\"ctxFactory\": \"org.apache.activemq.jndi.ActiveMQInitialContextFactory\",\"connFactory\": \"ConnectionFactory\",\"eventType\": \"BRANCH\",\"uri\": \"tcp://cae-ems-int-origin.jpl.nasa.gov:61616\",\"destType\": \"TOPIC\"}]}");
-	//    	jmc.ingestConnectionJson(connectionJson);
+	    	
+	    	String jmsSettings = MMSUtil.getJMSSettings(mmsServer);
+	    	JSONObject connectionJson = new JSONObject(jmsSettings);
+	    	jmc.ingestJson(connectionJson);
 	    	String workspaceID ="master";
 	    	String projectID = "Tommy";
-	//    	JSONObject temp = new JSONObject("{\"isStatic\": false,\"_modifier\": \"admin\",\"qualifierIds\": [],\"defaultValue\": {\"visibility\": \"public\",\"documentation\": \"\",\"mdExtensionsIds\": [],\"appliedStereotypeInstanceId\": null,\"templateParameterId\": null,\"type\": \"LiteralString\",\"ownerId\": \"PMA_1495648022023_1fe01b74-c0ac-473e-a9f4-339b152eda5f\",\"clientDependencyIds\": [],\"syncElementId\": null,\"name\": \"\",\"typeId\": null,\"id\": \"PMA_1495648022023_1fe01b74-c0ac-473e-a9f4-339b152eda5f_value\",\"supplierDependencyIds\": [],\"value\": \"05/24/2017-10:47:14\",\"_appliedStereotypeIds\": [],\"nameExpression\": null},\"mdExtensionsIds\": [],\"isUnique\": true,\"appliedStereotypeInstanceId\": null,\"templateParameterId\": null,\"aggregation\": \"composite\",\"endIds\": [],\"type\": \"Property\",\"ownerId\": \"PMA_1495648022023_474be86e-bbcd-4866-a2d1-5464844068e6\",\"isLeaf\": false,\"clientDependencyIds\": [],\"redefinedPropertyIds\": [],\"isReadOnly\": false,\"syncElementId\": null,\"associationEndId\": null,\"isDerivedUnion\": false,\"id\": \"PMA_1495648022023_1fe01b74-c0ac-473e-a9f4-339b152eda5f\",\"_elasticId\": \"5d1ecd64-080a-4a04-a53b-a79296e6bf91\",\"supplierDependencyIds\": [],\"isOrdered\": false,\"_modified\": \"2017-05-24T10:47:01.413-0700\",\"_refId\": \"master\",\"_appliedStereotypeIds\": [],\"nameExpression\": null,\"isDerived\": false,\"upperValue\": null,\"visibility\": null,\"documentation\": \"\",\"lowerValue\": null,\"_editable\": true,\"datatypeId\": null,\"subsettedPropertyIds\": [],\"_commitId\": \"762f0e9c-3b70-4f22-bec4-94b0177d84ff\",\"_creator\": \"admin\",\"isID\": false,\"_created\": \"2017-05-24T10:47:01.413-0700\",\"name\": \"completed\",\"typeId\": null,\"interfaceId\": null,\"deploymentIds\": [],\"associationId\": null,\"_projectId\": \"PROJECT-921084a3-e465-465f-944b-61194213043e\"}\"");
+	    	
+	    	for (Map.Entry entry : jmc.getConnectionMap().entrySet()) {
+	    		ConnectionInfo ci = (ConnectionInfo) entry.getValue();
+	    		System.out.println("key: "+entry.getKey() + " URL: " + ci.uri);
+	    	}
+	    	
 	    	JSONObject temp = new JSONObject("{\"refId\": \"master\"}");
 	    	jmc.publish(temp, TYPE_DELTA, workspaceID, projectID);
     	}

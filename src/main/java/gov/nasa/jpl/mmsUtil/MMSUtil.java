@@ -470,6 +470,10 @@ public class MMSUtil {
 			    	try
 			    	{
 				    	JmsConnection jmc = new JmsConnection();
+				    	String jmsSettings = MMSUtil.getJMSSettings(server);
+				    	JSONObject connectionJson = new JSONObject(jmsSettings);
+				    	jmc.ingestJson(connectionJson);
+				    	
 				    	String jobInstanceString = getJobInstanceElement(server, projectID, refID, jobInstanceId,jobId);
 				    	JSONObject temp = new JSONObject(jobInstanceString);
 				    	jmc.publish(temp, jmc.TYPE_DELTA, refID, projectID);
@@ -504,6 +508,10 @@ public class MMSUtil {
 				    		 * 
 				    		 */
 					    	JmsConnection jmc = new JmsConnection();
+					    	String jmsSettings = MMSUtil.getJMSSettings(server);
+					    	JSONObject connectionJson = new JSONObject(jmsSettings);
+					    	jmc.ingestJson(connectionJson);
+					    	
 					    	JSONObject temp = new JSONObject();
 					    	temp.put("id", jobInstanceId);
 					    	temp.put("jobId", jobId);
@@ -781,6 +789,13 @@ public class MMSUtil {
 		
 	}
 
+	/**
+	 * Retrieves alfresco token from mms.
+	 * @param server mms server
+	 * @param username mms username
+	 * @param password mms password
+	 * @return Alfresco Ticket String
+	 */
 	 public static String getAlfrescoToken(String server, String username, String password) {
 		server = server.replace("https://", "");
 		server = server.replace("/", "");
@@ -830,5 +845,35 @@ public class MMSUtil {
 			return e.toString();
 		}
 //		return "Exception Occurred";
+	}
+	 
+	 /**
+	  * Retrieves the jms settings for a mms server
+	  * @param server mms server
+	  * @return JSON String containing jms settings.
+	  */
+	 public static String getJMSSettings(String server) {
+		server = server.replace("https://", "");
+		server = server.replace("/", "");
+		HttpClient httpClient = HttpClientBuilder.create().build();
+
+		try {
+			String url = "https://"+server+"/alfresco/service/connection/jms";
+			HttpGet request = new HttpGet(url);
+			request.addHeader("Content-Type", "application/json");
+
+			HttpResponse response = httpClient.execute(request);
+			HttpEntity entity = response.getEntity();
+
+			return EntityUtils.toString(entity);
+		}
+		catch (java.net.UnknownHostException e) {
+			System.out.println("Unknown Host Exception");
+			return e.toString();
+		}catch (IOException e)
+		{
+			e.printStackTrace();
+			return e.toString();
+		}
 	}
 }
