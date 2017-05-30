@@ -431,7 +431,7 @@ public class MMSUtil {
 					// Find the ID of the job instance element.
 					if((element.get("type").toString().equals("\"Property\""))&&(element.get("defaultValue").get("value").toString().equals("\""+buildNumber+"\"")))
 					{
-						jobInstanceId = element.get("ownerId").toString();
+						jobInstanceId = element.get("ownerId").toString().replace("\"", "");
 					}
 				}
 				ObjectNode propertyElement = null;
@@ -439,7 +439,7 @@ public class MMSUtil {
 					/*
 					 * Find the property element that contains the value to be replaced.
 					 */
-					if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().equals(jobInstanceId))&&(element.get("name").toString().equals("\""+propertyName+"\"")))
+					if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().replace("\"", "").equals(jobInstanceId))&&(element.get("name").toString().equals("\""+propertyName+"\"")))
 					{
 						System.out.println("Found: "+propertyName);
 						System.out.println("Value: "+element.get("defaultValue").get("value").toString());
