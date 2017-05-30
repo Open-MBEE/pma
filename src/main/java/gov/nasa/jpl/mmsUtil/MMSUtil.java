@@ -420,7 +420,7 @@ public class MMSUtil {
 		MMSUtil mmsUtil = new MMSUtil(token);
 		
 		String jsonString = mmsUtil.get(server, projectID,refID, elementID,true);
-		System.out.println("Modify Part Property JSON String: "+jsonString);
+//		System.out.println("Modify Part Property JSON String: "+jsonString);
 		ObjectMapper mapper = new ObjectMapper();
 		
 		try {
@@ -446,6 +446,8 @@ public class MMSUtil {
 						System.out.println("Found: "+propertyName);
 						System.out.println("Value: "+element.get("defaultValue").get("value").toString());
 						propertyElement = (ObjectNode) element;
+						logger.info("Found: "+propertyName);
+						logger.info("Value: "+element.get("defaultValue").get("value").toString());
 					}
 				}
 				if(propertyElement!=null) // will be null if the property element isn't found
@@ -453,7 +455,7 @@ public class MMSUtil {
 					/*
 					 * Replace the value in the json object
 					 */
-					System.out.println("Before: "+propertyElement);
+//					System.out.println("Before: "+propertyElement);
 					ObjectNode propertyElementValue = (ObjectNode) propertyElement.get("defaultValue");
 					propertyElementValue.put("value", newPropertyValue);
 					propertyElement.put("defaultValue", propertyElementValue);
@@ -465,7 +467,7 @@ public class MMSUtil {
 					payload.put("elements",arrayElements);
 					
 					// send element to MMS
-					System.out.println("Payload: "+payload);
+//					System.out.println("Payload: "+payload);
 					String response = mmsUtil.post(server, projectID, refID, payload); // sending element to MMS . Expecting 200 OK response
 //					System.out.println("Response: "+response);
 					
@@ -487,21 +489,22 @@ public class MMSUtil {
 								jobInstanceValues.put(elementName, elementValue);
 								System.out.println("Found: "+propertyName);
 								System.out.println("Value: "+element.get("defaultValue").get("value").toString());
+								logger.info("Found: "+propertyName);
+								logger.info("Value: "+element.get("defaultValue").get("value").toString());
 							}
 						}
-						jobInstanceValues.put(propertyName, newPropertyValue);
+						jobInstanceValues.put(propertyName, newPropertyValue); // overwrites the old value
 			    		
 						// build job instance element json to be sent
-					 	JSONObject jobInstanceJSON = new JSONObject();
-				    	
-					 	jobInstanceJSON.put("id", jobInstanceId);
-				    	jobInstanceJSON.put("jobId", jobId);
+					 	JSONObject jobInstanceJSON = new JSONObject();			
 				    	
 				    	for (Map.Entry entry : jobInstanceValues.entrySet()) {
 				    		jobInstanceJSON.put((String) entry.getKey(), entry.getValue());
 				    		System.out.println("key: "+entry.getKey() + " value: "+entry.getValue());
 				    	}
-
+				    	
+					 	jobInstanceJSON.put("id", jobInstanceId);
+				    	jobInstanceJSON.put("jobId", jobId);
 				    	
 				    	// Sending job instance element to jms.
 				    	JmsConnection jmc = new JmsConnection();
@@ -549,7 +552,7 @@ public class MMSUtil {
 					    	jmc.ingestJson(connectionJson);
 					    	
 					    	JSONObject temp = new JSONObject();
-					    	temp.put("id", jobInstanceId);
+					    	temp.put("id", jobInstanceElementID);
 					    	temp.put("jobId", jobId);
 					    	temp.put("buildNumber", buildNumber);
 					    	temp.put("jobStatus", newPropertyValue);
