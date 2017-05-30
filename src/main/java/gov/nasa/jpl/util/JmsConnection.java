@@ -105,15 +105,10 @@ public class JmsConnection {
     
     public boolean publish(JSONObject json, String eventType, String workspaceId, String projectId) {
         boolean result = false;
-        try {
-            json.put( "sequence", sequenceId++ );
-            this.workspace = workspaceId;
-            this.projectId = projectId;
-            result = publishMessage(json.toString(), eventType);
-        } catch ( JSONException e ) {
-    		e.printStackTrace();
-    		logger.info(e.toString());
-        }
+        //            json.put( "sequence", sequenceId++ );
+		            this.workspace = workspaceId;
+		            this.projectId = projectId;
+		            result = publishMessage(json.toString(), eventType);
         
         return result;
     }

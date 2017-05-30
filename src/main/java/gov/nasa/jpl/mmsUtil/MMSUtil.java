@@ -463,9 +463,9 @@ public class MMSUtil {
 					payload.put("elements",arrayElements);
 					
 					// send element to MMS
-					System.out.println("Payload: "+payload);
+//					System.out.println("Payload: "+payload);
 					String response = mmsUtil.post(server, projectID, refID, payload); // sending element to MMS . Expecting 200 OK response
-					System.out.println("Response: "+response);
+//					System.out.println("Response: "+response);
 					
 			    	try
 			    	{
@@ -473,17 +473,20 @@ public class MMSUtil {
 				    	String jobInstanceString = getJobInstanceElement(server, projectID, refID, jobInstanceId,jobId);
 				    	JSONObject temp = new JSONObject(jobInstanceString);
 				    	jmc.publish(temp, jmc.TYPE_DELTA, refID, projectID);
+				    	logger.info("Sent JMS json: "+temp.toString());
+				    	System.out.println("Sent JMS json: "+temp.toString());
 			    	}
 			    	catch(JSONException e)
 			    	{
 			    		e.printStackTrace();
 			    		logger.info(e.toString());
 			    	}
-			    	
+//			    	
 					return response;
 				}
 				else 
 				{
+					// Creating job instance for the job run because it doesn't currently exist.
 					
 					if(propertyName.equals("jobStatus")) // creates the job instance
 					{
@@ -492,12 +495,28 @@ public class MMSUtil {
 			    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, elementID, elementID+"_instance_"+timestamp.getTime(),buildNumber,newPropertyValue); //job element will be the owner of the instance element
 			    		String elementCreationResponse = mmsUtil.post(server, projectID, refID, on);
 			    		
+			    		System.out.println(elementCreationResponse);
 				    	try
 				    	{
+				    		/*
+				    		 * When the job instance is first created, it will have these values by default. 
+				    		 * Couldn't retrieve the job instance part property values from MMS, since the job instance was just created a couple lines above. 
+				    		 * 
+				    		 */
 					    	JmsConnection jmc = new JmsConnection();
-					    	String jobInstanceString = getJobInstanceElement(server, projectID, refID, jobInstanceId,jobId);
-					    	JSONObject temp = new JSONObject(jobInstanceString);
+					    	JSONObject temp = new JSONObject();
+					    	temp.put("id", jobInstanceId);
+					    	temp.put("jobId", jobId);
+					    	temp.put("buildNumber", buildNumber);
+					    	temp.put("jobStatus", newPropertyValue);
+					    	temp.put("jenkinsLog", "");
+					    	temp.put("created", new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date()));
+					    	temp.put("completed", "");
+				
+					    	
 					    	jmc.publish(temp, jmc.TYPE_DELTA, refID, projectID);
+					    	logger.info("Sent JMS json: "+temp.toString());
+					    	System.out.println("Sent JMS json: "+temp.toString());
 				    	}
 				    	catch(JSONException e)
 				    	{
