@@ -491,13 +491,18 @@ public class MMSUtil {
 						}
 						jobInstanceValues.put(propertyName, newPropertyValue);
 			    		
-						// build job instance element to be sent
+						// build job instance element json to be sent
 					 	JSONObject jobInstanceJSON = new JSONObject();
+				    	
+					 	jobInstanceJSON.put("id", jobInstanceId);
+				    	jobInstanceJSON.put("jobId", jobId);
+				    	
 				    	for (Map.Entry entry : jobInstanceValues.entrySet()) {
 				    		jobInstanceJSON.put((String) entry.getKey(), entry.getValue());
 				    		System.out.println("key: "+entry.getKey() + " value: "+entry.getValue());
 				    	}
-						
+
+				    	
 				    	// Sending job instance element to jms.
 				    	JmsConnection jmc = new JmsConnection();
 				    	String jmsSettings = MMSUtil.getJMSSettings(server);
