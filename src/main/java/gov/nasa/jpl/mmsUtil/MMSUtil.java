@@ -570,14 +570,15 @@ public class MMSUtil {
 		return new ResponseEntity<String>(returnJSONString,status); // Returning the error
 	}
 	
-	public String getJobInstanceElement(String server, String project, String refID, String jobInstanceElementID)
+	public String getJobInstanceElement(String server, String project, String refID, String jobInstanceElementID,String jobSysmlID)
 	{
 		// recursive get job sysmlid
 		
 		String jsonString = get(server, project,refID, jobInstanceElementID, true);
 		
 		PMAUtil pmaUtil = new PMAUtil();
-		return pmaUtil.generateJobInstanceArrayJSON(jsonString);
+		
+		return pmaUtil.generateJobInstanceArrayJSON(jsonString,jobSysmlID);
 	}
 	
 	public ResponseEntity<String> getJobInstanceElements(String server, String project, String refID, String jobElementID)
@@ -593,7 +594,7 @@ public class MMSUtil {
 		{
 			System.out.println("is element json");
 			status = HttpStatus.OK;
-			return new ResponseEntity<String>(pmaUtil.generateJobInstanceArrayJSON(jsonString),status);
+			return new ResponseEntity<String>(pmaUtil.generateJobInstanceArrayJSON(jsonString,jobElementID),status);
 		}
 		
 		if (pmaUtil.isJSON(jsonString)) 

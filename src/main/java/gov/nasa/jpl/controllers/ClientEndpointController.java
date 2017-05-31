@@ -305,7 +305,7 @@ public class ClientEndpointController {
     			{
     				status = HttpStatus.OK;
     				
-    				String jobInstanceJSON = mmsUtil.getJobInstanceElement(mmsServer, projectID, refID, jobInstanceElementID);
+    				String jobInstanceJSON = mmsUtil.getJobInstanceElement(mmsServer, projectID, refID, jobInstanceElementID,jobSysmlID);
     				
     		        return new ResponseEntity<String>(jobInstanceJSON,status);
     			}
