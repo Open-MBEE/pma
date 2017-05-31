@@ -9,6 +9,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.HttpEntity;
@@ -32,6 +34,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nasa.jpl.pmaUtil.PMAUtil;
+import gov.nasa.jpl.util.JmsConnection;
+
 import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -409,14 +413,14 @@ public class MMSUtil {
 	 * @param token Alfresco token.
 	 * @return Status code returned from mms.
 	 */
-	public String modifyPartPropertyValue(String server,String projectID,String refID,String elementID,String buildNumber,String propertyName,String newPropertyValue,String token)
+	public String modifyPartPropertyValue(String server,String projectID,String refID,String elementID,String buildNumber,String propertyName,String newPropertyValue,String token , String jobId)
 	{
 		
 		// finding the part property
 		MMSUtil mmsUtil = new MMSUtil(token);
 		
 		String jsonString = mmsUtil.get(server, projectID,refID, elementID,true);
-		System.out.println("Modify Part Property JSON String: "+jsonString);
+//		System.out.println("Modify Part Property JSON String: "+jsonString);
 		ObjectMapper mapper = new ObjectMapper();
 		
 		try {
@@ -429,7 +433,7 @@ public class MMSUtil {
 					// Find the ID of the job instance element.
 					if((element.get("type").toString().equals("\"Property\""))&&(element.get("defaultValue").get("value").toString().equals("\""+buildNumber+"\"")))
 					{
-						jobInstanceId = element.get("ownerId").toString();
+						jobInstanceId = element.get("ownerId").toString().replace("\"", "");
 					}
 				}
 				ObjectNode propertyElement = null;
@@ -437,11 +441,13 @@ public class MMSUtil {
 					/*
 					 * Find the property element that contains the value to be replaced.
 					 */
-					if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().equals(jobInstanceId))&&(element.get("name").toString().equals("\""+propertyName+"\"")))
+					if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().replace("\"", "").equals(jobInstanceId))&&(element.get("name").toString().equals("\""+propertyName+"\"")))
 					{
 //						System.out.println("Found: "+propertyName);
 //						System.out.println("Value: "+element.get("defaultValue").get("value").toString());
 						propertyElement = (ObjectNode) element;
+						logger.info("Found: "+propertyName);
+						logger.info("Value: "+element.get("defaultValue").get("value").toString());
 					}
 				}
 				if(propertyElement!=null) // will be null if the property element isn't found
@@ -464,17 +470,107 @@ public class MMSUtil {
 //					System.out.println("Payload: "+payload);
 					String response = mmsUtil.post(server, projectID, refID, payload); // sending element to MMS . Expecting 200 OK response
 //					System.out.println("Response: "+response);
+					
+					/*
+					 * Sending jms messsage with job instance object
+					 */
+			    	try
+			    	{
+			    		// Retrieving job instance values 
+			    		Map<String,String> jobInstanceValues = new HashMap<String,String>();
+						for (JsonNode element : elements) {
+							/*
+							 * Find property elements
+							 */
+							if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().replace("\"", "").equals(jobInstanceId)))
+							{
+								String elementName = element.get("name").toString().replace("\"", "");
+								String elementValue = element.get("defaultValue").get("value").toString().replace("\"", "");
+								jobInstanceValues.put(elementName, elementValue);
+								System.out.println("Found: "+propertyName);
+								System.out.println("Value: "+element.get("defaultValue").get("value").toString());
+								logger.info("Found: "+propertyName);
+								logger.info("Value: "+element.get("defaultValue").get("value").toString());
+							}
+						}
+						jobInstanceValues.put(propertyName, newPropertyValue); // overwrites the old value
+			    		
+						// build job instance element json to be sent
+					 	JSONObject jobInstanceJSON = new JSONObject();			
+				    	
+				    	for (Map.Entry entry : jobInstanceValues.entrySet()) {
+				    		jobInstanceJSON.put((String) entry.getKey(), entry.getValue());
+				    		System.out.println("key: "+entry.getKey() + " value: "+entry.getValue());
+				    	}
+				    	
+					 	jobInstanceJSON.put("id", jobInstanceId);
+				    	jobInstanceJSON.put("jobId", jobId);
+				    	
+				    	// Sending job instance element to jms.
+				    	JmsConnection jmc = new JmsConnection();
+				    	String jmsSettings = MMSUtil.getJMSSettings(server);
+				    	JSONObject connectionJson = new JSONObject(jmsSettings);
+				    	jmc.ingestJson(connectionJson);
+				    	
+				    	jmc.publish(jobInstanceJSON, jmc.TYPE_DELTA, refID, projectID);
+				    	logger.info("Sent JMS json: "+jobInstanceJSON.toString());
+				    	System.out.println("Sent JMS json: "+jobInstanceJSON.toString());
+			    	}
+			    	catch(JSONException e)
+			    	{
+			    		e.printStackTrace();
+			    		logger.info(e.toString());
+			    	}
+
 					return response;
 				}
 				else 
 				{
 					
+					// Creating job instance for the job run because it doesn't currently exist.
 					if(propertyName.equals("jobStatus")) // creates the job instance
 					{
 			    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 			          	String jobInstanceElementID = createId();
 			    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, elementID, elementID+"_instance_"+timestamp.getTime(),buildNumber,newPropertyValue); //job element will be the owner of the instance element
 			    		String elementCreationResponse = mmsUtil.post(server, projectID, refID, on);
+			    		
+			    		System.out.println(elementCreationResponse);
+				    	
+						/*
+						 * Sending jms messsage with job instance object
+						 */
+			    		try
+				    	{
+				    		/*
+				    		 * When the job instance is first created, it will have these values by default. 
+				    		 * Couldn't retrieve the job instance part property values from MMS, since the job instance was just created a couple lines above. 
+				    		 *
+				    		 */
+					    	JmsConnection jmc = new JmsConnection();
+					    	String jmsSettings = MMSUtil.getJMSSettings(server);
+					    	JSONObject connectionJson = new JSONObject(jmsSettings);
+					    	jmc.ingestJson(connectionJson);
+					    	
+					    	JSONObject temp = new JSONObject();
+					    	temp.put("id", jobInstanceElementID);
+					    	temp.put("jobId", jobId);
+					    	temp.put("buildNumber", buildNumber);
+					    	temp.put("jobStatus", newPropertyValue);
+					    	temp.put("jenkinsLog", "");
+					    	temp.put("created", new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date()));
+					    	temp.put("completed", "");
+					    	
+					    	jmc.publish(temp, jmc.TYPE_DELTA, refID, projectID);
+					    	logger.info("Sent JMS json: "+temp.toString());
+					    	System.out.println("Sent JMS json: "+temp.toString());
+				    	}
+				    	catch(JSONException e)
+				    	{
+				    		e.printStackTrace();
+				    		logger.info(e.toString());
+				    	}
+			    		
 			    		return elementCreationResponse;
 					}
 				}
@@ -732,6 +828,13 @@ public class MMSUtil {
 		
 	}
 
+	/**
+	 * Retrieves alfresco token from mms.
+	 * @param server mms server
+	 * @param username mms username
+	 * @param password mms password
+	 * @return Alfresco Ticket String
+	 */
 	 public static String getAlfrescoToken(String server, String username, String password) {
 		server = server.replace("https://", "");
 		server = server.replace("/", "");
@@ -781,5 +884,35 @@ public class MMSUtil {
 			return e.toString();
 		}
 //		return "Exception Occurred";
+	}
+	 
+	 /**
+	  * Retrieves the jms settings for a mms server
+	  * @param server mms server
+	  * @return JSON String containing jms settings.
+	  */
+	 public static String getJMSSettings(String server) {
+		server = server.replace("https://", "");
+		server = server.replace("/", "");
+		HttpClient httpClient = HttpClientBuilder.create().build();
+
+		try {
+			String url = "https://"+server+"/alfresco/service/connection/jms";
+			HttpGet request = new HttpGet(url);
+			request.addHeader("Content-Type", "application/json");
+
+			HttpResponse response = httpClient.execute(request);
+			HttpEntity entity = response.getEntity();
+
+			return EntityUtils.toString(entity);
+		}
+		catch (java.net.UnknownHostException e) {
+			System.out.println("Unknown Host Exception");
+			return e.toString();
+		}catch (IOException e)
+		{
+			e.printStackTrace();
+			return e.toString();
+		}
 	}
 }

@@ -45,6 +45,8 @@ public class JobUpdateController
 	{
 		logger.info("Update Jobs was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"JobID: "+jobID+ "\n"+"Build Number: "+buildNumber+ "\n"+"Property admin: "+propertyName+ "\n"+"Value: "+value+ "\n"+"mmsServer: "+mmsServer+ "\n"+"Body Content: "+bodyContent);
+		System.out.println( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"JobID: "+jobID+ "\n"+"Build Number: "+buildNumber+ "\n"+"Property admin: "+propertyName+ "\n"+"Value: "+value+ "\n"+"mmsServer: "+mmsServer+ "\n"+"Body Content: "+bodyContent);
+		
 		// recieve token from jenkins
 		String token = "";
 //		String server = "opencae-uat.jpl.nasa.gov";
@@ -77,11 +79,11 @@ public class JobUpdateController
 		 * Finds the property and updates the value on mms. 
 		 * If the job instance doesn't exist, one will be created for the jenkins run.
 		 */
-		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token);
+		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token, jobID);
 		logger.info("MMS Response: "+mmsResponse);
 		if (propertyName.equals("jobStatus") && value.equals("completed")) {
 			String currentTimestamp = new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date());
-			mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, token);
+			mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, token, jobID);
 			logger.info(mmsResponse);
 		}
 
