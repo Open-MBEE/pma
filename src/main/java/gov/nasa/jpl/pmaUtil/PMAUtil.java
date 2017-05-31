@@ -229,7 +229,7 @@ public class PMAUtil
 	
 	// Accepts the get job instances json and returns the most recent instance.
 	// looks for the job instance with the highest build number
-	public static void getLatestJobInstance(String jsonString)
+	public static String getLatestJobInstance(String jsonString)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 	
@@ -262,7 +262,7 @@ public class PMAUtil
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println(latestJobInstance.toString());
+		return(latestJobInstance.toString());
 			
 	}
 	
@@ -270,6 +270,6 @@ public class PMAUtil
 	{
 		String jsonString = "{\"jobInstances\": [{\"id\": \"PMA_1493929692690_e9c15e52-1a21-4dd2-8c14-413ebd519c18\",\"buildNumber\": \"2\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null},{\"id\": \"PMA_1493929332779_c035124d-06af-40b7-ad7f-ce7781b08a3e\",\"buildNumber\": \"1\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null}]}";
 //		String jsonString = "{\"jobInstances\": []}";
-		getLatestJobInstance(jsonString);
+		System.out.println(getLatestJobInstance(jsonString));
 	}
 }
