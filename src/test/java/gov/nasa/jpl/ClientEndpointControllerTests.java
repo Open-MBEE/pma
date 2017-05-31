@@ -48,14 +48,17 @@ public class ClientEndpointControllerTests {
     private void configVeEndpointController(String mmsUser, String mmsPass, String jenkinsUser) {
         String user = jenkinsUser;
         if (user == null) {
-            je.setCredentials();
-        } else {
-            System.out.println("\n=======================================================\n FOUND ENV USER \n");
-            String password = System.getenv("JENKINS_TEST_PASSWORD");
-            je.setUsername(user);
-            je.setPassword(password);
-            dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int");
-            je.setURL("cae-jenkins2-int.jpl.nasa.gov");
+            user = System.getenv("JENKINS_TEST_USER");
+            if (user == null) {
+                je.setCredentials();
+            } else {
+                System.out.println("\n=======================================================\n FOUND ENV USER \n");
+                String password = System.getenv("JENKINS_TEST_PASSWORD");
+                je.setUsername(user);
+                je.setPassword(password);
+                dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int");
+                je.setURL("cae-jenkins2-int.jpl.nasa.gov");
+            }
         }
         if (mmsUser == null || mmsPass == null) {
             System.out.println("MMSUser or Pass is null");
