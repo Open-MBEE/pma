@@ -32,7 +32,7 @@ import gov.nasa.jpl.mmsUtil.MMSUtil;
 public class JmsConnection {
     private static Logger logger = Logger.getLogger(JmsConnection.class);
     private long sequenceId = 0;
-    private String workspace = null;
+    private String refId = null;
     private String projectId = null;
 
     private static ServiceRegistry services;
@@ -100,9 +100,9 @@ public class JmsConnection {
     }
     
     
-    public boolean publish(JSONObject json, String eventType, String workspaceId, String projectId) {
+    public boolean publish(JSONObject json, String eventType, String refId, String projectId) {
         boolean result = false;
-		            this.workspace = workspaceId;
+		            this.refId = refId;
 		            this.projectId = projectId;
 		            result = publishMessage(json.toString(), eventType);
         
@@ -165,20 +165,22 @@ public class JmsConnection {
             producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
             // Create a message
-            TextMessage message = session.createTextMessage(msg);
-            if (workspace != null) {
-                message.setStringProperty( "workspace", workspace );
+            TextMessage message = session.createTextMessage("");
+            if (refId != null) {
+                message.setStringProperty( "refId", refId );
             } else {
-                message.setStringProperty( "workspace", "master" );
+                message.setStringProperty( "refId", "master" );
             }
             if (projectId != null) {
                 message.setStringProperty( "projectId", projectId );
             }
             message.setLongProperty( "MessageID", sequenceId++ );
+            message.setStringProperty( "MessageSource", "PMA" );
 //            message.setStringProperty( "MessageSource", hostName );
 //            message.setStringProperty( "MessageRecipient", "TMS" );
             message.setStringProperty( "MessageType", eventType.toUpperCase() );
-
+            message.setStringProperty("UpdatedJobs", msg);
+            
             logger.info("before send");
             // Tell the producer to send the message
             producer.send(message);
@@ -197,8 +199,8 @@ public class JmsConnection {
         return status;
     }
     
-    public void setWorkspace( String workspace ) {
-        this.workspace = workspace;
+    public void setRefId( String refId ) {
+        this.refId = refId;
     }
 
     public void setProjectId( String projectId ) {
@@ -348,7 +350,7 @@ public class JmsConnection {
 	    	String jmsSettings = MMSUtil.getJMSSettings(mmsServer);
 	    	JSONObject connectionJson = new JSONObject(jmsSettings);
 	    	jmc.ingestJson(connectionJson);
-	    	String workspaceID ="master";
+	    	String refId ="master";
 	    	String projectID = "Tommy";
 	    	
 	    	for (Map.Entry entry : jmc.getConnectionMap().entrySet()) {
@@ -357,7 +359,7 @@ public class JmsConnection {
 	    	}
 	    	
 	    	JSONObject temp = new JSONObject("{\"refId\": \"master\"}");
-	    	jmc.publish(temp, TYPE_DELTA, workspaceID, projectID);
+	    	jmc.publish(temp, TYPE_DELTA, refId, projectID);
     	}
     	catch(JSONException e)
     	{

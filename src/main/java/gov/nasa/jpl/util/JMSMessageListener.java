@@ -31,6 +31,7 @@ public class JMSMessageListener
 					TextMessage tm = (TextMessage) msg;
 					System.out.println("Message: ");
 					System.out.println(tm.getText()); // print message content
+					System.out.println("To String: "+tm.toString());
 					System.out.println();
 				}
 			} finally {
