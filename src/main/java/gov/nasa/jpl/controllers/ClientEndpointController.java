@@ -180,23 +180,23 @@ public class ClientEndpointController {
 		if(!jobPackageExists) // create jobs bin package if it doesn't exist.
 		{
 			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm");
-			System.out.println(packageNode.toString());
+//			System.out.println(packageNode.toString());
 			mmsUtil.post(mmsServer, projectID, alfrescoToken, packageNode);
 		}
 		
 		String jobElementID = mmsUtil.createId();
 		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,command,schedule,"jobs_bin_"+projectID,arguments); // Job elements should be created in the jobs bin package
 		
-		System.out.println("Job class JSON: "+on.toString());
+//		System.out.println("Job class JSON: "+on.toString());
 		logger.info("Job class JSON: "+on.toString());
 		
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
-		System.out.println("MMS Job element response: "+elementCreationResponse);
+//		System.out.println("MMS Job element response: "+elementCreationResponse);
 		logger.info("MMS Job element response: "+elementCreationResponse);
 		System.out.println("");
 		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
 		{
-			System.out.println("Created Job Element ID: "+jobElementID);
+//			System.out.println("Created Job Element ID: "+jobElementID);
 			
 			// Post to jenkins using jobElementID as the job name
 	       
@@ -218,7 +218,7 @@ public class ClientEndpointController {
 	        JenkinsEngine je = login();
 
 	        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
-	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
+//	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
 	        
 	        if(jobCreationResponse.equals("HTTP/1.1 200 OK"))
 	        {
@@ -240,7 +240,7 @@ public class ClientEndpointController {
     		ObjectNode responseJSON = mapper.createObjectNode();
     		responseJSON.put("message", elementCreationResponse+" MMS");
     		elementCreationResponse = responseJSON.toString();
-    		System.out.println("Return message: "+elementCreationResponse);
+//    		System.out.println("Return message: "+elementCreationResponse);
 			logger.info("Return message: "+elementCreationResponse+" MMS"); // job element not created on mms. 
 			return new ResponseEntity<String>(elementCreationResponse,status);
 		}
@@ -270,7 +270,7 @@ public class ClientEndpointController {
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
     	String jobResponse = je.getJob(jobSysmlID);
-    	System.out.println("Job Response: "+jobResponse);
+//    	System.out.println("Job Response: "+jobResponse);
     	if(!jobResponse.equals("Job Not Found"))
     	{
     		System.out.println("");
@@ -286,11 +286,11 @@ public class ClientEndpointController {
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
     		String jobInstanceElementID = mmsUtil.createId();
     		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, jobSysmlID, jobSysmlID+"_instance_"+timestamp.getTime(),nextBuildNumber,"pending"); //job element will be the owner of the instance element
-    		System.out.println("job instance JSON: "+on.toString());
+//    		System.out.println("job instance JSON: "+on.toString());
     		logger.info("job instance JSON: "+on.toString());
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
     		
-    		System.out.println("job instance element creation response"+elementCreationResponse);
+//    		System.out.println("job instance element creation response"+elementCreationResponse);
     		logger.info("job instance element creation response"+elementCreationResponse);
     		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
     		{
@@ -298,9 +298,9 @@ public class ClientEndpointController {
     	        String runResponse = je.executeJob(jobSysmlID); // job name should be the job sysmlID
     	        je.getBuildNumber(jobSysmlID);
     	        
-    			System.out.println("Job run response: "+runResponse);
+//    			System.out.println("Job run response: "+runResponse);
     			logger.info("Run job Jenkins response: "+runResponse);
-    			System.out.println("JOBRUN: "+runResponse);
+//    			System.out.println("JOBRUN: "+runResponse);
     			if(runResponse.equals("HTTP/1.1 201 Created"))
     			{
     				status = HttpStatus.OK;

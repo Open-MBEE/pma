@@ -439,8 +439,8 @@ public class MMSUtil {
 					 */
 					if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().equals(jobInstanceId))&&(element.get("name").toString().equals("\""+propertyName+"\"")))
 					{
-						System.out.println("Found: "+propertyName);
-						System.out.println("Value: "+element.get("defaultValue").get("value").toString());
+//						System.out.println("Found: "+propertyName);
+//						System.out.println("Value: "+element.get("defaultValue").get("value").toString());
 						propertyElement = (ObjectNode) element;
 					}
 				}
@@ -449,7 +449,7 @@ public class MMSUtil {
 					/*
 					 * Replace the value in the json object
 					 */
-					System.out.println("Before: "+propertyElement);
+//					System.out.println("Before: "+propertyElement);
 					ObjectNode propertyElementValue = (ObjectNode) propertyElement.get("defaultValue");
 					propertyElementValue.put("value", newPropertyValue);
 					propertyElement.put("defaultValue", propertyElementValue);
@@ -461,9 +461,9 @@ public class MMSUtil {
 					payload.put("elements",arrayElements);
 					
 					// send element to MMS
-					System.out.println("Payload: "+payload);
+//					System.out.println("Payload: "+payload);
 					String response = mmsUtil.post(server, projectID, refID, payload); // sending element to MMS . Expecting 200 OK response
-					System.out.println("Response: "+response);
+//					System.out.println("Response: "+response);
 					return response;
 				}
 				else 
@@ -502,7 +502,7 @@ public class MMSUtil {
 		// recursive get job sysmlid
 		String jsonString = get(server, projectID,refID, "jobs_bin_"+projectID, true);
 		
-		System.out.println("Get job elements string: "+jsonString);
+//		System.out.println("Get job elements string: "+jsonString);
 		
 		PMAUtil pmaUtil = new PMAUtil();
 		if(isElementJSON(jsonString)) // It will be an error if the json string is not an element JSON.
@@ -525,7 +525,7 @@ public class MMSUtil {
 		}
 		
 		logger.info("Get Job element return JSON: "+returnJSONString);
-		System.out.println("Get Job element return JSON: "+returnJSONString);
+//		System.out.println("Get Job element return JSON: "+returnJSONString);
 		return new ResponseEntity<String>(returnJSONString,status); // Returning the error
 	}
 	
@@ -542,7 +542,7 @@ public class MMSUtil {
 	{
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 		String jsonString = get(server,project,refID,jobElementID,true); //should contain job element information from mms
-		System.out.println("Get job elements string: "+jsonString);
+//		System.out.println("Get job elements string: "+jsonString);
 		String returnJSONString = "";
 		
 		PMAUtil pmaUtil = new PMAUtil();
@@ -566,7 +566,7 @@ public class MMSUtil {
 		}
 		
 		logger.info("Get Job element return JSON: "+returnJSONString);
-		System.out.println("Get Job element return JSON: "+returnJSONString);
+//		System.out.println("Get Job element return JSON: "+returnJSONString);
 		return new ResponseEntity<String>(returnJSONString,status); // Returning the error
 	}
 	
@@ -610,7 +610,7 @@ public class MMSUtil {
 		}
 		
 		logger.info("Get Job element return JSON: "+returnJSONString);
-		System.out.println("Get Job element return JSON: "+returnJSONString);
+//		System.out.println("Get Job element return JSON: "+returnJSONString);
 		return new ResponseEntity<String>(returnJSONString,status); // Returning the error
 //		return pmaUtil.generateJobInstanceArrayJSON(jsonString);
 	}
@@ -633,7 +633,7 @@ public class MMSUtil {
 		// finds a package with id projectID_job
 		String packageID = "jobs_bin_"+projectID;
 		String jsonReturnString = this.get(server,projectID,refID,packageID,true);
-		System.out.println("JSON RETURN STRING: "+jsonReturnString);
+//		System.out.println("JSON RETURN STRING: "+jsonReturnString);
 		
 		try {
 		ObjectMapper mapper = new ObjectMapper();
@@ -699,7 +699,7 @@ public class MMSUtil {
 
 		
 		ObjectNode on = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm");
-		System.out.println(on.toString());
+//		System.out.println(on.toString());
 		mmsUtil.post(server, projectID, token, on);
 		
 		try {
@@ -709,7 +709,7 @@ public class MMSUtil {
 			e.printStackTrace();
 		}
 		
-		System.out.println("Package: "+mmsUtil.jobPackageExists(server, projectID, refID));
+//		System.out.println("Package: "+mmsUtil.jobPackageExists(server, projectID, refID));
 //		System.out.println(mmsUtil.get(server, projectID, refID, "jobs_bin_PROJECT-921084a3-e465-465f-944b-61194213043e", true));
 		
 //		String jobElementID = "PMA_"+timestamp.getTime();
