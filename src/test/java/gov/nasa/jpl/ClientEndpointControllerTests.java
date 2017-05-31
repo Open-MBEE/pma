@@ -190,32 +190,32 @@ public class ClientEndpointControllerTests {
 
     }
 
-    @Test
-    public void testIncorrectMMSAuthentication() {
-        System.out.println("\n----------------------- [ Incorrect MMS Authentication ] -----------------------\n");
-        configVeEndpointController("wrongUser", "wrongPass");
-        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
-        jobInstanceFromClient.setMmsServer(testServer);
-        jobInstanceFromClient.setArguments(null);
-        jobInstanceFromClient.setAlfrescoToken(alfTicket);
-
-        try {
-            String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
-            assert (false);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        System.out.println("\n-------------------------------------------------------------------------------\n");
-    }
-
-    @Test
-    public void testIncorrectJenkinsCredential() {
-        System.out.println("\n----------------------- [ Incorrect Jenkins Credentials ] -----------------------\n");
-        configVeEndpointController(null,null, "someUser");
-
-        String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
-
-        assert (id == null);
-        System.out.println("\n-------------------------------------------------------------------------------\n");
-    }
+//    @Test
+//    public void testIncorrectMMSAuthentication() {
+//        System.out.println("\n----------------------- [ Incorrect MMS Authentication ] -----------------------\n");
+//        configVeEndpointController("wrongUser", "wrongPass");
+//        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
+//        jobInstanceFromClient.setMmsServer(testServer);
+//        jobInstanceFromClient.setArguments(null);
+//        jobInstanceFromClient.setAlfrescoToken(alfTicket);
+//
+//        try {
+//            String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
+//            assert (false);
+//        } catch (Exception e) {
+//            System.out.println(e.getMessage());
+//        }
+//        System.out.println("\n-------------------------------------------------------------------------------\n");
+//    }
+//
+//    @Test
+//    public void testIncorrectJenkinsCredential() {
+//        System.out.println("\n----------------------- [ Incorrect Jenkins Credentials ] -----------------------\n");
+//        configVeEndpointController(null,null, "someUser");
+//
+//        String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
+//
+//        assert (id == null);
+//        System.out.println("\n-------------------------------------------------------------------------------\n");
+//    }
 }
