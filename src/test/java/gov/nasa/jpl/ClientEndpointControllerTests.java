@@ -48,14 +48,17 @@ public class ClientEndpointControllerTests {
     private void configVeEndpointController(String mmsUser, String mmsPass, String jenkinsUser) {
         String user = jenkinsUser;
         if (user == null) {
-            je.setCredentials();
-        } else {
-            System.out.println("\n=======================================================\n FOUND ENV USER \n");
-            String password = System.getenv("JENKINS_TEST_PASSWORD");
-            je.setUsername(user);
-            je.setPassword(password);
-            dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int");
-            je.setURL("cae-jenkins2-int.jpl.nasa.gov");
+            user = System.getenv("JENKINS_TEST_USER");
+            if (user == null) {
+                je.setCredentials();
+            } else {
+                System.out.println("\n=======================================================\n FOUND ENV USER \n");
+                String password = System.getenv("JENKINS_TEST_PASSWORD");
+                je.setUsername(user);
+                je.setPassword(password);
+                dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int");
+                je.setURL("cae-jenkins2-int.jpl.nasa.gov");
+            }
         }
         if (mmsUser == null || mmsPass == null) {
             System.out.println("MMSUser or Pass is null");
@@ -190,32 +193,32 @@ public class ClientEndpointControllerTests {
 
     }
 
-    @Test
-    public void testIncorrectMMSAuthentication() {
-        System.out.println("\n----------------------- [ Incorrect MMS Authentication ] -----------------------\n");
-        configVeEndpointController("wrongUser", "wrongPass");
-        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
-        jobInstanceFromClient.setMmsServer(testServer);
-        jobInstanceFromClient.setArguments(null);
-        jobInstanceFromClient.setAlfrescoToken(alfTicket);
-
-        try {
-            String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
-            assert (false);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        System.out.println("\n-------------------------------------------------------------------------------\n");
-    }
-
-    @Test
-    public void testIncorrectJenkinsCredential() {
-        System.out.println("\n----------------------- [ Incorrect Jenkins Credentials ] -----------------------\n");
-        configVeEndpointController(null,null, "someUser");
-
-        String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
-
-        assert (id == null);
-        System.out.println("\n-------------------------------------------------------------------------------\n");
-    }
+//    @Test
+//    public void testIncorrectMMSAuthentication() {
+//        System.out.println("\n----------------------- [ Incorrect MMS Authentication ] -----------------------\n");
+//        configVeEndpointController("wrongUser", "wrongPass");
+//        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
+//        jobInstanceFromClient.setMmsServer(testServer);
+//        jobInstanceFromClient.setArguments(null);
+//        jobInstanceFromClient.setAlfrescoToken(alfTicket);
+//
+//        try {
+//            String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
+//            assert (false);
+//        } catch (Exception e) {
+//            System.out.println(e.getMessage());
+//        }
+//        System.out.println("\n-------------------------------------------------------------------------------\n");
+//    }
+//
+//    @Test
+//    public void testIncorrectJenkinsCredential() {
+//        System.out.println("\n----------------------- [ Incorrect Jenkins Credentials ] -----------------------\n");
+//        configVeEndpointController(null,null, "someUser");
+//
+//        String id = createJobGetId("PROJECT-921084a3-e465-465f-944b-61194213043e", "master");
+//
+//        assert (id == null);
+//        System.out.println("\n-------------------------------------------------------------------------------\n");
+//    }
 }
