@@ -70,3 +70,9 @@ ticket=$(curl -X POST -H Content-Type:application/json --data "{"username":$MMS_
 
 pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$ticket" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus/$status?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse
+
+artifactLink=$BUILD_URL"artifact/MDNotificationWindowText.html"
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$ticket" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus/$status?mmsServer=${MMS_HOST})
+echo pmaResponse $pmaResponse
+
+exit $mdExitCode
