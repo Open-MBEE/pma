@@ -81,7 +81,17 @@ public class JobUpdateController
 		 */
 		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token, jobID);
 		logger.info("MMS Response: "+mmsResponse);
+		
 		if (propertyName.equals("jobStatus") && value.equals("completed")) {
+			try {
+				/*
+				 * This sleep is here because I need to wait for elastic search to update after modifying the job status.  
+				 */
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			String currentTimestamp = new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date());
 			mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, token, jobID);
 			logger.info(mmsResponse);

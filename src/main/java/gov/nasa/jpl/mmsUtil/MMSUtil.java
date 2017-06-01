@@ -421,6 +421,7 @@ public class MMSUtil {
 		
 		String jsonString = mmsUtil.get(server, projectID,refID, elementID,true);
 //		System.out.println("Modify Part Property JSON String: "+jsonString);
+		logger.info("Modify Part Property JSON String: "+jsonString);
 		ObjectMapper mapper = new ObjectMapper();
 		
 		try {
@@ -489,10 +490,10 @@ public class MMSUtil {
 									String elementName = element.get("name").toString().replace("\"", "");
 									String elementValue = element.get("defaultValue").get("value").toString().replace("\"", "");
 									jobInstanceValues.put(elementName, elementValue);
-									System.out.println("Found: "+propertyName);
-									System.out.println("Value: "+element.get("defaultValue").get("value").toString());
-									logger.info("Found: "+propertyName);
-									logger.info("Value: "+element.get("defaultValue").get("value").toString());
+									System.out.println("Found: "+elementName);
+									System.out.println("Value: "+elementValue);
+									logger.info("Found: "+elementName);
+									logger.info("Value: "+elementValue);
 								}
 							}
 							jobInstanceValues.put(propertyName, newPropertyValue); // overwrites the old value
