@@ -85,9 +85,10 @@ public class JobUpdateController
 		if (propertyName.equals("jobStatus") && value.equals("completed")) {
 			try {
 				/*
-				 * This sleep is here because I need to wait for elastic search to update after modifying the job status.  
+				 * This sleep is here because I need to wait for elastic search to update after modifying the job status. 
+				 * I retrieve all the properties of the job instance in a function call below. Without the sleep, I will sometimes get an empty JSON object. 
 				 */
-				Thread.sleep(2000);
+				Thread.sleep(5000);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
