@@ -124,14 +124,14 @@ public class JenkinsBuildConfig {
 			daysToKeep.appendChild(doc.createTextNode("-1"));
 			Element numToKeep = doc.createElement("numToKeep");
 			numToKeep.appendChild(doc.createTextNode("-1"));
-			Element artifactDaysToKeep = doc.createElement("artifactDaysToKeep");
-			artifactDaysToKeep.appendChild(doc.createTextNode("28"));
+//			Element artifactDaysToKeep = doc.createElement("artifactDaysToKeep");
+//			artifactDaysToKeep.appendChild(doc.createTextNode("28"));
 			Element artifactNumToKeep = doc.createElement("artifactNumToKeep");
 			artifactNumToKeep.appendChild(doc.createTextNode("-1"));
 
 			logRotator.appendChild(daysToKeep);
 			logRotator.appendChild(numToKeep);
-			logRotator.appendChild(artifactDaysToKeep);
+//			logRotator.appendChild(artifactDaysToKeep);
 			logRotator.appendChild(artifactNumToKeep);
 
 			discardOldBuilds.appendChild(logRotator);
@@ -489,6 +489,7 @@ public class JenkinsBuildConfig {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			setArtifactFile("MDNotificationWindowText.html");
 			setJenkinsShellFile("docgen.sh");
 			setEnvironmentVariables("JOB_ID=" + this.jobID + "\n" + 
 			"TARGET_VIEW_ID=" + this.targetElement + "\n"+ 
