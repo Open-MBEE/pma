@@ -515,7 +515,7 @@ public class MMSUtil {
 					    	jmc.ingestJson(connectionJson);
 					    	
 					    	JSONObject jmsJSON = new JSONObject();	
-					    	jmsJSON.put("UpdatedJobs", jobInstanceJSON);
+					    	jmsJSON.put("updatedJobs", jobInstanceJSON);
 					    	jmc.publish(jmsJSON, jmc.TYPE_DELTA, refID, projectID);
 					    	logger.info("Sent JMS json: "+jmsJSON.toString());
 					    	System.out.println("Sent JMS json: "+jmsJSON.toString());
@@ -568,7 +568,7 @@ public class MMSUtil {
 						    	jobInstanceJSON.put("completed", "");
 						    	
 						    	JSONObject jmsJSON = new JSONObject();	
-						    	jmsJSON.put("UpdatedJobs", jobInstanceJSON);
+						    	jmsJSON.put("updatedJobs", jobInstanceJSON);
 						    	
 						    	jmc.publish(jobInstanceJSON, jmc.TYPE_DELTA, refID, projectID);
 						    	logger.info("Sent JMS json: "+jobInstanceJSON.toString());
