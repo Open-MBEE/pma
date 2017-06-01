@@ -81,7 +81,18 @@ public class JobUpdateController
 		 */
 		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token, jobID);
 		logger.info("MMS Response: "+mmsResponse);
+		
 		if (propertyName.equals("jobStatus") && value.equals("completed")) {
+			try {
+				/*
+				 * This sleep is here because I need to wait for elastic search to update after modifying the job status. 
+				 * I retrieve all the properties of the job instance in a function call below. Without the sleep, I will sometimes get an empty JSON object. 
+				 */
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			String currentTimestamp = new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date());
 			mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, token, jobID);
 			logger.info(mmsResponse);

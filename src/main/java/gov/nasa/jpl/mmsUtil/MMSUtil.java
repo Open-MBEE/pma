@@ -421,6 +421,7 @@ public class MMSUtil {
 		
 		String jsonString = mmsUtil.get(server, projectID,refID, elementID,true);
 //		System.out.println("Modify Part Property JSON String: "+jsonString);
+		logger.info("Modify Part Property JSON String: "+jsonString);
 		ObjectMapper mapper = new ObjectMapper();
 		
 		try {
@@ -474,54 +475,58 @@ public class MMSUtil {
 					/*
 					 * Sending jms messsage with job instance object
 					 */
-			    	try
-			    	{
-			    		// Retrieving job instance values 
-			    		Map<String,String> jobInstanceValues = new HashMap<String,String>();
-						for (JsonNode element : elements) {
-							/*
-							 * Find property elements
-							 */
-							if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().replace("\"", "").equals(jobInstanceId)))
-							{
-								String elementName = element.get("name").toString().replace("\"", "");
-								String elementValue = element.get("defaultValue").get("value").toString().replace("\"", "");
-								jobInstanceValues.put(elementName, elementValue);
-								System.out.println("Found: "+propertyName);
-								System.out.println("Value: "+element.get("defaultValue").get("value").toString());
-								logger.info("Found: "+propertyName);
-								logger.info("Value: "+element.get("defaultValue").get("value").toString());
+		    		if (response.equals("HTTP/1.1 200 OK"))
+		    		{
+				    	try
+				    	{
+				    		// Retrieving job instance values 
+				    		Map<String,String> jobInstanceValues = new HashMap<String,String>();
+							for (JsonNode element : elements) {
+								/*
+								 * Find property elements
+								 */
+								if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().replace("\"", "").equals(jobInstanceId)))
+								{
+									String elementName = element.get("name").toString().replace("\"", "");
+									String elementValue = element.get("defaultValue").get("value").toString().replace("\"", "");
+									jobInstanceValues.put(elementName, elementValue);
+									System.out.println("Found: "+elementName);
+									System.out.println("Value: "+elementValue);
+									logger.info("Found: "+elementName);
+									logger.info("Value: "+elementValue);
+								}
 							}
-						}
-						jobInstanceValues.put(propertyName, newPropertyValue); // overwrites the old value
-			    		
-						// build job instance element json to be sent
-					 	JSONObject jobInstanceJSON = new JSONObject();			
-				    	
-				    	for (Map.Entry entry : jobInstanceValues.entrySet()) {
-				    		jobInstanceJSON.put((String) entry.getKey(), entry.getValue());
-				    		System.out.println("key: "+entry.getKey() + " value: "+entry.getValue());
+							jobInstanceValues.put(propertyName, newPropertyValue); // overwrites the old value
+				    		
+							// build job instance element json to be sent
+						 	JSONObject jobInstanceJSON = new JSONObject();			
+					    	
+					    	for (Map.Entry entry : jobInstanceValues.entrySet()) {
+					    		jobInstanceJSON.put((String) entry.getKey(), entry.getValue());
+					    		System.out.println("key: "+entry.getKey() + " value: "+entry.getValue());
+					    	}
+					    	
+						 	jobInstanceJSON.put("id", jobInstanceId);
+					    	jobInstanceJSON.put("jobId", jobId);
+					    	
+					    	// Sending job instance element to jms.
+					    	JmsConnection jmc = new JmsConnection();
+					    	String jmsSettings = MMSUtil.getJMSSettings(server);
+					    	JSONObject connectionJson = new JSONObject(jmsSettings);
+					    	jmc.ingestJson(connectionJson);
+					    	
+					    	JSONObject jmsJSON = new JSONObject();	
+					    	jmsJSON.put("updatedJobs", jobInstanceJSON);
+					    	jmc.publish(jmsJSON, jmc.TYPE_DELTA, refID, projectID);
+					    	logger.info("Sent JMS json: "+jmsJSON.toString());
+					    	System.out.println("Sent JMS json: "+jmsJSON.toString());
 				    	}
-				    	
-					 	jobInstanceJSON.put("id", jobInstanceId);
-				    	jobInstanceJSON.put("jobId", jobId);
-				    	
-				    	// Sending job instance element to jms.
-				    	JmsConnection jmc = new JmsConnection();
-				    	String jmsSettings = MMSUtil.getJMSSettings(server);
-				    	JSONObject connectionJson = new JSONObject(jmsSettings);
-				    	jmc.ingestJson(connectionJson);
-				    	
-				    	jmc.publish(jobInstanceJSON, jmc.TYPE_DELTA, refID, projectID);
-				    	logger.info("Sent JMS json: "+jobInstanceJSON.toString());
-				    	System.out.println("Sent JMS json: "+jobInstanceJSON.toString());
-			    	}
-			    	catch(JSONException e)
-			    	{
-			    		e.printStackTrace();
-			    		logger.info(e.toString());
-			    	}
-
+				    	catch(JSONException e)
+				    	{
+				    		e.printStackTrace();
+				    		logger.info(e.toString());
+				    	}
+		    		}
 					return response;
 				}
 				else 
@@ -540,37 +545,42 @@ public class MMSUtil {
 						/*
 						 * Sending jms messsage with job instance object
 						 */
-			    		try
-				    	{
-				    		/*
-				    		 * When the job instance is first created, it will have these values by default. 
-				    		 * Couldn't retrieve the job instance part property values from MMS, since the job instance was just created a couple lines above. 
-				    		 *
-				    		 */
-					    	JmsConnection jmc = new JmsConnection();
-					    	String jmsSettings = MMSUtil.getJMSSettings(server);
-					    	JSONObject connectionJson = new JSONObject(jmsSettings);
-					    	jmc.ingestJson(connectionJson);
-					    	
-					    	JSONObject temp = new JSONObject();
-					    	temp.put("id", jobInstanceElementID);
-					    	temp.put("jobId", jobId);
-					    	temp.put("buildNumber", buildNumber);
-					    	temp.put("jobStatus", newPropertyValue);
-					    	temp.put("jenkinsLog", "");
-					    	temp.put("created", new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date()));
-					    	temp.put("completed", "");
-					    	
-					    	jmc.publish(temp, jmc.TYPE_DELTA, refID, projectID);
-					    	logger.info("Sent JMS json: "+temp.toString());
-					    	System.out.println("Sent JMS json: "+temp.toString());
-				    	}
-				    	catch(JSONException e)
-				    	{
-				    		e.printStackTrace();
-				    		logger.info(e.toString());
-				    	}
-			    		
+			    		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
+			    		{
+				    		try
+					    	{
+					    		/*
+					    		 * When the job instance is first created, it will have these values by default. 
+					    		 * Couldn't retrieve the job instance part property values from MMS, since the job instance was just created a couple lines above. 
+					    		 *
+					    		 */
+						    	JmsConnection jmc = new JmsConnection();
+						    	String jmsSettings = MMSUtil.getJMSSettings(server);
+						    	JSONObject connectionJson = new JSONObject(jmsSettings);
+						    	jmc.ingestJson(connectionJson);
+						    	
+						    	JSONObject jobInstanceJSON = new JSONObject();
+						    	jobInstanceJSON.put("id", jobInstanceElementID);
+						    	jobInstanceJSON.put("jobId", jobId);
+						    	jobInstanceJSON.put("buildNumber", buildNumber);
+						    	jobInstanceJSON.put("jobStatus", newPropertyValue);
+						    	jobInstanceJSON.put("jenkinsLog", "");
+						    	jobInstanceJSON.put("created", new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date()));
+						    	jobInstanceJSON.put("completed", "");
+						    	
+						    	JSONObject jmsJSON = new JSONObject();	
+						    	jmsJSON.put("updatedJobs", jobInstanceJSON);
+						    	
+						    	jmc.publish(jobInstanceJSON, jmc.TYPE_DELTA, refID, projectID);
+						    	logger.info("Sent JMS json: "+jobInstanceJSON.toString());
+						    	System.out.println("Sent JMS json: "+jobInstanceJSON.toString());
+					    	}
+					    	catch(JSONException e)
+					    	{
+					    		e.printStackTrace();
+					    		logger.info(e.toString());
+					    	}
+			    		}
 			    		return elementCreationResponse;
 					}
 				}
