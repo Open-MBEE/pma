@@ -165,7 +165,7 @@ public class JmsConnection {
             producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
             // Create a message
-            TextMessage message = session.createTextMessage("");
+            TextMessage message = session.createTextMessage(msg);
             if (refId != null) {
                 message.setStringProperty( "refId", refId );
             } else {
@@ -179,7 +179,6 @@ public class JmsConnection {
 //            message.setStringProperty( "MessageSource", hostName );
 //            message.setStringProperty( "MessageRecipient", "TMS" );
             message.setStringProperty( "MessageType", eventType.toUpperCase() );
-            message.setStringProperty("UpdatedJobs", msg);
             
             logger.info("before send");
             // Tell the producer to send the message
