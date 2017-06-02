@@ -39,31 +39,37 @@ public class JobUpdateController
 	 * @param bodyContent Alfresco ticket JSON
 	 * @return
 	 */
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{buildNumber}/{propertyName}/{value}", method = RequestMethod.POST)
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{buildNumber}/{propertyName}", method = RequestMethod.POST)
 	@ResponseBody
-	public String updateJobInstanceProperty(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String buildNumber,@PathVariable String propertyName,@PathVariable String value,@RequestParam String mmsServer,@RequestBody String bodyContent) 
+	public String updateJobInstanceProperty(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String buildNumber,@PathVariable String propertyName,@RequestParam String mmsServer,@RequestBody String bodyContent) 
 	{
 		logger.info("Update Jobs was called");
-		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"JobID: "+jobID+ "\n"+"Build Number: "+buildNumber+ "\n"+"Property admin: "+propertyName+ "\n"+"Value: "+value+ "\n"+"mmsServer: "+mmsServer+ "\n"+"Body Content: "+bodyContent);
-		System.out.println( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"JobID: "+jobID+ "\n"+"Build Number: "+buildNumber+ "\n"+"Property admin: "+propertyName+ "\n"+"Value: "+value+ "\n"+"mmsServer: "+mmsServer+ "\n"+"Body Content: "+bodyContent);
+		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"JobID: "+jobID+ "\n"+"Build Number: "+buildNumber+ "\n"+"Property admin: "+propertyName+ "\n"+"\n"+"mmsServer: "+mmsServer+ "\n"+"Body Content: "+bodyContent);
+		System.out.println( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"JobID: "+jobID+ "\n"+"Build Number: "+buildNumber+ "\n"+"Property admin: "+propertyName+ "\n"+"\n"+"mmsServer: "+mmsServer+ "\n"+"Body Content: "+bodyContent);
 		
 		// recieve token from jenkins
-		String token = "";
+		String ticket = "";
+		String value = "";
 //		String server = "opencae-uat.jpl.nasa.gov";
 		System.out.println("propertyName: "+propertyName);
-		System.out.println("value: "+value);
 		
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			JsonNode fullJson = mapper.readTree(bodyContent);
 			System.out.println(fullJson);
-			JsonNode data = fullJson.get("data");
-			if (data != null)  // elements will be null if the json passed in is incorrect
+			JsonNode ticketJSON = fullJson.get("ticket");
+			if (ticketJSON != null)  // elements will be null if the json passed in is incorrect
 			{
-				JsonNode alfrescoTicket = data.get("ticket");
-				token = alfrescoTicket.toString().replace("\"", "");
-				System.out.println(token);
+				ticket = ticketJSON.toString().replace("\"", "");
+				System.out.println(ticket);
 			}
+			JsonNode valueJSON = fullJson.get("value");
+			if (ticketJSON != null)  // elements will be null if the json passed in is incorrect
+			{
+				value = valueJSON.toString().replace("\"", "");
+				System.out.println(value);
+			}
+			
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -72,14 +78,13 @@ public class JobUpdateController
 			e.printStackTrace();
 		}
 		
-		MMSUtil mmsUtil = new MMSUtil(token);
-		String newPropertyValue = value;
+		MMSUtil mmsUtil = new MMSUtil(ticket);
 		
 		/*
 		 * Finds the property and updates the value on mms. 
 		 * If the job instance doesn't exist, one will be created for the jenkins run.
 		 */
-		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token, jobID);
+		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, value, ticket, jobID);
 		logger.info("MMS Response: "+mmsResponse);
 		
 		if (propertyName.equals("jobStatus") && value.equals("completed")) {
@@ -94,7 +99,7 @@ public class JobUpdateController
 				e.printStackTrace();
 			}
 			String currentTimestamp = new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date());
-			mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, token, jobID);
+			mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, ticket, jobID);
 			logger.info(mmsResponse);
 		}
 
