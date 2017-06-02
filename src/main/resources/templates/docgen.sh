@@ -93,12 +93,12 @@ pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse
 
-artifactLink=$BUILD_URL"artifact/MDNotificationWindowText.html"
+# artifactLink=$BUILD_URL"artifact/MDNotificationWindowText.html"
 
-param='"'$artifactLink'"'
+# param='"'$artifactLink'"'
 
-pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
-echo pmaResponse $pmaResponse
+# pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
+# pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
+# echo pmaResponse $pmaResponse
 
 #exit $mdExitCode
