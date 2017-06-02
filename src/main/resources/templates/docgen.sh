@@ -32,7 +32,20 @@ ticket=$(curl -X POST -H Content-Type:application/json --data "{"username":$MMS_
 
 echo jobName $JOB_NAME
 echo twProject $TEAMWORK_PROJECT
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$ticket" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus/$status?mmsServer=${MMS_HOST})
+
+ticketKey='"ticket"' #ticket key for the pmaUpdateJSON
+valueKey='"value"' #value key for the pmaUpdateJSON
+
+ticket=$(echo $ticket | tr -d '\r') #Removing new lines
+ticket=${ticket#*'ticket":'} #Removing everything until ticket:"
+ticket=${ticket%' } }'} #Removing the last two brackets
+
+param='"'$status'"'
+
+pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
+
+
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse
 
 
@@ -68,11 +81,23 @@ echo status $status
 ticket=$(curl -X POST -H Content-Type:application/json --data "{"username":$MMS_USERNAME, "password":$MMS_PASSWORD}" https://${MMS_HOST}/alfresco/service/api/login)
 #echo "$ticket"
 
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$ticket" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus/$status?mmsServer=${MMS_HOST})
+ticket=$(echo $ticket | tr -d '\r') #Removing new lines
+ticket=${ticket#*'ticket":'} #Removing everything until ticket:"
+ticket=${ticket%' } }'} #Removing the last two brackets
+
+param='"'$status'"'
+
+pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
+
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse
 
 artifactLink=$BUILD_URL"artifact/MDNotificationWindowText.html"
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$ticket" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus/$status?mmsServer=${MMS_HOST})
+
+param='"'$artifactLink'"'
+
+pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse
 
 exit $mdExitCode
