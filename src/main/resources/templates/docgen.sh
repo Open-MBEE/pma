@@ -60,7 +60,7 @@ vncserver "$DISPLAY" -SecurityTypes None
 export DISPLAY
 
 bash /opt/local/MD/analysis/automatedviewgeneration.sh \
---mmsHost $MMS_HOST --mmsPort $MMS_PORT --mmsUsername $MMS_USERNAME --mmsPassword $MMS_PASSWORD \
+--mmsHost $MMS_HOST --mmsUsername $MMS_USERNAME --mmsPassword $MMS_PASSWORD \
 --twcHost $TWC_HOST --twcPort $TWC_PORT --twcUsername $TWC_USERNAME \
 --twcPassword $TWC_PASSWORD --projectId $PROJECT_ID --refId $REF_ID \
 --targetViewId $TARGET_VIEW_ID --pmaHost $PMA_HOST --pmaPort $PMA_PORT --pmaJobId $JOB_ID --generateRecursively
