@@ -45,7 +45,7 @@ param='"'$status'"'
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 
 
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON $PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse
 
 
@@ -58,23 +58,23 @@ echo --mmsHost $MMS_HOST --mmsPort $MMS_PORT --mmsUsername $MMS_USERNAME --mmsPa
 # vncserver "$DISPLAY" -SecurityTypes None
 # export DISPLAY
 #
-# bash /opt/local/MD/analysis/automatedviewgeneration.sh \
-# --mmsHost $MMS_HOST --mmsPort $MMS_PORT --mmsUsername $MMS_USERNAME --mmsPassword $MMS_PASSWORD \
-# --twcHost $TWC_HOST --twcPort $TWC_PORT --twcUsername $TWC_USERNAME \
-# --twcPassword $TWC_PASSWORD --projectId $PROJECT_ID --refId $REF_ID \
-# --targetViewId $TARGET_VIEW_ID --generateRecursively
+bash /opt/local/MD/analysis/automatedviewgeneration.sh \
+--mmsHost $MMS_HOST --mmsPort $MMS_PORT --mmsUsername $MMS_USERNAME --mmsPassword $MMS_PASSWORD \
+--twcHost $TWC_HOST --twcPort $TWC_PORT --twcUsername $TWC_USERNAME \
+--twcPassword $TWC_PASSWORD --projectId $PROJECT_ID --refId $REF_ID \
+--targetViewId $TARGET_VIEW_ID --generateRecursively
 #
 # mdExitCode=$?
 # echo MDEXITCODE $mdExitCode
 #
 # vncserver -kill "$DISPLAY"
 #
-# if (($mdExitCode == 0))
-# then
-# 	status=Completed
-# else
-# 	status=Failed
-# fi
+if (($mdExitCode == 0))
+then
+	status=Completed
+else
+	status=Failed
+fi
 
 status=Completed
 echo status $status
@@ -90,7 +90,7 @@ param='"'$status'"'
 
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" $PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse
 
 # artifactLink=$BUILD_URL"artifact/MDNotificationWindowText.html"
@@ -98,7 +98,7 @@ echo pmaResponse $pmaResponse
 # param='"'$artifactLink'"'
 
 # pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
-# pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" $PMA_HOST/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
+# pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" $PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
 # echo pmaResponse $pmaResponse
 
 #exit $mdExitCode

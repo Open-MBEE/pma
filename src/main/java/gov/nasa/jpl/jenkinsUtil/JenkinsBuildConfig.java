@@ -496,7 +496,8 @@ public class JenkinsBuildConfig {
 			"PROJECT_ID="+ this.teamworkProject + "\n" + 
 			"MMS_HOST=" + this.mmsServer + "\n" + 
 			"REF_ID="+ this.workspace + "\n" + 
-			"PMA_HOST=" + pmaHost+":8080"+ "\n");
+			"PMA_HOST=" + pmaHost+""+ "\n"+
+			"PMA_PORT="+ "8443" + "\n");
 		}
 		else
 		{
