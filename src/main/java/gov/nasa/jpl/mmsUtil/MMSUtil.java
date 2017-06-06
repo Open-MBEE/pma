@@ -466,6 +466,7 @@ public class MMSUtil {
 					ArrayNode arrayElements = mapper.createArrayNode();
 					arrayElements.add(propertyElement);
 					payload.put("elements",arrayElements);
+					payload.put("source","pma");
 					
 					// send element to MMS
 //					System.out.println("Payload: "+payload);
