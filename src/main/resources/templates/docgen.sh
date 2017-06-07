@@ -59,7 +59,7 @@ vncserver -kill "$DISPLAY" 2> /dev/null || true
 vncserver "$DISPLAY" -SecurityTypes None
 export DISPLAY
 
-bash /opt/local/MD/analysis/automatedviewgeneration.sh \
+bash $MAGICDRAW_HOME/bin/cli/automatedviewgenerator.sh \
 --mmsHost $MMS_HOST --mmsUsername $MMS_USERNAME --mmsPassword $MMS_PASSWORD \
 --twcHost $TWC_HOST --twcPort $TWC_PORT --twcUsername $TWC_USERNAME \
 --twcPassword $TWC_PASSWORD --projectId $PROJECT_ID --refId $REF_ID \
