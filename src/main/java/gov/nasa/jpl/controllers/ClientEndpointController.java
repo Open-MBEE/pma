@@ -179,7 +179,8 @@ public class ClientEndpointController {
 		
 		if(!jobPackageExists) // create jobs bin package if it doesn't exist.
 		{
-			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm");
+//			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm"); //creating the package inside the project
+			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID); // creating the package one level above the package, wont get synced back to the model.
 //			System.out.println(packageNode.toString());
 			mmsUtil.post(mmsServer, projectID, alfrescoToken, packageNode);
 		}

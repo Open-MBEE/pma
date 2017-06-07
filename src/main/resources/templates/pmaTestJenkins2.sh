@@ -27,7 +27,7 @@ param='"'$status'"'
 
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON cae-pma-test:8080/projects/$TEAMWORK_PROJECT/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_SERVER})
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON https://cae-pma-test:8443/projects/$TEAMWORK_PROJECT/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_SERVER})
 echo $pmaResponse
 
 sleep 10s
@@ -36,5 +36,5 @@ status=completed
 param='"'$status'"'
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON cae-pma-test:8080/projects/$TEAMWORK_PROJECT/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_SERVER})
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON https://cae-pma-test:8443/projects/$TEAMWORK_PROJECT/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_SERVER})
 echo $pmaResponse

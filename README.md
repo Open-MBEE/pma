@@ -16,8 +16,21 @@ mvn package -Dmaven.test.skip=true
 ```
 The resulting files will be located inside of the target directory.
 
+## Https requirements
+By default, the server uses http.
+Ssl certificate must be located in /etc/pki/certs/ 
+Certificate must be called server.jks
+
 ## Deployment
+scp the jar to the server
 ssh into server
+
+If https is needed these commands are required:
+```
+export ssl_key_password=sslKeyPassword
+export ssl_key_alias=sslKeyAlias
+```
+
 java -jar pma.jar &
 
 A log file will be generated when pma starts. File will be called pma.log

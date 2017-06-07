@@ -12,7 +12,9 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 public class JMSMessageListener 
 {
 	public static void main(String[] args) {
-		ConnectionFactory factory = new ActiveMQConnectionFactory("tcp://cae-ems-alf5int.jpl.nasa.gov:61616"); // ActiveMQ-specific (more)
+		String intJms = "tcp://cae-ems-alf5int.jpl.nasa.gov:61616";
+		String testJms="tcp://cae-ems-alf5test.jpl.nasa.gov:61616";
+		ConnectionFactory factory = new ActiveMQConnectionFactory(testJms); // ActiveMQ-specific (more)
 		try {
 			Connection con = factory.createConnection();
 
