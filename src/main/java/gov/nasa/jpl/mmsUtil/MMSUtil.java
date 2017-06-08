@@ -9,6 +9,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -271,7 +273,7 @@ public class MMSUtil {
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = buildClassElement(id,ownerID,name);
 		
-		String currentTimestamp = new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date());
+		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 		
 		elements.add(buildPropertyNode(id,"buildNumber",buildNumber));
 		elements.add(buildPropertyNode(id,"jobStatus",jobStatus));
@@ -566,7 +568,7 @@ public class MMSUtil {
 						    	jobInstanceJSON.put("buildNumber", buildNumber);
 						    	jobInstanceJSON.put("jobStatus", newPropertyValue);
 						    	jobInstanceJSON.put("jenkinsLog", "");
-						    	jobInstanceJSON.put("created", new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date()));
+						    	jobInstanceJSON.put("created", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date())); //ex. 2017-06-08T13:37:19.483-0700);
 						    	jobInstanceJSON.put("completed", "");
 						    	
 						    	JSONObject jmsJSON = new JSONObject();	

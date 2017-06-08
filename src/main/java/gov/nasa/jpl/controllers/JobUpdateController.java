@@ -84,6 +84,9 @@ public class JobUpdateController
 		 * Finds the property and updates the value on mms. 
 		 * If the job instance doesn't exist, one will be created for the jenkins run.
 		 */
+		if (propertyName.equals("jobStatus")) {
+			value=value.toLowerCase();
+		}
 		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, value, ticket, jobID);
 		logger.info("MMS Response: "+mmsResponse);
 		
