@@ -5,6 +5,8 @@ package gov.nasa.jpl.controllers;
  */
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +92,7 @@ public class JobUpdateController
 		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, value, ticket, jobID);
 		logger.info("MMS Response: "+mmsResponse);
 		
-		if (propertyName.equals("jobStatus") && value.toLowerCase().equals("completed")) {
+		if (propertyName.equals("jobStatus") && value.toLowerCase().equals("completed")&& value.toLowerCase().equals("failed")) {
 			try {
 				/*
 				 * This sleep is here because I need to wait for elastic search to update after modifying the job status. 
@@ -101,7 +103,7 @@ public class JobUpdateController
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			String currentTimestamp = new java.text.SimpleDateFormat("MM/dd/yyyy-HH:mm:ss").format(new java.util.Date());
+			String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 			mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, ticket, jobID);
 			logger.info(mmsResponse);
 		}
