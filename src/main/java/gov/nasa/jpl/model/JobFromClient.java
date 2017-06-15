@@ -14,7 +14,7 @@ import javax.persistence.Id;
  *
  */
 @Entity
-public class JobFromVE implements Serializable {
+public class JobFromClient implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

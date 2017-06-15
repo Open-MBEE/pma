@@ -9,8 +9,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest
 public class PmaApplicationTests {
 
-	@Test
-	public void contextLoads() {
-	}
+    @Test
+    public void contextLoads() {
+        System.out.println("\n------------------------------------------------------\n");
+        System.out.println("[ Testing output ]");
+        System.out.println("\n------------------------------------------------------\n");
+
+    }
 
 }

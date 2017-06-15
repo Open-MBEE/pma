@@ -12,14 +12,46 @@ mvn spring-boot:run
 To package the project
 
 ```bash
-mvn package
+mvn package -Dmaven.test.skip=true
 ```
 The resulting files will be located inside of the target directory.
 
+## Https requirements
+By default, the server uses http.
+Ssl certificate must be located in /etc/pki/certs/ 
+Certificate must be called server.jks
+
 ## Deployment
+scp the jar to the server
 ssh into server
+
+If https is needed these commands are required:
+```
+export ssl_key_password=sslKeyPassword
+export ssl_key_alias=sslKeyAlias
+```
+
 java -jar pma.jar &
 
 A log file will be generated when pma starts. File will be called pma.log
 
-The endpoint /dbUpdate will need to be called to pass in jenkins credentials. 
+This JSON will need to be posted to the dbUpdate endpoint the first time it is deployed to store the credentials in the database.
+```
+{
+"username":"jenkinsUser",
+"password":"jenkinsPassword",
+"url":"jenkinsURL",
+"agent":"jenkinsBuildAgentLabel"
+}
+```
+#Tests
+To run spring-boot and junit tests type into the command line:
+```bash
+mvn test
+```
+These environment variables have to be set for the tests to be ran locally.
+
+* ADMIN_USER (mms admin username)
+* ADMIN_PASS (mms admin password)
+* JENKINS_TEST_USER (Jenkins admin account)
+* JENKINS_TEST_PASSWORD (Jenkins admin password)

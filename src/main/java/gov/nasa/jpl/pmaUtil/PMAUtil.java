@@ -1,3 +1,7 @@
+/**
+ * Utility class for creating JSON PMA returns.
+ * @author hang
+ */
 package gov.nasa.jpl.pmaUtil;
 
 import java.io.IOException;
@@ -16,13 +20,6 @@ public class PMAUtil
 	public PMAUtil()
 	{
 		
-	}
-	
-	public void createJobsJSON()
-	{
-		ObjectMapper mapper = new ObjectMapper();
-		
-		ArrayNode jobs = mapper.createArrayNode();
 	}
 	
 	/**
@@ -46,44 +43,23 @@ public class PMAUtil
 		
 	}
 	
-	public ObjectNode createJobJSON(String id, String name, String command, String associatedElementID,String schedule, String arguments)
-	{
-		ObjectMapper mapper = new ObjectMapper();
-		
-		ObjectNode jobElement = mapper.createObjectNode();
-		jobElement.put("id",id);
-		jobElement.put("name",name);
-		jobElement.put("command",command);
-		jobElement.put("associatedElementID",associatedElementID);
-		jobElement.put("schedule",schedule);
-		jobElement.put("arguments",arguments);
-		return jobElement;
-		
-	}
-	
+	/**
+	 * 
+	 * @param jobInstancesMap
+	 * @return
+	 */
 	public ObjectNode createJobInstanceJSON(Map<String,String> jobInstancesMap)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		
 		ObjectNode jobInstanceElement = mapper.createObjectNode();
 		jobInstanceElement.put("id",jobInstancesMap.get("id"));
+		jobInstanceElement.put("jobId",jobInstancesMap.get("jobId"));
+		jobInstanceElement.put("buildNumber",jobInstancesMap.get("buildNumber"));
 		jobInstanceElement.put("jobStatus",jobInstancesMap.get("jobStatus"));
 		jobInstanceElement.put("jenkinsLog",jobInstancesMap.get("jenkinsLog"));
 		jobInstanceElement.put("created",jobInstancesMap.get("created"));
 		jobInstanceElement.put("completed",jobInstancesMap.get("completed"));
-		return jobInstanceElement;
-	}
-	
-	public ObjectNode createJobInstanceJSON(String id, String jobStatus,String jenkinsLog,String created,String completed)
-	{
-		ObjectMapper mapper = new ObjectMapper();
-		
-		ObjectNode jobInstanceElement = mapper.createObjectNode();
-		jobInstanceElement.put("id",id);
-		jobInstanceElement.put("jobStatus",jobStatus);
-		jobInstanceElement.put("jenkinsLog",jenkinsLog);
-		jobInstanceElement.put("created",created);
-		jobInstanceElement.put("completed",completed);
 		return jobInstanceElement;
 	}
 	
@@ -143,6 +119,13 @@ public class PMAUtil
 			}
 			else
 			{
+				System.out.println("Error or empty mms JSON String: "+mmsJSONString);
+				if(mmsJSONString.equals("{}"))
+				{
+					jobJSON.put("jobs",jobElements);
+					
+					return jobJSON.toString();
+				}
 				return mmsJSONString; // Returns status from mms. Should be an error or empty if the elements were null.
 			}
 		} catch (JsonProcessingException e) {
@@ -162,7 +145,7 @@ public class PMAUtil
 	 * @param mmsJSONString Element data from MMS.
 	 * @return
 	 */
-	public String generateJobInstanceArrayJSON(String mmsJSONString)
+	public String generateJobInstanceArrayJSON(String mmsJSONString,String jobID)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode jobJSON = mapper.createObjectNode();
@@ -190,6 +173,7 @@ public class PMAUtil
 				{
 					Map<String,String> jobInstanceMap = new HashMap();
 					jobInstanceMap.put("id", jobInstanceID);
+					jobInstanceMap.put("jobId", jobID);
 					for (JsonNode element : elements) 
 					{	
 						String elementOwner = element.get("ownerId").toString().replace("\"", "");
@@ -219,5 +203,75 @@ public class PMAUtil
 		jobJSON.put("jobInstances",jobInstanceElements);
 		
 		return jobJSON.toString();
+	}
+	
+	
+	/**
+	 * Checks if a string is a JSON
+	 * @param jsonString
+	 * @return
+	 */
+	public Boolean isJSON(String jsonString)
+	{
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode fullJson = mapper.readTree(jsonString);
+			System.out.println("jobs "+fullJson.get("jobs"));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
+	// Accepts the get job instances json and returns the most recent instance.
+	// looks for the job instance with the highest build number
+	public static String getLatestJobInstance(String jsonString)
+	{
+		ObjectMapper mapper = new ObjectMapper();
+	
+		int highestBuildNumber = 0;
+		
+		JsonNode latestJobInstance = mapper.createObjectNode();
+		
+		try {
+			JsonNode fullJson = mapper.readTree(jsonString);
+			JsonNode jobInstances = fullJson.get("jobInstances");
+			
+			if(jobInstances.get(0)!=null)
+			{
+				latestJobInstance = jobInstances.get(0);
+				highestBuildNumber = Integer.parseInt(jobInstances.get(0).get("buildNumber").toString().replace("\"", ""));
+			}
+			int buildNumber = 0;
+			for (JsonNode jobInstance : jobInstances) {
+				buildNumber = Integer.parseInt(jobInstance.get("buildNumber").toString().replace("\"", ""));
+				if(buildNumber>highestBuildNumber)
+				{
+					highestBuildNumber = buildNumber;
+					latestJobInstance = jobInstance;
+				}
+			}
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return(latestJobInstance.toString());
+			
+	}
+	
+	public static void main(String args[])
+	{
+		String jsonString = "{\"jobInstances\": [{\"id\": \"PMA_1493929692690_e9c15e52-1a21-4dd2-8c14-413ebd519c18\",\"buildNumber\": \"2\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null},{\"id\": \"PMA_1493929332779_c035124d-06af-40b7-ad7f-ce7781b08a3e\",\"buildNumber\": \"1\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null}]}";
+//		String jsonString = "{\"jobInstances\": []}";
+		System.out.println(getLatestJobInstance(jsonString));
 	}
 }

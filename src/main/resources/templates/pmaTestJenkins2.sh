@@ -1,3 +1,4 @@
+# Example test job
 set +x
 
 # Tell PMA that this job has started
@@ -9,16 +10,31 @@ username=$(echo $line | awk '{print $2}')
 line=$(sed -n '3p' /opt/local/jenkins/.netrc)
 password=$(echo $line | awk '{print $2}')
 
-IP=$(curl -X POST -H Content-Type:application/json --data "{"username":$username, "password":$password}" https://${MMS_SERVER}/alfresco/service/api/login)
-echo "$IP"
+ticket=$(curl -X POST -H Content-Type:application/json --data "{"username":$username, "password":$password}" https://${MMS_SERVER}/alfresco/service/api/login)
+echo $ticket
 
 echo $JOB_NAME
 echo $TEAMWORK_PROJECT
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$IP" cae-pma-test:8080/projects/$TEAMWORK_PROJECT/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus/$status?mmsServer=${MMS_SERVER})
+
+ticketKey='"ticket"' #ticket key for the pmaUpdateJSON
+valueKey='"value"' #value key for the pmaUpdateJSON
+
+ticket=$(echo $ticket | tr -d '\r') #Removing new lines
+ticket=${ticket#*'ticket":'} #Removing everything until ticket:"
+ticket=${ticket%' } }'} #Removing the last two brackets
+
+param='"'$status'"'
+
+pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
+
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON https://cae-pma-test:8443/projects/$TEAMWORK_PROJECT/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_SERVER})
 echo $pmaResponse
 
 sleep 10s
 
 status=completed
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$IP" cae-pma-test:8080/projects/$TEAMWORK_PROJECT/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus/$status?mmsServer=${MMS_SERVER})
+param='"'$status'"'
+pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
+
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON https://cae-pma-test:8443/projects/$TEAMWORK_PROJECT/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_SERVER})
 echo $pmaResponse

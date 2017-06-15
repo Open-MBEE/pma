@@ -5,6 +5,8 @@ package gov.nasa.jpl.controllers;
  */
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,30 +27,51 @@ import gov.nasa.jpl.mmsUtil.MMSUtil;
 public class JobUpdateController 
 {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-		
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{buildNumber}/{propertyName}/{value}", method = RequestMethod.POST)
+	
+	/**
+	 * Used for updating part property values of Job instance elements. 
+	 * 
+	 * @param projectID Magicdraw Project ID
+	 * @param refID Workspace ID
+	 * @param jobID Job element ID
+	 * @param buildNumber Jenkins build number
+	 * @param propertyName Part property name
+	 * @param value New value of part property
+	 * @param mmsServer 
+	 * @param bodyContent Alfresco ticket JSON
+	 * @return
+	 */
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobID}/instances/{buildNumber}/{propertyName}", method = RequestMethod.POST)
 	@ResponseBody
-	public String updateJobInstanceProperty(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String buildNumber,@PathVariable String propertyName,@PathVariable String value,@RequestParam String mmsServer,@RequestBody String bodyContent) 
+	public String updateJobInstanceProperty(@PathVariable String projectID, @PathVariable String refID,@PathVariable String jobID,@PathVariable String buildNumber,@PathVariable String propertyName,@RequestParam String mmsServer,@RequestBody String bodyContent) 
 	{
 		logger.info("Update Jobs was called");
-		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"JobID: "+jobID+ "\n"+"Build Number: "+buildNumber+ "\n"+"Property admin: "+propertyName+ "\n"+"Value: "+value+ "\n"+"mmsServer: "+mmsServer+ "\n"+"Body Content: "+bodyContent);
+		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"JobID: "+jobID+ "\n"+"Build Number: "+buildNumber+ "\n"+"Property admin: "+propertyName+ "\n"+"\n"+"mmsServer: "+mmsServer+ "\n"+"Body Content: "+bodyContent);
+		System.out.println( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"JobID: "+jobID+ "\n"+"Build Number: "+buildNumber+ "\n"+"Property admin: "+propertyName+ "\n"+"\n"+"mmsServer: "+mmsServer+ "\n"+"Body Content: "+bodyContent);
+		
 		// recieve token from jenkins
-		String token = "";
+		String ticket = "";
+		String value = "";
 //		String server = "opencae-uat.jpl.nasa.gov";
 		System.out.println("propertyName: "+propertyName);
-		System.out.println("value: "+value);
 		
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			JsonNode fullJson = mapper.readTree(bodyContent);
 			System.out.println(fullJson);
-			JsonNode data = fullJson.get("data");
-			if (data != null)  // elements will be null if the json passed in is incorrect
+			JsonNode ticketJSON = fullJson.get("ticket");
+			if (ticketJSON != null)  // elements will be null if the json passed in is incorrect
 			{
-				JsonNode alfrescoTicket = data.get("ticket");
-				token = alfrescoTicket.toString().replace("\"", "");
-				System.out.println(token);
+				ticket = ticketJSON.toString().replace("\"", "");
+				System.out.println(ticket);
 			}
+			JsonNode valueJSON = fullJson.get("value");
+			if (ticketJSON != null)  // elements will be null if the json passed in is incorrect
+			{
+				value = valueJSON.toString().replace("\"", "");
+				System.out.println(value);
+			}
+			
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -57,16 +80,35 @@ public class JobUpdateController
 			e.printStackTrace();
 		}
 		
-		MMSUtil mmsUtil = new MMSUtil(token);
-		String newPropertyValue = value;
+		MMSUtil mmsUtil = new MMSUtil(ticket);
 		
 		/*
 		 * Finds the property and updates the value on mms. 
 		 * If the job instance doesn't exist, one will be created for the jenkins run.
 		 */
-		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, newPropertyValue, token);
+		if (propertyName.equals("jobStatus")) {
+			value=value.toLowerCase();
+		}
+		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, value, ticket, jobID);
 		logger.info("MMS Response: "+mmsResponse);
-		return mmsResponse;	
+		
+		if (propertyName.equals("jobStatus") && value.toLowerCase().equals("completed")&& value.toLowerCase().equals("failed")) {
+			try {
+				/*
+				 * This sleep is here because I need to wait for elastic search to update after modifying the job status. 
+				 * I retrieve all the properties of the job instance in a function call below. Without the sleep, I will sometimes get an empty JSON object. 
+				 */
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+			mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, ticket, jobID);
+			logger.info(mmsResponse);
+		}
+
+		return mmsResponse;
 	}
 
 }
