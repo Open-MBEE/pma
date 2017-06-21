@@ -103,19 +103,19 @@ public class MMSUtil {
 		ArrayNode elements = mapper.createArrayNode();
 		ObjectNode classElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
-		classElement.put("type", "Class");
-		classElement.put("documentation", "");
 		classElement.put("_appliedStereotypeIds", mapper.createArrayNode().add("_18_0_5_407019f_1458258829038_313297_14086"));
+		classElement.put("documentation", "");
+		classElement.put("type", "Class");
 		classElement.put("id", id);
 		classElement.put("mdExtensionsIds", mapper.createArrayNode());
 		classElement.put("ownerId", ownerID);
-		classElement.put("syncElementId", nullNode);
+		classElement.put("syncElementId", nullNode);		
 		classElement.put("appliedStereotypeInstanceId", id+"_asi");
 		classElement.put("clientDependencyIds", mapper.createArrayNode());
 		classElement.put("supplierDependencyIds", mapper.createArrayNode());
 		classElement.put("name", name);
 		classElement.put("nameExpression", nullNode);
-		classElement.put("visibility", "public");
+		classElement.put("visibility", nullNode);
 		classElement.put("templateParameterId", nullNode);
 		classElement.put("elementImportIds", mapper.createArrayNode());
 		classElement.put("packageImportIds", mapper.createArrayNode());
@@ -135,15 +135,15 @@ public class MMSUtil {
 		classElement.put("interfaceRealizationIds", mapper.createArrayNode());
 		classElement.put("ownedOperationIds", mapper.createArrayNode());
 		classElement.put("isActive", Boolean.FALSE);
-		classElement.put("nestedClassifierIds", mapper.createArrayNode());
+//		classElement.put("nestedClassifierIds", mapper.createArrayNode());
 		
 		elements.add(classElement);
 		
 		ObjectNode instanceSpecificationElement = mapper.createObjectNode();
 		
-		instanceSpecificationElement.put("type", "InstanceSpecification");
-		instanceSpecificationElement.put("documentation", "");
 		instanceSpecificationElement.put("_appliedStereotypeIds",mapper.createArrayNode());
+		instanceSpecificationElement.put("documentation", "");
+		instanceSpecificationElement.put("type", "InstanceSpecification");
 		instanceSpecificationElement.put("id", id+"_asi");
 		instanceSpecificationElement.put("mdExtensionsIds", mapper.createArrayNode());
 		instanceSpecificationElement.put("ownerId", id);
@@ -258,6 +258,24 @@ public class MMSUtil {
 		elements.add(buildPropertyNode(id,"schedule",schedule));
 		elements.add(buildPropertyNode(id,"arguments",arguments));
 		
+		// Adding the property id's to the ownedAttributes key in the job class JSON
+		ObjectNode jobClass = (ObjectNode) elements.get(0);
+		ArrayNode ownedAttributes = mapper.createArrayNode();
+		
+		ObjectNode commandNode = (ObjectNode) elements.get(2);
+		ObjectNode associatedElementIDNode = (ObjectNode) elements.get(3);
+		ObjectNode scheduleNode = (ObjectNode) elements.get(4);
+		ObjectNode argumentsNode = (ObjectNode) elements.get(5);
+		
+		ownedAttributes.add(commandNode.get("id"));
+		ownedAttributes.add(associatedElementIDNode.get("id"));
+		ownedAttributes.add(scheduleNode.get("id"));
+		ownedAttributes.add(argumentsNode.get("id"));
+		
+		jobClass.put("ownedAttributeIds",ownedAttributes);
+		
+		elements.set(0, jobClass);
+		
 		payload.put("elements",elements);
 		payload.put("source","pma");
 		payload.put("pmaVersion","1.0");
@@ -280,6 +298,26 @@ public class MMSUtil {
 		elements.add(buildPropertyNode(id,"jenkinsLog",""));
 		elements.add(buildPropertyNode(id,"created",currentTimestamp));
 		elements.add(buildPropertyNode(id,"completed",""));
+		
+		// Adding the property id's to the ownedAttributes key in the job class JSON
+		ObjectNode jobInstanceClass = (ObjectNode) elements.get(0);
+		ArrayNode ownedAttributes = mapper.createArrayNode();
+		
+		ObjectNode buildNumberNode = (ObjectNode) elements.get(2);
+		ObjectNode jobStatusNode = (ObjectNode) elements.get(3);
+		ObjectNode jenkinsLogNode = (ObjectNode) elements.get(4);
+		ObjectNode createdNode = (ObjectNode) elements.get(5);
+		ObjectNode completedNode = (ObjectNode) elements.get(6);
+		
+		ownedAttributes.add(buildNumberNode.get("id"));
+		ownedAttributes.add(jobStatusNode.get("id"));
+		ownedAttributes.add(jenkinsLogNode.get("id"));
+		ownedAttributes.add(createdNode.get("id"));
+		ownedAttributes.add(completedNode.get("id"));
+		
+		jobInstanceClass.put("ownedAttributeIds",ownedAttributes);
+		
+		elements.set(0, jobInstanceClass);
 		
 		payload.put("elements",elements);
 		payload.put("source","pma");
