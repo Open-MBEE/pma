@@ -89,9 +89,7 @@ public class JobUpdateController
 		if (propertyName.equals("jobStatus")) {
 			value=value.toLowerCase();
 		}
-		if (propertyName.equals("jobStatus") && !(value.toLowerCase().equals("completed")|| value.toLowerCase().equals("failed")||value.toLowerCase().equals("running"))) {
-			return "";
-		}
+
 		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, value, ticket, jobID);
 		logger.info("MMS Response: "+mmsResponse);
 		
