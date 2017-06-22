@@ -61,6 +61,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import gov.nasa.jpl.dbUtil.DBUtil;
+import gov.nasa.jpl.pmaUtil.PMAUtil;
 
 /**
  * Implements the ExecutionEngine as a way to execute jobs (events) on the
@@ -1214,7 +1215,7 @@ public class JenkinsEngine {
 	public String createFolder(String folderName)
 	{
 		try {
-			this.executeUrl = this.url + "/job/PMA/"+"createItem?name=TEMPFOLDER&mode=com.cloudbees.hudson.plugins.folder.Folder&from=&json=%7B%22name%22%3A%22FolderName%22%2C%22mode%22%3A%22com.cloudbees.hudson.plugins.folder.Folder%22%2C%22from%22%3A%22%22%2C%22Submit%22%3A%22OK%22%7D&Submit=OK";
+			this.executeUrl = this.url + "/job/PMA/"+"createItem?name="+folderName+"&mode=com.cloudbees.hudson.plugins.folder.Folder&from=&json=%7B%22name%22%3A%22FolderName%22%2C%22mode%22%3A%22com.cloudbees.hudson.plugins.folder.Folder%22%2C%22from%22%3A%22%22%2C%22Submit%22%3A%22OK%22%7D&Submit=OK";
 			System.out.println("Create Folder url: "+executeUrl);
 			HttpPost post = new HttpPost(this.executeUrl);
 			post.setHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -1234,7 +1235,7 @@ public class JenkinsEngine {
 			e.printStackTrace();
 			return e.toString();
 		}
-	}
+}
 	
 	public static void main(String[] args) 
 	{
@@ -1257,8 +1258,26 @@ public class JenkinsEngine {
         JenkinsEngine je = new JenkinsEngine();
         je.setCredentials();
         je.login();
+        
+        String folderName = "merp";
+        String jobString = je.getJob(folderName);
+        
+        System.out.println("JOB STRING: "+jobString);
+        if(!PMAUtil.isJSON(jobString))
+        {
+        	if(jobString.equals("Job not found on Jenkins"))
+        	{
+        		System.out.println("create folder");
+        		je.createFolder(folderName);
+        	}
+        }
+        else
+        {
 
-        System.out.println(je.createFolder("merp"));
+        }
+//        System.out.println("Job existence: "+je.getJob("master"));
+        
+//        System.out.println(je.createFolder("merp"));
         
 //        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
 //        je.postConfigXml(jbc, jobElementID, true);
@@ -1271,5 +1290,5 @@ public class JenkinsEngine {
 //        je.deleteJob(jobElementID);
 
         
-	}
+}
 }
