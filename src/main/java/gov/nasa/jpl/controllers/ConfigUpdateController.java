@@ -1,6 +1,9 @@
 package gov.nasa.jpl.controllers;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -55,6 +58,7 @@ public class ConfigUpdateController {
 	@ResponseBody
 	public String dbUpdate(@RequestBody String bodyContent) 
 	{
+		logger.info("Updating credentials db");
 		
 		String jenkinsUsername = "";
 		String jenkinsPassword = "";
@@ -97,14 +101,31 @@ public class ConfigUpdateController {
 		jdbcTemplate.execute("CREATE TABLE if not exists credentials (username TEXT, password TEXT, server TEXT, agent TEXT)"); //creates the table that will store the credentials
 		jdbcTemplate.execute("insert into CREDENTIALS (username, password, server, agent) values ('tempUSER', 'tempPassword', 'tempURL' ,'tempAgent')"); // inserts temp values for first row
 		
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET username='"+jenkinsUsername+"'");
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET password='"+jenkinsPassword+"'");
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET server='"+jenkinsURL+"'");
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET agent='"+jenkinsAgent+"'");
+		String updateJenkinsUsernameSQL = "UPDATE CREDENTIALS SET username = ?";
+		String updateJenkinsPassword = "UPDATE CREDENTIALS SET password = ?";
+		String updateJenkinsURL = "UPDATE CREDENTIALS SET server = ?";
+		String updateJenkinsAgent = "UPDATE CREDENTIALS SET agent = ?";
+		
+		executeSanitizedQueury(jdbcTemplate,updateJenkinsUsernameSQL,jenkinsUsername);
+		executeSanitizedQueury(jdbcTemplate,updateJenkinsPassword,jenkinsPassword);
+		executeSanitizedQueury(jdbcTemplate,updateJenkinsURL,jenkinsURL);
+		executeSanitizedQueury(jdbcTemplate,updateJenkinsAgent,jenkinsAgent);
 		
 		logger.info("Credentials Updated");
 		
 		return "Credentials Updated";
+	}
+	
+	public void executeSanitizedQueury(JdbcTemplate jdbcTemplate,String sqlQuery,String value)
+	{
+		try {
+			PreparedStatement ps = jdbcTemplate.getDataSource().getConnection().prepareStatement(sqlQuery);
+			ps.setString(1, value);
+			ps.execute();
+		} catch (SQLException e) {
+			logger.info(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 		
 }
