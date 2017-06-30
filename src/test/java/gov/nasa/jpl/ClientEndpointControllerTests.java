@@ -251,10 +251,8 @@ public class ClientEndpointControllerTests {
 		
 
 		urlInjectionTestBuilder("test test"); // test for space
-		urlInjectionTestBuilder("\'"); // test special character
 		urlInjectionTestBuilder("\""); // test special character
 		urlInjectionTestBuilder("\\"); // test special character
-		urlInjectionTestBuilder("test \'"); // test for space and special character
 		urlInjectionTestBuilder("test \""); // test for space and special character
 		urlInjectionTestBuilder("test \\"); // test for space and special character
 
