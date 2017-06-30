@@ -12,8 +12,12 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.Id;
 import javax.validation.constraints.Null;
@@ -124,6 +128,46 @@ public class ClientEndpointControllerTests {
         }
         return responseBody.toString();
     }
+    
+
+    /**
+     * Passes in a refId string to the create job endpoint and see if the string causes an illegal character exception
+     * @param refId
+     */
+    public void urlInjectionTestBuilder(String refId)
+    {
+        ResponseEntity<String> response = new ResponseEntity<String>(HttpStatus.PAYLOAD_TOO_LARGE);
+        response = clientEndpointController.createJob("TestingJob", refId, job);
+        try {
+       
+        response = clientEndpointController.createJob("PROJECT-921084a3-e465-465f-944b-61194213043e", refId, job);
+        } catch (java.lang.IllegalArgumentException e) {
+//        	e.printStackTrace();
+            System.out.println(e.getMessage());
+            System.out.println("STATUS CODE: "+response.getStatusCodeValue());
+        }
+ 
+        assert(response.getStatusCodeValue() == 500);
+        System.out.println(response.getStatusCodeValue() == 500);
+        System.out.println("REFID: "+refId);
+        System.out.println("STATUS CODE: "+response.getStatusCodeValue()); // Should be 500
+        System.out.println("RESPONSE BODY: "+response.getBody());
+        System.out.println(response.getBody().contains("java.lang.IllegalArgumentException"));
+        assert(response.getBody().contains("java.lang.IllegalArgumentException"));
+        
+        
+        try {
+        	JSONObject responseBody;
+            responseBody = new JSONObject(response.getBody());
+            String id = responseBody.getJSONArray("jobs").getJSONObject(0).getString("id");
+            deleteJob("PROJECT-921084a3-e465-465f-944b-61194213043e", refId, id);
+        } catch (JSONException e) {
+            System.out.println("[ JSONException ] " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("[ Exception ] " + e.getMessage());
+        }
+        
+    }
 
     @Test
     public void testCreateDeleteJob() {
@@ -192,6 +236,38 @@ public class ClientEndpointControllerTests {
         System.out.println("\n-------------------------------------------------------------------------------\n");
 
     }
+    
+	/**
+	 * Tests parameter input of the create job post 
+	 * Each of the inputs are supposed to cause a 500 status to return with a java.lang.IllegalArgumentException exception.
+	 */
+    @Test
+    public void testURLParameterInjection() {
+
+		System.out.println("\n----------------------- [ ClientEndpointController testURLParameterInjection ] -----------------------\n");
+		System.out.println("BEFORE: " + this.alfTicket);
+		configVeEndpointController();
+		System.out.println("AFTER: " + this.alfTicket);
+		List<String> testInput = new ArrayList<String>();
+		
+
+		testInput.add("test test"); // test for space
+		testInput.add("\'"); // test special character
+		testInput.add("\""); // test special character
+		testInput.add("\\"); // test special character
+		testInput.add("test \'"); // test for space and special character
+		testInput.add("test \""); // test for space and special character
+		testInput.add("test \\"); // test for space and special character
+		
+		
+		for(String refId:testInput)
+		{
+			urlInjectionTestBuilder(refId);
+		}
+
+        System.out.println("\n----------------------------------------------------------------------------------------\n");
+    }
+
 
 //    @Test
 //    public void testIncorrectMMSAuthentication() {
