@@ -354,7 +354,13 @@ public class MMSUtil {
 		} 
 		catch (java.net.UnknownHostException e) {
 		      System.out.println("Unknown Host Exception");
+		      logger.info("Unknown Host Exception");
 		      return e.toString();
+		}
+		catch (java.lang.IllegalArgumentException e) {
+			logger.info("Illegal argument during Post");
+			System.out.println("Illegal argument during Post");
+			return e.toString();
 		}catch (IOException e) 
 		{
 			e.printStackTrace();
@@ -429,8 +435,14 @@ public class MMSUtil {
 			
 		}
 		catch (java.net.UnknownHostException e) {
-		      System.out.println("Unknown Host Exception During Get");
-		      return e.toString();
+			logger.info("Unknown Host Exception During Get");
+			System.out.println("Unknown Host Exception During Get");
+			return e.toString();
+		}
+		catch (java.lang.IllegalArgumentException e) {
+			logger.info("Illegal argument during Get");
+			System.out.println("Illegal argument during Get");
+			return e.toString();
 		}
 		catch (IOException e) {
 			// TODO Auto-generated catch block
