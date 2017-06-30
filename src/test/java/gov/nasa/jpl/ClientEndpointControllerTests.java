@@ -248,22 +248,16 @@ public class ClientEndpointControllerTests {
 		System.out.println("BEFORE: " + this.alfTicket);
 		configVeEndpointController();
 		System.out.println("AFTER: " + this.alfTicket);
-		List<String> testInput = new ArrayList<String>();
 		
 
-		testInput.add("test test"); // test for space
-		testInput.add("\'"); // test special character
-		testInput.add("\""); // test special character
-		testInput.add("\\"); // test special character
-		testInput.add("test \'"); // test for space and special character
-		testInput.add("test \""); // test for space and special character
-		testInput.add("test \\"); // test for space and special character
-		
-		
-		for(String refId:testInput)
-		{
-			urlInjectionTestBuilder(refId);
-		}
+		urlInjectionTestBuilder("test test"); // test for space
+		urlInjectionTestBuilder("\'"); // test special character
+		urlInjectionTestBuilder("\""); // test special character
+		urlInjectionTestBuilder("\\"); // test special character
+		urlInjectionTestBuilder("test \'"); // test for space and special character
+		urlInjectionTestBuilder("test \""); // test for space and special character
+		urlInjectionTestBuilder("test \\"); // test for space and special character
+
 
         System.out.println("\n----------------------------------------------------------------------------------------\n");
     }
