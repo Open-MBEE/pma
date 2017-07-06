@@ -1,12 +1,17 @@
 package gov.nasa.jpl.controllers;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Arrays;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -17,6 +22,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nasa.jpl.dbUtil.DBUtil;
+import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
+import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
+import gov.nasa.jpl.mmsUtil.MMSUtil;
+import gov.nasa.jpl.model.JobFromClient;
 
 @Controller
 public class ConfigUpdateController {
@@ -55,6 +64,7 @@ public class ConfigUpdateController {
 	@ResponseBody
 	public String dbUpdate(@RequestBody String bodyContent) 
 	{
+		logger.info("Updating credentials db");
 		
 		String jenkinsUsername = "";
 		String jenkinsPassword = "";
@@ -97,14 +107,47 @@ public class ConfigUpdateController {
 		jdbcTemplate.execute("CREATE TABLE if not exists credentials (username TEXT, password TEXT, server TEXT, agent TEXT)"); //creates the table that will store the credentials
 		jdbcTemplate.execute("insert into CREDENTIALS (username, password, server, agent) values ('tempUSER', 'tempPassword', 'tempURL' ,'tempAgent')"); // inserts temp values for first row
 		
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET username='"+jenkinsUsername+"'");
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET password='"+jenkinsPassword+"'");
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET server='"+jenkinsURL+"'");
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET agent='"+jenkinsAgent+"'");
+		String updateJenkinsUsernameSQL = "UPDATE CREDENTIALS SET username = ?";
+		String updateJenkinsPassword = "UPDATE CREDENTIALS SET password = ?";
+		String updateJenkinsURL = "UPDATE CREDENTIALS SET server = ?";
+		String updateJenkinsAgent = "UPDATE CREDENTIALS SET agent = ?";
+		
+		executeSanitizedQueury(jdbcTemplate,updateJenkinsUsernameSQL,jenkinsUsername);
+		executeSanitizedQueury(jdbcTemplate,updateJenkinsPassword,jenkinsPassword);
+		executeSanitizedQueury(jdbcTemplate,updateJenkinsURL,jenkinsURL);
+		executeSanitizedQueury(jdbcTemplate,updateJenkinsAgent,jenkinsAgent);
 		
 		logger.info("Credentials Updated");
 		
 		return "Credentials Updated";
+	}
+	
+	public void executeSanitizedQueury(JdbcTemplate jdbcTemplate,String sqlQuery,String value)
+	{
+		try {
+			PreparedStatement ps = jdbcTemplate.getDataSource().getConnection().prepareStatement(sqlQuery);
+			ps.setString(1, value);
+			ps.execute();
+		} catch (SQLException e) {
+			logger.info(e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Creates job element on mms and job on Jenkins.
+	 * 
+	 * @param projectID magicdraw project ID
+	 * @param refID id of workspace
+	 * @param jobjobFromVE 
+	 * @return
+	 */
+	@RequestMapping(value = "/testing/{projectID}/refs/{refID}/jobs", method = RequestMethod.POST)
+	@ResponseBody
+	public String createJob(@PathVariable String projectID, @PathVariable String refID) {
+		
+		return refID;
+
 	}
 		
 }
