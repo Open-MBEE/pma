@@ -89,10 +89,11 @@ public class JobUpdateController
 		if (propertyName.equals("jobStatus")) {
 			value=value.toLowerCase();
 		}
+
 		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, value, ticket, jobID);
 		logger.info("MMS Response: "+mmsResponse);
 		
-		if (propertyName.equals("jobStatus") && value.toLowerCase().equals("completed")&& value.toLowerCase().equals("failed")) {
+		if (propertyName.equals("jobStatus") && (value.toLowerCase().equals("completed")|| value.toLowerCase().equals("failed"))) {
 			try {
 				/*
 				 * This sleep is here because I need to wait for elastic search to update after modifying the job status. 
