@@ -29,14 +29,14 @@ start() {
     # Password is the second word of the second line
 
     line=$(sed -n '1p' credentials.txt)
-    if [-n "$line"]
+    if [ ! -z "$line" ]
     then
       echo "Found ssl alias"
       export ssl_key_alias=$(echo $line | awk '{print $2}')
     fi
 
     line=$(sed -n '2p' credentials.txt)
-    if [-n "$line"]
+    if [ ! -z "$line" ]
     then
       echo "Found ssl password"
       export ssl_key_password=$(echo $line | awk '{print $2}')
