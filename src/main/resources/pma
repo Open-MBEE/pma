@@ -2,6 +2,8 @@
 #
 # pma     This shell script takes care of starting and stopping PMA
 #
+# chkconfig: 2345 99 10
+#
 # Tommy Hang 7/11/2017
 
 SHUTDOWN_WAIT=20
