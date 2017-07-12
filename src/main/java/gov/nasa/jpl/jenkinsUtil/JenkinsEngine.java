@@ -546,14 +546,7 @@ public class JenkinsEngine {
 		
 		if((!projectID.equals(""))&&(!refID.equals("")))
 		{
-			nestedLocation = "job/"+projectID+"/job/"+refID+"/";
-			
-//			if (newConfig) {
-//				postUrl = this.url + "/job/PMA/job/"+projectID+"/job/"+refID+"/"+"createItem?name=" + jobName; // Jenkins 2
-//			} else {
-//				postUrl = this.url + "/job/PMA/job/"+projectID+"/job/"+refID+"/config.xml"; // Jenkins 2
-//			}
-			
+			nestedLocation = "job/"+projectID+"/job/"+refID+"/";	
 		}
 		
 		if (newConfig) {
