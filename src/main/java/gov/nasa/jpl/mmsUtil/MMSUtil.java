@@ -35,8 +35,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nasa.jpl.jmsUtil.JmsConnection;
 import gov.nasa.jpl.pmaUtil.PMAUtil;
+import gov.nasa.jpl.util.JmsConnection;
 
 import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
