@@ -260,7 +260,7 @@ public class ClientEndpointController {
 	        }
 	        
 	        // Creating the job
-	        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
+	        String jobCreationResponse = je.postNestedJobConfigXml(jbc, jobElementID,projectID ,refID, true);
 //	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
 	        
 	        if(jobCreationResponse.equals("HTTP/1.1 200 OK"))
@@ -338,7 +338,7 @@ public class ClientEndpointController {
     		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
     		{
     			// run job on jenkins
-    	        String runResponse = je.executeJob(jobSysmlID); // job name should be the job sysmlID
+    	        String runResponse = je.executeNestedJob(jobSysmlID, projectID, refID); // job name should be the job sysmlID
     	        je.getBuildNumber(jobSysmlID);
     	        
 //    			System.out.println("Job run response: "+runResponse);
@@ -419,7 +419,7 @@ public class ClientEndpointController {
 		
 		// delete job on jenkins
     	JenkinsEngine je = login();
-    	String jenkinsDeleteResponse = je.deleteJob(jobSysmlID);
+    	String jenkinsDeleteResponse = je.deleteNestedJob(jobSysmlID, projectID, refID);
     	System.out.println("Jenkins delete response: "+jenkinsDeleteResponse);
     	logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
     	if(!jenkinsDeleteResponse.equals("HTTP/1.1 302 Found"))
