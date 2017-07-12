@@ -1,4 +1,4 @@
-package gov.nasa.jpl.util;
+package gov.nasa.jpl.jmsUtil;
 
 import java.util.HashMap;
 import java.util.Hashtable;
