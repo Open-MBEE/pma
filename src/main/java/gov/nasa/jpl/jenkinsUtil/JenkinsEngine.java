@@ -550,10 +550,8 @@ public class JenkinsEngine {
 		}
 		
 		if (newConfig) {
-//			postUrl = this.url + "/view/PMA/createItem?name=" + jobName; // Jenkins 1
 			postUrl = this.url + "/job/PMA/"+nestedLocation+"createItem?name=" + jobName; // Jenkins 2
 		} else {
-//			postUrl = this.url + "/job/" + jobName + "/config.xml"; // Jenkins 1
 			postUrl = this.url + "/job/PMA/"+nestedLocation+"job/" + jobName + "/config.xml"; // Jenkins 2
 		}
 
@@ -687,11 +685,21 @@ public class JenkinsEngine {
 		return null;
 	}
 
-	public String executeJob(String jobName) {
+	public String executeJob(String jobName) 
+	{
+		return executeNestedJob(jobName,"","");
+	}
+	public String executeNestedJob(String jobName,String projectID, String refID) 
+	{
+		String nestedLocation = "";
+		
+		if((!projectID.equals(""))&&(!refID.equals("")))
+		{
+			nestedLocation = projectID+"/job/"+refID+"/job/";	
+		}
 		try {
 			this.setJobToken("build");
-//			this.executeUrl = this.url + "/job/" + jobName + "/build?token=" + this.jenkinsToken; // Jenkins 1
-			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/build?token=" + this.jenkinsToken; // Jenkins 2
+			this.executeUrl = this.url + "/job/PMA/job/"+nestedLocation+ jobName + "/build?token=" + this.jenkinsToken; // Jenkins 2
 			System.out.println("Execute url: "+executeUrl);
 			String response = this.build();
 			return response;
@@ -700,10 +708,21 @@ public class JenkinsEngine {
 		}
 	}
 
-	public String deleteJob(String jobName) {
+	public String deleteJob(String jobName) 
+	{
+		return deleteNestedJob(jobName,"","");
+	}
+	public String deleteNestedJob(String jobName,String projectID,String refID)
+	{
+		String nestedLocation = "";
+		
+		if((!projectID.equals(""))&&(!refID.equals("")))
+		{
+			nestedLocation = projectID+"/job/"+refID+"/job/";	
+		}
+		
 		try {
-//			this.executeUrl = this.url + "/job/" + jobName + "/doDelete"; // Jenkins 1
-			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/doDelete"; // Jenkins2
+			this.executeUrl = this.url + "/job/PMA/job/"+nestedLocation + jobName + "/doDelete"; // Jenkins2
 			System.out.println("Delete url: "+executeUrl);
 			String response = this.build();
 			return response;
