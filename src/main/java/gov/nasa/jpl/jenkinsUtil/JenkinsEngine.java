@@ -654,12 +654,11 @@ public class JenkinsEngine {
 		String nestedPMAFolder = "";
 		if(!jobParentFolderName.equals(""))
 		{
-			nestedPMAFolder="job/"+jobParentFolderName+"/";
+			nestedPMAFolder=jobParentFolderName+"/";
 		}
-//		String url = this.url + "/view/PMA/api/json?tree=jobs[name,color]"; // Jenkins 1
-		String url = this.url + "/job/PMA/"+nestedPMAFolder+"api/json?tree=jobs[name,color]"; // Jenkins 2
+		String url = this.url + "/job/PMA/job/"+nestedPMAFolder+"api/json?tree=jobs[name,color]"; // Jenkins 2
 
-		System.out.println("Current constuction url is " + url);
+		System.out.println("Current construction url is " + url);
 		this.executeUrl = url;
 		System.out.println("Execution url is " + this.executeUrl);
 		
@@ -843,10 +842,9 @@ public class JenkinsEngine {
 	 * @param jobName
 	 * @return
 	 */
-	public String getBuildNumber(String jobName) {
+	public String getBuildNumber(String jobName,String projectID, String refID) {
 		try {
-//			this.executeUrl = this.url + "/job/" + jobName + "/api/json?tree=builds[number]";
-			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/api/json?tree=builds[number]";
+			this.executeUrl = this.url + "/job/PMA/job/"+projectID+"/job/"+refID+"/job/" + jobName + "/api/json?tree=builds[number]";
 			System.out.println("Get build number url: "+this.executeUrl);
 			execute();
 
@@ -875,10 +873,9 @@ public class JenkinsEngine {
 	 * @param jobName name of job.
 	 * @return
 	 */
-	public String getNextBuildNumber(String jobName) {
+	public String getNextBuildNumber(String jobName,String projectID, String refID) {
 		try {
-			this.executeUrl = this.url + "/job/PMA/job/" + jobName + "/api/json?tree=nextBuildNumber";
-
+			this.executeUrl = this.url + "/job/PMA/job/"+projectID+"/job/"+refID+"/job/"+ jobName + "/api/json?tree=nextBuildNumber";
 			System.out.println("Get next build number url: "+this.executeUrl);
 			execute();
 
