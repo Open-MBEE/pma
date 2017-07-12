@@ -518,14 +518,6 @@ public class JenkinsEngine {
 		System.out.println("Execution url is " + this.executeUrl);
 	}
 
-	public void constructAllJobs() {
-//		String url = this.url + "/view/PMA/api/json?tree=jobs[name,color]"; // Jenkins 1
-		String url = this.url + "/job/PMA/api/json?tree=jobs[name,color]"; // Jenkins 2
-
-		System.out.println("Current constuction url is " + url);
-		this.executeUrl = url;
-		System.out.println("Execution url is " + this.executeUrl);
-	}
 
 	// This should be called when you change the name, status, schedule of a job
 	public String postConfigXml(JenkinsBuildConfig config, String jobName, boolean newConfig) {
@@ -571,10 +563,24 @@ public class JenkinsEngine {
 	 * @return Returns a JSON object from Jenkins with color of last job run.
 	 *         Ex. {"color":"red","name":"PMA_1490223990977"}
 	 */
-	public String getJob(String jobName) {
+	public String getJob(String jobName) 
+	{
+		return getNestedJob(jobName,"");
+	}
+
+	/**
+	 * Gets job information from Jenkins.
+	 * 
+	 * @param jobName Name of job
+	 * @param nestedPMAFolderName Name of folder inside the pma folder in Jenkins
+	 * @return Returns a JSON object from Jenkins with color of last job run.
+	 *         Ex. {"color":"red","name":"PMA_1490223990977"}
+	 */
+	public String getNestedJob(String jobName,String nestedPMAFolderName) 
+	{
 		JSONObject json = null;
 		System.out.println("jenkins get job");
-		String allJobResponse = getAllJobs();
+		String allJobResponse = getAllJobs(nestedPMAFolderName);
 		System.out.println("ALL JOB RESPONSE: "+allJobResponse);
 		if (allJobResponse != null&&allJobResponse.startsWith("{")) {
 			try {
@@ -582,7 +588,7 @@ public class JenkinsEngine {
 
 				JSONArray jobs = allJobs.optJSONArray("jobs");
 				if (jobs == null || jobs.length() <= 0)
-					return null;
+					return "Job not found on Jenkins";
 				for (int i = 0; i < jobs.length(); ++i) {
 					JSONObject job = jobs.optJSONObject(i);
 					if (job == null)
@@ -611,17 +617,29 @@ public class JenkinsEngine {
 		return allJobResponse;
 
 	}
-
+	
 	/**
-	 * Gets a list of all jobs in the PMA view on Jenkins.
+	 * Gets a list of all jobs in the PMA folder on Jenkins.
+	 * @param nestedPMAFolderName Name of folder inside the pma folder on Jenkins 
 	 * 
 	 * @return
 	 */
-	public String getAllJobs() {
-		constructAllJobs();
+	public String getAllJobs(String nestedPMAFolderName) 
+	{
+		String nestedPMAFolder = "";
+		if(!nestedPMAFolderName.equals(""))
+		{
+			nestedPMAFolder="job/"+nestedPMAFolderName+"/";
+		}
+//		String url = this.url + "/view/PMA/api/json?tree=jobs[name,color]"; // Jenkins 1
+		String url = this.url + "/job/PMA/"+nestedPMAFolder+"api/json?tree=jobs[name,color]"; // Jenkins 2
+
+		System.out.println("Current constuction url is " + url);
+		this.executeUrl = url;
+		System.out.println("Execution url is " + this.executeUrl);
+		
 		System.out.println("before execute");
-		String allJobs = execute(); // execute returns not null when theres an
-									// error
+		String allJobs = execute(); // execute returns not null when theres an error
 		System.out.println("all jobs inside getAllJobs");
 		if (allJobs != null) {
 			return allJobs;
@@ -1212,10 +1230,31 @@ public class JenkinsEngine {
 		return null;
 	}
 	
+	/**
+	 * Creates a folder inside the PMA folder
+	 * @param folderName name of folder
+	 * @return response from Jenkins during folder creation
+	 */
 	public String createFolder(String folderName)
 	{
+		return createFolderWithParent(folderName,"");
+	}
+	
+	/**
+	 * Creates a folder inside another specified folder inside the PMA folder
+	 * @param folderName Name of folder to be created
+	 * @param folderParentName Name of parent folder to put the new folder. If it is empty string, then it is ignored.
+	 * @return
+	 */
+	public String createFolderWithParent(String folderName,String folderParentName)
+	{
 		try {
-			this.executeUrl = this.url + "/job/PMA/"+"createItem?name="+folderName+"&mode=com.cloudbees.hudson.plugins.folder.Folder&from=&json=%7B%22name%22%3A%22FolderName%22%2C%22mode%22%3A%22com.cloudbees.hudson.plugins.folder.Folder%22%2C%22from%22%3A%22%22%2C%22Submit%22%3A%22OK%22%7D&Submit=OK";
+			String folderParent = "";
+			if(!folderParentName.equals(""))
+			{
+				folderParent = "job/"+folderParentName+"/";
+			}
+			this.executeUrl = this.url + "/job/PMA/"+folderParent+"createItem?name="+folderName+"&mode=com.cloudbees.hudson.plugins.folder.Folder&from=&json=%7B%22name%22%3A%22FolderName%22%2C%22mode%22%3A%22com.cloudbees.hudson.plugins.folder.Folder%22%2C%22from%22%3A%22%22%2C%22Submit%22%3A%22OK%22%7D&Submit=OK";
 			System.out.println("Create Folder url: "+executeUrl);
 			HttpPost post = new HttpPost(this.executeUrl);
 			post.setHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -1235,7 +1274,7 @@ public class JenkinsEngine {
 			e.printStackTrace();
 			return e.toString();
 		}
-}
+	}
 	
 	public static void main(String[] args) 
 	{
@@ -1273,8 +1312,28 @@ public class JenkinsEngine {
         }
         else
         {
-
+        	System.out.println("Folder already exists");
         }
+        
+        String nestedfolderName = "nestedMerp";
+        jobString = je.getNestedJob(nestedfolderName, folderName);
+        
+        System.out.println("JOB STRING: "+jobString);
+        if(!PMAUtil.isJSON(jobString))
+        {
+        	if(jobString.equals("Job not found on Jenkins"))
+        	{
+        		System.out.println("create folder");
+        		je.createFolderWithParent(nestedfolderName, folderName);
+        	}
+        }
+        else
+        {
+        	System.out.println("Folder already exists");
+        }
+        
+        
+        
 //        System.out.println("Job existence: "+je.getJob("master"));
         
 //        System.out.println(je.createFolder("merp"));
