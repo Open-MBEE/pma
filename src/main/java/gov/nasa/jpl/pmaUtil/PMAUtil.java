@@ -211,23 +211,19 @@ public class PMAUtil
 	 * @param jsonString
 	 * @return
 	 */
-	public static Boolean isJSON(String jsonString)
+	public Boolean isJSON(String jsonString)
 	{
-		if(jsonString==null)
-		{
-			return false;
-		}
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode fullJson = mapper.readTree(jsonString);
 			System.out.println("jobs "+fullJson.get("jobs"));
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
-//			e.printStackTrace();
+			e.printStackTrace();
 			return false;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-//			e.printStackTrace();
+			e.printStackTrace();
 			return false;
 		}
 		return true;

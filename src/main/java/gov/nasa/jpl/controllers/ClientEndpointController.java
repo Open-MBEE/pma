@@ -171,7 +171,7 @@ public class ClientEndpointController {
 		String command = jobFromVE.getCommand();
 		String arguments = Arrays.toString(jobFromVE.getArguments());
 		
-		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // By default, the return status code is 500 Internal Server error
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		
@@ -180,7 +180,7 @@ public class ClientEndpointController {
 		if(!jobPackageExists) // create jobs bin package if it doesn't exist.
 		{
 			logger.info("Job Package Does not exist");
-//			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm"); // creating the package inside the project
+//			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm"); //creating the package inside the project
 			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID); // creating the package one level above the package, wont get synced back to the model.
 //			System.out.println(packageNode.toString());
 			mmsUtil.post(mmsServer, projectID, refID, packageNode);
@@ -218,49 +218,8 @@ public class ClientEndpointController {
 //	        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
 	        
 	        JenkinsEngine je = login();
-	        
-	        /*
-	         *  Creating a folder for the projectID if it doesn't exist
-	         */
-	        String folderName = projectID;
-	        String jobString = je.getJob(folderName);
-	        
-	        logger.info("JOB STRING: "+jobString);
-	        if(!PMAUtil.isJSON(jobString))
-	        {
-	        	if(jobString.equals("Job not found on Jenkins"))
-	        	{
-	        		logger.info("Creating folder: "+folderName);
-	        		je.createFolder(folderName);
-	        	}
-	        }
-	        else
-	        {
-	        	logger.info("Folder already exists");
-	        }
-	        
-	        /*
-	         *  Creating a folder for the ref if it doesn't exist
-	         */
-	        String nestedfolderName = refID;
-	        jobString = je.getNestedJob(nestedfolderName, folderName);
-	        
-	        logger.info("JOB STRING: "+jobString);
-	        if(!PMAUtil.isJSON(jobString))
-	        {
-	        	if(jobString.equals("Job not found on Jenkins"))
-	        	{
-	        		logger.info("Creating folder: "+nestedfolderName);
-	        		je.createFolderWithParent(nestedfolderName, folderName);
-	        	}
-	        }
-	        else
-	        {
-	        	logger.info(nestedfolderName+" Folder already exists");
-	        }
-	        
-	        // Creating the job
-	        String jobCreationResponse = je.postNestedJobConfigXml(jbc, jobElementID,projectID ,refID, true);
+
+	        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
 //	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
 	        
 	        if(jobCreationResponse.equals("HTTP/1.1 200 OK"))
@@ -338,7 +297,7 @@ public class ClientEndpointController {
     		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
     		{
     			// run job on jenkins
-    	        String runResponse = je.executeNestedJob(jobSysmlID, projectID, refID); // job name should be the job sysmlID
+    	        String runResponse = je.executeJob(jobSysmlID); // job name should be the job sysmlID
     	        je.getBuildNumber(jobSysmlID);
     	        
 //    			System.out.println("Job run response: "+runResponse);
@@ -419,7 +378,7 @@ public class ClientEndpointController {
 		
 		// delete job on jenkins
     	JenkinsEngine je = login();
-    	String jenkinsDeleteResponse = je.deleteNestedJob(jobSysmlID, projectID, refID);
+    	String jenkinsDeleteResponse = je.deleteJob(jobSysmlID);
     	System.out.println("Jenkins delete response: "+jenkinsDeleteResponse);
     	logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
     	if(!jenkinsDeleteResponse.equals("HTTP/1.1 302 Found"))
