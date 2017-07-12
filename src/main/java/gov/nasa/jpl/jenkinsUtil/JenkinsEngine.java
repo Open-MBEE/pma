@@ -572,15 +572,15 @@ public class JenkinsEngine {
 	 * Gets job information from Jenkins.
 	 * 
 	 * @param jobName Name of job
-	 * @param nestedPMAFolderName Name of folder inside the pma folder in Jenkins
+	 * @param jobParentFolderName Name of folder inside the pma folder in Jenkins
 	 * @return Returns a JSON object from Jenkins with color of last job run.
 	 *         Ex. {"color":"red","name":"PMA_1490223990977"}
 	 */
-	public String getNestedJob(String jobName,String nestedPMAFolderName) 
+	public String getNestedJob(String jobName,String jobParentFolderName) 
 	{
 		JSONObject json = null;
 		System.out.println("jenkins get job");
-		String allJobResponse = getAllJobs(nestedPMAFolderName);
+		String allJobResponse = getAllJobs(jobParentFolderName);
 		System.out.println("ALL JOB RESPONSE: "+allJobResponse);
 		if (allJobResponse != null&&allJobResponse.startsWith("{")) {
 			try {
@@ -620,16 +620,16 @@ public class JenkinsEngine {
 	
 	/**
 	 * Gets a list of all jobs in the PMA folder on Jenkins.
-	 * @param nestedPMAFolderName Name of folder inside the pma folder on Jenkins 
+	 * @param jobParentFolderName Name of folder inside the pma folder on Jenkins 
 	 * 
 	 * @return
 	 */
-	public String getAllJobs(String nestedPMAFolderName) 
+	public String getAllJobs(String jobParentFolderName) 
 	{
 		String nestedPMAFolder = "";
-		if(!nestedPMAFolderName.equals(""))
+		if(!jobParentFolderName.equals(""))
 		{
-			nestedPMAFolder="job/"+nestedPMAFolderName+"/";
+			nestedPMAFolder="job/"+jobParentFolderName+"/";
 		}
 //		String url = this.url + "/view/PMA/api/json?tree=jobs[name,color]"; // Jenkins 1
 		String url = this.url + "/job/PMA/"+nestedPMAFolder+"api/json?tree=jobs[name,color]"; // Jenkins 2
