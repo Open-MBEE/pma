@@ -211,8 +211,12 @@ public class PMAUtil
 	 * @param jsonString
 	 * @return
 	 */
-	public Boolean isJSON(String jsonString)
+	public static Boolean isJSON(String jsonString)
 	{
+		if(jsonString==null)
+		{
+			return false;
+		}
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode fullJson = mapper.readTree(jsonString);
