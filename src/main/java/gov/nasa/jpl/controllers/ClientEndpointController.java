@@ -260,7 +260,7 @@ public class ClientEndpointController {
 	        }
 	        
 	        // Creating the job
-	        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
+	        String jobCreationResponse = je.postNestedJobConfigXml(jbc, jobElementID,projectID ,refID, true);
 //	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
 	        
 	        if(jobCreationResponse.equals("HTTP/1.1 200 OK"))

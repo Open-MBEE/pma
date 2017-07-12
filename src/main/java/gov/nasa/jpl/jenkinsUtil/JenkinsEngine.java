@@ -518,16 +518,50 @@ public class JenkinsEngine {
 		System.out.println("Execution url is " + this.executeUrl);
 	}
 
-
-	// This should be called when you change the name, status, schedule of a job
-	public String postConfigXml(JenkinsBuildConfig config, String jobName, boolean newConfig) {
+	/**
+	 * Posting a config xml to jenkins to create or update a job
+	 * @param config JenkinsBuildConfig object containing xml of job to be created
+	 * @param jobName Name of Jenkins Job
+	 * @param newConfig When creating a new job, newConfig will be true. If updating a job, then newConfig is false.
+	 * @return
+	 */
+	public String postConfigXml(JenkinsBuildConfig config, String jobName, boolean newConfig)
+	{
+		return postNestedJobConfigXml(config, jobName,"","", newConfig);
+	}
+	
+	/**
+	 * Posting a config xml to jenkins to create or update a job
+	 * @param config JenkinsBuildConfig object containing xml of job to be created
+	 * @param jobName Name of Jenkins Job
+	 * @param projectID ID of the magicdraw project, should also be a folder on Jenkins
+	 * @param refID ID of the mms branch, should also be a folder on Jenkins
+	 * @param newConfig When creating a new job, newConfig will be true. If updating a job, then newConfig is false.
+	 * @return
+	 */
+	public String postNestedJobConfigXml(JenkinsBuildConfig config, String jobName,String projectID,String refID, boolean newConfig) {
 		String postUrl = null;
+		
+		String nestedLocation = "";
+		
+		if((!projectID.equals(""))&&(!refID.equals("")))
+		{
+			nestedLocation = "job/"+projectID+"/job/"+refID+"/";
+			
+//			if (newConfig) {
+//				postUrl = this.url + "/job/PMA/job/"+projectID+"/job/"+refID+"/"+"createItem?name=" + jobName; // Jenkins 2
+//			} else {
+//				postUrl = this.url + "/job/PMA/job/"+projectID+"/job/"+refID+"/config.xml"; // Jenkins 2
+//			}
+			
+		}
+		
 		if (newConfig) {
 //			postUrl = this.url + "/view/PMA/createItem?name=" + jobName; // Jenkins 1
-			postUrl = this.url + "/job/PMA/createItem?name=" + jobName; // Jenkins 2
+			postUrl = this.url + "/job/PMA/"+nestedLocation+"createItem?name=" + jobName; // Jenkins 2
 		} else {
 //			postUrl = this.url + "/job/" + jobName + "/config.xml"; // Jenkins 1
-			postUrl = this.url + "/job/PMA/job/" + jobName + "/config.xml"; // Jenkins 2
+			postUrl = this.url + "/job/PMA/"+nestedLocation+"job/" + jobName + "/config.xml"; // Jenkins 2
 		}
 
 		String configFile = generateConfigXML(config);
