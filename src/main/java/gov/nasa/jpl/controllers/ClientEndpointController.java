@@ -312,15 +312,15 @@ public class ClientEndpointController {
 		
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
-    	String jobResponse = je.getJob(jobSysmlID);
-//    	System.out.println("Job Response: "+jobResponse);
-    	if(!jobResponse.equals("Job Not Found"))
+    	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
+    	System.out.println("Job Response: "+jobResponse);
+    	if((!jobResponse.equals("Job not found on Jenkins"))&&(!jobResponse.equals("HTTP/1.1 404 Not Found")))
     	{
     		System.out.println("");
     		String alfrescoToken = jobInstance.getAlfrescoToken();
     		String mmsServer = jobInstance.getMmsServer();
     		
-    		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID);
+    		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectID, refID);
     		
     		// Create job instance element. Use the jobSysmlID as the owner.
     		
@@ -339,7 +339,6 @@ public class ClientEndpointController {
     		{
     			// run job on jenkins
     	        String runResponse = je.executeNestedJob(jobSysmlID, projectID, refID); // job name should be the job sysmlID
-    	        je.getBuildNumber(jobSysmlID);
     	        
 //    			System.out.println("Job run response: "+runResponse);
     			logger.info("Run job Jenkins response: "+runResponse);
@@ -369,11 +368,14 @@ public class ClientEndpointController {
     	}
     	else
     	{	
+    		System.out.println("JOB NOT FOUND ELSE");
         	logger.info("Run Job Response: "+jobResponse); // Jenkins issue when checking if job exists.
-        	if (jobResponse.equals("HTTP/1.1 404 Not Found")) 
+        	if ((jobResponse.contains("HTTP/1.1 404 Not Found")||(jobResponse.equals("Job not found on Jenkins")))) 
 			{
 				status = HttpStatus.NOT_FOUND; 
-				jobResponse="Job Not Found on Jenkins";
+				ObjectNode responseJSON = mapper.createObjectNode();
+				responseJSON.put("message", jobResponse); 
+				jobResponse = responseJSON.toString();
 			}
         	return new ResponseEntity<String>(jobResponse,status);
     	}
