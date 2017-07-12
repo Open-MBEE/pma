@@ -3,7 +3,7 @@
  * Used for debugging the JMS messages that PMA sends out.
  * @author hang
  */
-package gov.nasa.jpl.util;
+package gov.nasa.jpl.jmsUtil;
 
 import javax.jms.*;
 
