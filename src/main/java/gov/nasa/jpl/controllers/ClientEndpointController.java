@@ -187,7 +187,7 @@ public class ClientEndpointController {
 		}
 		
 		String jobElementID = mmsUtil.createId();
-		ObjectNode on = mmsUtil.buildJobElementJSON(jobElementID, associatedElementID, jobName,command,schedule,"jobs_bin_"+projectID,arguments); // Job elements should be created in the jobs bin package
+		ObjectNode on = mmsUtil.buildDocgenJobElementJSON(jobElementID,"jobs_bin_"+projectID,jobName, associatedElementID,command,schedule); // Job elements should be created in the jobs bin package
 		
 //		System.out.println("Job class JSON: "+on.toString());
 		logger.info("Job class JSON: "+on.toString());

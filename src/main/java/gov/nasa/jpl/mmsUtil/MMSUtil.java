@@ -84,7 +84,7 @@ public class MMSUtil {
 		elements.add(packageElement);
 		payload.put("elements",elements);
 		payload.put("source","pma");
-		payload.put("pmaVersion","1.0");
+		payload.put("pmaVersion","3.1");
 		
 		return payload;
 	} 
@@ -103,7 +103,7 @@ public class MMSUtil {
 		ArrayNode elements = mapper.createArrayNode();
 		ObjectNode classElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
-		classElement.put("_appliedStereotypeIds", mapper.createArrayNode().add("_18_0_5_407019f_1458258829038_313297_14086"));
+		classElement.put("_appliedStereotypeIds", mapper.createArrayNode().add("_11_5EAPbeta_be00301_1147424179914_458922_958"));
 		classElement.put("documentation", "");
 		classElement.put("type", "Class");
 		classElement.put("id", id);
@@ -135,7 +135,6 @@ public class MMSUtil {
 		classElement.put("interfaceRealizationIds", mapper.createArrayNode());
 		classElement.put("ownedOperationIds", mapper.createArrayNode());
 		classElement.put("isActive", Boolean.FALSE);
-//		classElement.put("nestedClassifierIds", mapper.createArrayNode());
 		
 		elements.add(classElement);
 		
@@ -158,13 +157,44 @@ public class MMSUtil {
 		instanceSpecificationElement.put("deploymentIds", mapper.createArrayNode());
 		instanceSpecificationElement.put("slotIds", mapper.createArrayNode());
 		instanceSpecificationElement.put("specification", nullNode);
-		instanceSpecificationElement.put("classifierIds", mapper.createArrayNode().add("_18_0_5_407019f_1458258829038_313297_14086"));
+		instanceSpecificationElement.put("classifierIds", mapper.createArrayNode().add("_11_5EAPbeta_be00301_1147424179914_458922_958"));
 		instanceSpecificationElement.put("stereotypedElementId", id);
 		
 		elements.add(instanceSpecificationElement);
 		
 
 		return elements;
+	}
+	
+	
+	public ObjectNode buildInstanceSpecificationNode(String ownerID,String classifierID)
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode nullNode = null;
+		
+		ObjectNode instanceSpecificationElement = mapper.createObjectNode();
+		
+		instanceSpecificationElement.put("_appliedStereotypeIds",mapper.createArrayNode());
+		instanceSpecificationElement.put("documentation", "");
+		instanceSpecificationElement.put("type", "InstanceSpecification");
+		instanceSpecificationElement.put("id", ownerID+"_asi");
+		instanceSpecificationElement.put("mdExtensionsIds", mapper.createArrayNode());
+		instanceSpecificationElement.put("ownerId", ownerID);
+		instanceSpecificationElement.put("syncElementId", nullNode);
+		instanceSpecificationElement.put("appliedStereotypeInstanceId", nullNode);
+		instanceSpecificationElement.put("clientDependencyIds", mapper.createArrayNode());
+		instanceSpecificationElement.put("supplierDependencyIds", mapper.createArrayNode());
+		instanceSpecificationElement.put("name", "");
+		instanceSpecificationElement.put("nameExpression", nullNode);
+		instanceSpecificationElement.put("visibility", nullNode);
+		instanceSpecificationElement.put("templateParameterId", nullNode);
+		instanceSpecificationElement.put("deploymentIds", mapper.createArrayNode());
+		instanceSpecificationElement.put("slotIds", mapper.createArrayNode());
+		instanceSpecificationElement.put("specification", nullNode);
+		instanceSpecificationElement.put("classifierIds", mapper.createArrayNode().add(classifierID));
+		instanceSpecificationElement.put("stereotypedElementId", ownerID);
+		
+		return instanceSpecificationElement;
 	}
 	
 	/**
@@ -175,7 +205,7 @@ public class MMSUtil {
 	 * @param value value of property. 
 	 * @return
 	 */
-	public ObjectNode buildPropertyNode(String ownerID,String name,String value)
+	public ObjectNode buildPropertyNode(String ownerID,String name,String value, String redefinedPropertyId)
 	{
 		
 		String propertyID = createId();
@@ -183,14 +213,14 @@ public class MMSUtil {
 		ObjectNode classElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
 		
-		classElement.put("type", "Property");
+		classElement.put("_appliedStereotypeIds", mapper.createArrayNode().add("_12_0_be00301_1164123483951_695645_2041"));
 		classElement.put("documentation", "");
-		classElement.put("_appliedStereotypeIds", mapper.createArrayNode());
+		classElement.put("type", "Property");
 		classElement.put("id", propertyID);
 		classElement.put("mdExtensionsIds", mapper.createArrayNode());
 		classElement.put("ownerId", ownerID);
 		classElement.put("syncElementId", nullNode);
-		classElement.put("appliedStereotypeInstanceId", nullNode);
+		classElement.put("appliedStereotypeInstanceId", propertyID+"_asi");
 		classElement.put("clientDependencyIds", mapper.createArrayNode());
 		classElement.put("supplierDependencyIds", mapper.createArrayNode());
 		classElement.put("name", name);
@@ -198,7 +228,7 @@ public class MMSUtil {
 		classElement.put("visibility", nullNode);
 		classElement.put("isLeaf", Boolean.FALSE);
 		classElement.put("isStatic", Boolean.FALSE);
-		classElement.put("typeId", nullNode);
+		classElement.put("typeId", "_16_5_1_12c903cb_1245415335546_479030_4092");
 		classElement.put("isOrdered", Boolean.FALSE);
 		classElement.put("isUnique", Boolean.TRUE);
 		classElement.put("lowerValue", nullNode);
@@ -214,11 +244,11 @@ public class MMSUtil {
 		
 		ObjectNode defaultValue = mapper.createObjectNode(); // value element
 		
-		defaultValue.put("type","LiteralString");
-		defaultValue.put("documentation","");
 		defaultValue.put("_appliedStereotypeIds",mapper.createArrayNode());
+		defaultValue.put("documentation","");
+		defaultValue.put("type","LiteralString");
 		
-		defaultValue.put("id",propertyID+"_value");
+		defaultValue.put("id",createId());
 		defaultValue.put("mdExtensionsIds",mapper.createArrayNode());
 		
 		defaultValue.put("ownerId",propertyID);
@@ -240,23 +270,62 @@ public class MMSUtil {
 		classElement.put("isDerived", Boolean.FALSE);
 		classElement.put("isDerivedUnion", Boolean.FALSE);
 		classElement.put("isID", Boolean.FALSE);
-		classElement.put("redefinedPropertyIds", mapper.createArrayNode());
+		
+		if(redefinedPropertyId!=null)
+		{
+			classElement.put("redefinedPropertyIds", mapper.createArrayNode().add(redefinedPropertyId));
+		}
+		else
+		{
+			classElement.put("redefinedPropertyIds", mapper.createArrayNode());
+		}
 		classElement.put("subsettedPropertyIds", mapper.createArrayNode());
 		classElement.put("associationId", nullNode);
 		
 		return classElement;
 	}
-
-	public ObjectNode buildJobElementJSON(String id, String associatedElementID,String name,String command,String schedule, String ownerID,String arguments) {
+	
+	public ObjectNode buildGeneralizationNode(String ownerID,String sourceID,String targetID)
+	{
+		String generalizationID = createId();
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode generalization = mapper.createObjectNode();
+		ObjectNode nullNode = null;
+		generalization.put("_appliedStereotypeIds", mapper.createArrayNode());
+		generalization.put("documentation", "");
+		generalization.put("type", "Generalization");
+		generalization.put("id", generalizationID);
+		generalization.put("mdExtensionsIds", mapper.createArrayNode());
+		generalization.put("ownerId", ownerID);
+		generalization.put("syncElementId", nullNode);
+		generalization.put("appliedStereotypeInstanceId", nullNode);
+		generalization.put("_sourceIds", mapper.createArrayNode().add(sourceID));
+		generalization.put("_targetIds", mapper.createArrayNode().add(targetID));
+		generalization.put("generalId", targetID);
+		generalization.put("generalizationSetIds", mapper.createArrayNode());
+		generalization.put("isSubstitutable", Boolean.TRUE);
+		generalization.put("specificId", ownerID);
+		
+		return generalization;
+	}
+	
+	public ObjectNode buildDocgenJobElementJSON(String id, String ownerID,String name, String associatedElementID, String type,String schedule) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = buildClassElement(id,ownerID,name);
 		
-		elements.add(buildPropertyNode(id,"command",command));
-		elements.add(buildPropertyNode(id,"associatedElementID",associatedElementID));
-		elements.add(buildPropertyNode(id,"schedule",schedule));
-		elements.add(buildPropertyNode(id,"arguments",arguments));
+		elements.add(buildPropertyNode(id,"type",type,null));
+		elements.add(buildPropertyNode(id,"schedule",schedule,null));
+		elements.add(buildPropertyNode(id,"buildNumber",schedule,null));
+		elements.add(buildPropertyNode(id,"jobStatus",schedule,null));
+		elements.add(buildPropertyNode(id,"logUrl",schedule,null));
+		elements.add(buildPropertyNode(id,"started",schedule,null));
+		elements.add(buildPropertyNode(id,"completed",schedule,null));
+		elements.add(buildPropertyNode(id,"associatedElementID",associatedElementID,null));
+		elements.add(buildPropertyNode(id,"refID",schedule,null));
+		elements.add(buildPropertyNode(id,"projectID",schedule,null));
+		
 		
 		// Adding the property id's to the ownedAttributes key in the job class JSON
 		ObjectNode jobClass = (ObjectNode) elements.get(0);
@@ -278,7 +347,7 @@ public class MMSUtil {
 		
 		payload.put("elements",elements);
 		payload.put("source","pma");
-		payload.put("pmaVersion","1.0");
+		payload.put("pmaVersion","3.1");
 		
 		return payload;
 	}
@@ -293,11 +362,11 @@ public class MMSUtil {
 		
 		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 		
-		elements.add(buildPropertyNode(id,"buildNumber",buildNumber));
-		elements.add(buildPropertyNode(id,"jobStatus",jobStatus));
-		elements.add(buildPropertyNode(id,"jenkinsLog",""));
-		elements.add(buildPropertyNode(id,"created",currentTimestamp));
-		elements.add(buildPropertyNode(id,"completed",""));
+		elements.add(buildPropertyNode(id,"buildNumber",buildNumber,null));
+		elements.add(buildPropertyNode(id,"jobStatus",jobStatus,null));
+		elements.add(buildPropertyNode(id,"jenkinsLog","",null));
+		elements.add(buildPropertyNode(id,"created",currentTimestamp,null));
+		elements.add(buildPropertyNode(id,"completed","",null));
 		
 		// Adding the property id's to the ownedAttributes key in the job class JSON
 		ObjectNode jobInstanceClass = (ObjectNode) elements.get(0);
@@ -321,7 +390,7 @@ public class MMSUtil {
 		
 		payload.put("elements",elements);
 		payload.put("source","pma");
-		payload.put("pmaVersion","1.0");
+		payload.put("pmaVersion","3.1");
 		
 		return payload;
 		
@@ -844,52 +913,6 @@ public class MMSUtil {
 		}
 		return false;
 	}
-	
-	public static void main(String[] args) 
-	{
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-		String sysmlID = "PMA_"+timestamp.getTime();
-		String ownerID = "PROJECT-921084a3-e465-465f-944b-61194213043e_pm";
-		String token = "TICKET_966561726f35a382c76fa36d3a0a53b471f2db0b";
-		String server = "opencae-int.jpl.nasa.gov";
-		String projectID = "PROJECT-921084a3-e465-465f-944b-61194213043e";
-		String refID = "master";
-		MMSUtil mmsUtil = new MMSUtil(token);
-
-		
-		ObjectNode on = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm");
-//		System.out.println(on.toString());
-		mmsUtil.post(server, projectID, token, on);
-		
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-//		System.out.println("Package: "+mmsUtil.jobPackageExists(server, projectID, refID));
-//		System.out.println(mmsUtil.get(server, projectID, refID, "jobs_bin_PROJECT-921084a3-e465-465f-944b-61194213043e", true));
-		
-//		String jobElementID = "PMA_"+timestamp.getTime();
-//		ObjectNode on2 = mmsUtil.buildJobElementJSON("PMA_"+timestamp.getTime(),ownerID,"jobEle");
-//		System.out.println(on2.toString());
-//		mmsUtil.post(server, projectID,refID, on2);
-//		
-//		timestamp = new Timestamp(System.currentTimeMillis());
-//		ObjectNode on3 = mmsUtil.buildJobInstanceJSON("PMA_"+timestamp.getTime()+"_instance",jobElementID,"jobInstance","1");
-//		System.out.println(on3.toString());
-//		mmsUtil.post(server, projectID,refID, on3);
-		
-//		String elementID = "PMA_1491324925592";
-//		String buildNumber = "55";
-//		String propertyName = "jobStatus";
-//		String newPropertyValue = "completed";
-//		
-//		System.out.println(mmsUtil.get(server, projectID, refID, elementID, true));
-////		System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
-		
-	}
 
 	/**
 	 * Retrieves alfresco token from mms.
@@ -978,4 +1001,83 @@ public class MMSUtil {
 			return e.toString();
 		}
 	}
+	 
+		public static void main(String[] args) 
+		{
+
+			String ownerID = "_18_5_1_40a019f_1498057623506_316834_18928";
+			String token = "TICKET_13c0a9075c0de1d6b8218347d5666edcc5dd5122";
+			String server = "opencae-int.jpl.nasa.gov";
+			String projectID = "PROJECT-58b59e19-35d0-46e1-acb7-97f974823b1c";
+			String refID = "master";
+			String jobName = "testJob";
+			String associatedElementID = "ASCELEMENT_123";
+			String type = "docgen";
+			String schedule = "";
+			String targetID = "_18_5_1_40a019f_1499898145957_571809_17594";
+			MMSUtil mmsUtil = new MMSUtil(token);
+
+			String sysmlID = mmsUtil.createId();
+			
+			
+			
+			
+//			ObjectNode on2 = mmsUtil.buildDocgenJobElementJSON(sysmlID, ownerID, jobName, associatedElementID, type, schedule);
+//			System.out.println(on2.toString());
+//			mmsUtil.post(server, projectID,refID, on2);
+
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode payload = mapper.createObjectNode();
+			ArrayNode elements = mmsUtil.buildClassElement(sysmlID,ownerID,jobName);
+			
+			
+			ObjectNode generalizationNode = mmsUtil.buildGeneralizationNode(sysmlID, sysmlID, targetID);
+			ObjectNode typePropertyNode = mmsUtil.buildPropertyNode(sysmlID,"type",type,"_18_5_1_40a019f_1499898145958_112751_17595");
+			ObjectNode typePropertyInstanceSpecification = mmsUtil.buildInstanceSpecificationNode(typePropertyNode.get("id").toString().replace("\"", ""), "_12_0_be00301_1164123483951_695645_2041");
+			
+			elements.add(generalizationNode);
+			elements.add(typePropertyNode);
+			elements.add(typePropertyInstanceSpecification);
+			
+			/*
+			 * Adding the property id's to the ownedAttributes key in the job class JSON
+			 * Also adding generalization id to the job class node.
+			 */
+			
+			ObjectNode jobClass = (ObjectNode) elements.get(0);
+			ArrayNode ownedAttributes = mapper.createArrayNode();
+			
+			ownedAttributes.add(typePropertyNode.get("id"));
+			
+			jobClass.put("ownedAttributeIds",ownedAttributes);
+			
+			jobClass.put("generalizationIds",mapper.createArrayNode().add(generalizationNode.get("id")));
+			
+			elements.set(0, jobClass);
+			
+			
+			payload.put("elements",elements);
+			payload.put("source","pma");
+			payload.put("pmaVersion","3.1");
+			
+			mmsUtil.post(server, projectID,refID, payload);
+			
+			
+
+			
+			
+//			ObjectNode on3 = mmsUtil.buildJobInstanceJSON("PMA_"+timestamp.getTime()+"_instance",jobElementID,"jobInstance","1");
+//			System.out.println(on3.toString());
+//			mmsUtil.post(server, projectID,refID, on3);
+			
+//			String elementID = "PMA_1491324925592";
+//			String buildNumber = "55";
+//			String propertyName = "jobStatus";
+//			String newPropertyValue = "completed";
+//			
+//			System.out.println(mmsUtil.get(server, projectID, refID, elementID, true));
+////			System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
+			
+		}
+	 
 }
