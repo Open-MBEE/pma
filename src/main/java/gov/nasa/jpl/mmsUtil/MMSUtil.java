@@ -1075,11 +1075,13 @@ public class MMSUtil {
 	 
 		public static void main(String[] args) 
 		{
-
+			String projectID = "PROJECT-58b59e19-35d0-46e1-acb7-97f974823b1c";
 			String ownerID = "_18_5_1_40a019f_1498057623506_316834_18928";
 			String token = "TICKET_13c0a9075c0de1d6b8218347d5666edcc5dd5122";
 			String server = "opencae-int.jpl.nasa.gov";
-			String projectID = "PROJECT-58b59e19-35d0-46e1-acb7-97f974823b1c";
+			
+//			String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
+//			String ownerID = "jobs_bin_PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
 			String refID = "master";
 			String jobName = "testJob";
 			String associatedElementID = "ASCELEMENT_123";
