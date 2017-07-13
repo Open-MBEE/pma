@@ -85,7 +85,7 @@ public class PMAUtil
 					 * Find the ID of job element by looking for the owner of the command property
 					 * only job elements have the command part property
 					 */
-					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"command\"")))
+					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"type\"")))
 					{
 						String jobID = element.get("ownerId").toString().replace("\"", "");//id of owner of part property
 						jobElementIDList.add(jobID);// put owner of part property in a list. Owner should be the job element
@@ -105,7 +105,7 @@ public class PMAUtil
 							System.out.println("Job Name: "+jobName);
 							jobMap.put("name", jobName);
 						}
-						if((element.get("type").toString().equals("\"Property\""))&&(elementOwner.equals(jobID)))
+						if((element.get("type").toString().equals("\"Property\""))&&(elementOwner.equals(jobID))&&(element.get("defaultValue").get("value")!=null))
 						{
 							String propertyName = element.get("name").toString().replace("\"", "");
 							String propertyValue = element.get("defaultValue").get("value").toString().replace("\"", "");
