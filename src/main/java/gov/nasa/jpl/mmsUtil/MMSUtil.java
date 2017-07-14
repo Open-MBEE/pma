@@ -221,14 +221,12 @@ public class MMSUtil {
 		return instanceSpecificationElement;
 	}
 	
-	public ObjectNode buildSlotNode(String ownerID,String value, String server, String projectID, String refID, String jobID, String propertyName)
+	public ObjectNode buildSlotNode(String ownerID,String value, String definingFeatureId)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode nullNode = null;
 		
 		ObjectNode slotElement = mapper.createObjectNode();
-		
-		String definingFeatureId = this.getDefiningFeatureID(server, projectID, refID, jobID, propertyName);
 		
 		String slotElementID = ownerID+"-slot-"+definingFeatureId;
 		slotElement.put("_appliedStereotypeIds",mapper.createArrayNode());
@@ -1239,8 +1237,26 @@ public class MMSUtil {
 			ObjectNode payload = mapper.createObjectNode();
 			ArrayNode elements = mapper.createArrayNode();
 			ObjectNode instanceSpecificationNode = mmsUtil.buildInstanceSpecificationNode("_18_5_1_40a019f_1498057623506_316834_18928", "_18_5_1_40a019f_1499898367904_56649_17676", "Test Instance", false);
+			String associatedElementDefiningFeatureId = mmsUtil.getDefiningFeatureID(server, projectID, refID, "_18_5_1_40a019f_1499898367904_56649_17676", "associatedElementId");
+			ObjectNode associatedElementIDSlotNode = mmsUtil.buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "12345",associatedElementDefiningFeatureId);
+			
+			String typeDefiningFeatureId = mmsUtil.getDefiningFeatureID(server, projectID, refID, "_18_5_1_40a019f_1499898367904_56649_17676", "type");
+			ObjectNode typeSlotNode = mmsUtil.buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "12345",typeDefiningFeatureId);
+			
+			/*
+			 * Adding the property id's to the ownedAttributes key in the instance specification JSON
+			 */
+
+			ArrayNode slotIds = mapper.createArrayNode();
+			slotIds.add(associatedElementIDSlotNode.get("id"));
+			slotIds.add(typeSlotNode.get("id"));
+			
+			instanceSpecificationNode.put("slotIds",slotIds);
+			
 			elements.add(instanceSpecificationNode);
-//			elements.add(mmsUtil.buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "12345", server, projectID, refID, "_18_5_1_40a019f_1499898367904_56649_17676", "associatedElementId"));
+			elements.add(associatedElementIDSlotNode);
+			elements.add(typeSlotNode);
+			
 			payload.put("elements",elements);
 			payload.put("source","pma");
 			payload.put("pmaVersion","3.1");
