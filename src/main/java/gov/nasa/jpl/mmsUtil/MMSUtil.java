@@ -544,6 +544,10 @@ public class MMSUtil {
 					associatedElementID = associatedElementIDValue.replace("\"", "");
 				}
 			}
+			else
+			{
+				return(null); // If fullJson was null, then the job element must not exist because mms returned an empty json.
+			}
 
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
@@ -895,10 +899,14 @@ public class MMSUtil {
 			    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 			          	String jobInstanceElementID = createId();
 			          	
-			          	/**
-			          	 * TODO update the creation of job instance
-			          	 */
 			    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID, "jobs_bin_"+projectID, elementID+"_instance_"+timestamp.getTime(),buildNumber,newPropertyValue, server, projectID, refID,elementID); //job folder will be the owner of the instance element
+			    		
+			    		if(on==null)
+			    		{
+			    			logger.info("buildDocGenJobInstanceJSON output was null");
+			    			return "Job Element doesn't exist on MMS";
+			    		}
+			    		
 			    		String elementCreationResponse = mmsUtil.post(server, projectID, refID, on);
 			    		
 			    		System.out.println(elementCreationResponse);
@@ -1363,9 +1371,9 @@ public class MMSUtil {
 //			System.out.println(on2.toString());
 //			mmsUtil.post(server, projectID,refID, on2);
 			
-			ObjectNode on3 = mmsUtil.buildDocGenJobInstanceJSON(sysmlID, ownerID, "test job instance", buildNumber, jobStatus, server, projectID, refID,jobID);
-			System.out.println(on3.toString());
-			mmsUtil.post(server, projectID,refID, on3);
+			ObjectNode on3 = mmsUtil.buildDocGenJobInstanceJSON(sysmlID, ownerID, "test job instance", buildNumber, jobStatus, server, projectID, refID,"");
+			System.out.println("ON3: "+on3);
+//			mmsUtil.post(server, projectID,refID, on3);
 			
 //			String elementID = "PMA_1491324925592";
 //			String buildNumber = "55";

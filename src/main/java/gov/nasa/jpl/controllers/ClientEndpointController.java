@@ -331,7 +331,16 @@ public class ClientEndpointController {
     		String jobInstanceElementID = mmsUtil.createId();
     		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+projectID, jobSysmlID+"_instance_"+timestamp.getTime(),nextBuildNumber,"pending", mmsServer, projectID, refID,jobSysmlID); //job element will be the owner of the instance element
 //    		System.out.println("job instance JSON: "+on.toString());
-    		logger.info("job instance JSON: "+on.toString());
+    		logger.info("job instance JSON: "+on);
+    		if(on==null)
+    		{
+    			status = HttpStatus.NOT_FOUND; 
+				ObjectNode responseJSON = mapper.createObjectNode();
+				responseJSON.put("message", "Job element not found on MMS"); 
+				jobResponse = responseJSON.toString();
+				
+				return new ResponseEntity<String>(jobResponse,status);
+    		}
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
     		
 //    		System.out.println("job instance element creation response"+elementCreationResponse);
