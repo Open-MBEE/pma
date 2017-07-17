@@ -896,10 +896,9 @@ public class MMSUtil {
 					// Creating job instance for the job run because it doesn't currently exist.
 					if(propertyName.equals("jobStatus")) // creates the job instance
 					{
-			    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 			          	String jobInstanceElementID = createId();
-			          	
-			    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID, "jobs_bin_"+projectID, elementID+"_instance_"+timestamp.getTime(),buildNumber,newPropertyValue, server, projectID, refID,elementID); //job folder will be the owner of the instance element
+			          	String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+			    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID, "jobs_bin_"+projectID, elementID+"_instance_"+currentTimestamp,buildNumber,newPropertyValue, server, projectID, refID,elementID); //job folder will be the owner of the instance element
 			    		
 			    		if(on==null)
 			    		{

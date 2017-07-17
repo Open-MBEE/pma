@@ -4,7 +4,9 @@ package gov.nasa.jpl.controllers;
  * Endpoints for applications to interface with PMA.
  */
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -325,11 +327,11 @@ public class ClientEndpointController {
     		
     		// Create job instance element. Use the jobSysmlID as the owner.
     		
-    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
           	
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
     		String jobInstanceElementID = mmsUtil.createId();
-    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+projectID, jobSysmlID+"_instance_"+timestamp.getTime(),nextBuildNumber,"pending", mmsServer, projectID, refID,jobSysmlID); //job element will be the owner of the instance element
+    		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+projectID, jobSysmlID+"_instance_"+currentTimestamp,nextBuildNumber,"pending", mmsServer, projectID, refID,jobSysmlID); //job element will be the owner of the instance element
 //    		System.out.println("job instance JSON: "+on.toString());
     		logger.info("job instance JSON: "+on);
     		if(on==null)
