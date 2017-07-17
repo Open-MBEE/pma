@@ -329,7 +329,7 @@ public class ClientEndpointController {
           	
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
     		String jobInstanceElementID = mmsUtil.createId();
-    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, jobSysmlID, jobSysmlID+"_instance_"+timestamp.getTime(),nextBuildNumber,"pending"); //job element will be the owner of the instance element
+    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+projectID, jobSysmlID+"_instance_"+timestamp.getTime(),nextBuildNumber,"pending", mmsServer, projectID, refID,jobSysmlID); //job element will be the owner of the instance element
 //    		System.out.println("job instance JSON: "+on.toString());
     		logger.info("job instance JSON: "+on.toString());
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);

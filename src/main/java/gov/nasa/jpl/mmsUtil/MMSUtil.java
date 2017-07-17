@@ -171,7 +171,7 @@ public class MMSUtil {
 	 * @param ownerID Owner id of instance specification
 	 * @param classifierID ID of classifying element
 	 * @param name Name of instance specification
-	 * @param stereotypesElement
+	 * @param stereotypesElement If the instance stereotypes an element, then it will be true.
 	 * @return
 	 */
 	public ObjectNode buildInstanceSpecificationNode(String ownerID,String classifierID,String name,Boolean stereotypesElement)
@@ -221,6 +221,13 @@ public class MMSUtil {
 		return instanceSpecificationElement;
 	}
 	
+	/**
+	 * Creates the json of a slot to send to mms.
+	 * @param ownerID Owner of the slot element
+	 * @param value value of slot
+	 * @param definingFeatureId Defining feature ID is the ID of a property. 
+	 * @return
+	 */
 	public ObjectNode buildSlotNode(String ownerID,String value, String definingFeatureId)
 	{
 		ObjectMapper mapper = new ObjectMapper();
@@ -493,45 +500,132 @@ public class MMSUtil {
 		return payload;
 	}
 	
-	public ObjectNode buildJobInstanceJSON(String id, String ownerID,String name,String buildNumber,String jobStatus) 
+	/**
+	* Creating instance specification with slots
+	 * @param id SysmlID of the instance specification
+	 * @param ownerID 
+	 * @param name name of job instance
+	 * @param buildNumber Jenkins build number
+	 * @param jobStatus
+	 * @param server
+	 * @param projectID
+	 * @param refID
+	 * @param jobID
+	 * @return
+	 */
+	public ObjectNode buildDocGenJobInstanceJSON(String id, String ownerID,String name,String buildNumber,String jobStatus,String server, String projectID, String refID,String jobID) 
 	{
 		
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = new ObjectMapper();	
+		
+		String schedule = "";
+		String type = "";
+		String associatedElementID = "";
+		
+		try {
+			String jobJSON = getJobElement(server, projectID, refID, jobID).getBody();
+			JsonNode fullJson = mapper.readTree(jobJSON).get("jobs").get(0);
+			if(fullJson!=null)
+			{
+				String scheduleValue = fullJson.get("schedule").toString();
+				String typeValue = fullJson.get("command").toString();
+				String associatedElementIDValue = fullJson.get("associatedElementID").toString();
+				
+				if(scheduleValue!=null)
+				{
+					schedule = scheduleValue.replace("\"", "");
+				}
+				if(typeValue!=null)
+				{
+					type = typeValue.replace("\"", "");
+				}
+				if(associatedElementIDValue!=null)
+				{
+					associatedElementID = associatedElementIDValue.replace("\"", "");
+				}
+			}
+
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		
 		ObjectNode payload = mapper.createObjectNode();
-		ArrayNode elements = buildClassElement(id,ownerID,name);
+		ArrayNode elements = mapper.createArrayNode();
+		ObjectNode instanceSpecificationNode = buildInstanceSpecificationNode(ownerID, jobID,name, false);
+		instanceSpecificationNode.put("id",id);
+		
+		String typeDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "type");
+		ObjectNode typeSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), type,typeDefiningFeatureId);
+		
+		String scheduleDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "schedule");
+		ObjectNode scheduleSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), schedule,scheduleDefiningFeatureId);
+		
+		String buildNumberDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "buildNumber");
+		ObjectNode buildNumberSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), buildNumber,buildNumberDefiningFeatureId);
+		
+		String jobStatusDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "jobStatus");
+		ObjectNode jobStatusSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), jobStatus,jobStatusDefiningFeatureId);
+		
+		String logUrlDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "logUrl");
+		ObjectNode logUrlSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",logUrlDefiningFeatureId);
 		
 		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+		String startedDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "started");
+		ObjectNode startedSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), currentTimestamp,startedDefiningFeatureId);
 		
-		elements.add(buildPropertyNode(id,"buildNumber",buildNumber,null));
-		elements.add(buildPropertyNode(id,"jobStatus",jobStatus,null));
-		elements.add(buildPropertyNode(id,"jenkinsLog","",null));
-		elements.add(buildPropertyNode(id,"created",currentTimestamp,null));
-		elements.add(buildPropertyNode(id,"completed","",null));
+		String completedDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "completed");
+		ObjectNode completedSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",completedDefiningFeatureId);
 		
-		// Adding the property id's to the ownedAttributes key in the job class JSON
-		ObjectNode jobInstanceClass = (ObjectNode) elements.get(0);
-		ArrayNode ownedAttributes = mapper.createArrayNode();
+		String associatedElementDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "associatedElementId");
+		ObjectNode associatedElementIDSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), associatedElementID ,associatedElementDefiningFeatureId);
 		
-		ObjectNode buildNumberNode = (ObjectNode) elements.get(2);
-		ObjectNode jobStatusNode = (ObjectNode) elements.get(3);
-		ObjectNode jenkinsLogNode = (ObjectNode) elements.get(4);
-		ObjectNode createdNode = (ObjectNode) elements.get(5);
-		ObjectNode completedNode = (ObjectNode) elements.get(6);
+		String projectIdDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "projectId");
+		ObjectNode projectIdSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), projectID,projectIdDefiningFeatureId);
 		
-		ownedAttributes.add(buildNumberNode.get("id"));
-		ownedAttributes.add(jobStatusNode.get("id"));
-		ownedAttributes.add(jenkinsLogNode.get("id"));
-		ownedAttributes.add(createdNode.get("id"));
-		ownedAttributes.add(completedNode.get("id"));
+		String refIdDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "refId");
+		ObjectNode refIdSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), refID,refIdDefiningFeatureId);
 		
-		jobInstanceClass.put("ownedAttributeIds",ownedAttributes);
+		/*
+		 * Adding the property id's to the ownedAttributes key in the instance specification JSON
+		 */
+		ArrayNode slotIds = mapper.createArrayNode();
+		slotIds.add(typeSlotNode.get("id"));
+		slotIds.add(scheduleSlotNode.get("id"));
+		slotIds.add(buildNumberSlotNode.get("id"));
+		slotIds.add(jobStatusSlotNode.get("id"));
+		slotIds.add(logUrlSlotNode.get("id"));
+		slotIds.add(startedSlotNode.get("id"));
+		slotIds.add(completedSlotNode.get("id"));
+		slotIds.add(associatedElementIDSlotNode.get("id"));
+		slotIds.add(projectIdSlotNode.get("id"));
+		slotIds.add(refIdSlotNode.get("id"));
 		
-		elements.set(0, jobInstanceClass);
+		instanceSpecificationNode.put("slotIds",slotIds);
+		
+		elements.add(instanceSpecificationNode);
+		
+		elements.add(typeSlotNode);
+		elements.add(scheduleSlotNode);
+		elements.add(buildNumberSlotNode);
+		elements.add(jobStatusSlotNode);
+		elements.add(logUrlSlotNode);
+		elements.add(startedSlotNode);
+		elements.add(completedSlotNode);
+		elements.add(associatedElementIDSlotNode);
+		elements.add(projectIdSlotNode);
+		elements.add(refIdSlotNode);
+
 		
 		payload.put("elements",elements);
 		payload.put("source","pma");
 		payload.put("pmaVersion","3.1");
+		
 		
 		return payload;
 		
@@ -661,7 +755,7 @@ public class MMSUtil {
 		}
 
 	}
-
+	
 	
 	/**
 	 * Should get the current value of the property, change it and send it back to mms
@@ -800,7 +894,11 @@ public class MMSUtil {
 					{
 			    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 			          	String jobInstanceElementID = createId();
-			    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, elementID, elementID+"_instance_"+timestamp.getTime(),buildNumber,newPropertyValue); //job element will be the owner of the instance element
+			          	
+			          	/**
+			          	 * TODO update the creation of job instance
+			          	 */
+			    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID, "jobs_bin_"+projectID, elementID+"_instance_"+timestamp.getTime(),buildNumber,newPropertyValue, server, projectID, refID,elementID); //job folder will be the owner of the instance element
 			    		String elementCreationResponse = mmsUtil.post(server, projectID, refID, on);
 			    		
 			    		System.out.println(elementCreationResponse);
@@ -1143,44 +1241,55 @@ public class MMSUtil {
 		}
 	}
 	 
+	 /**
+	  * Retrieves a defining feature ID used for creating slots. Defining feature ID is the ID of a property. 
+	  * @param server MMS server ex:opencae-test.jpl.nasa.gov
+	  * @param projectID MagicDraw project ID
+	  * @param refID MMS branch or tag ID
+	  * @param jobID ID of PMA job element
+	  * @param propertyName Name of the property of the job element.
+	  * @return
+	  */
 	 public String getDefiningFeatureID(String server, String projectID, String refID, String jobID,String propertyName)
 	 {
 		String definingFeatureID = null;
-		String jsonString = this.get(server, projectID, refID, jobID, false);
+		String jsonString = this.get(server, projectID, refID, jobID, true);
 		 // Parse through ownedAttributeIds
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode fullJSON = mapper.readTree(jsonString);
 			JsonNode elements = fullJSON.get("elements");
-			if ((elements == null)||(elements.get(0)==null)) // elements will be null if the json returned with error
+			if ((elements == null)) // elements will be null if the json returned with error
 			{
 				// return false;
 				System.out.println(jsonString);
 			}
 			else
 			{
-				ArrayNode ownedAttributeIds = (ArrayNode) elements.get(0).get("ownedAttributeIds");
-				for(JsonNode ownedAttribute:ownedAttributeIds)
+				for(JsonNode element: elements)
 				{
-					String attributeID = ownedAttribute.toString().replace("\"", "");
-					String propertyJSON = this.get(server, projectID, refID, attributeID, false);
-					JsonNode fullpropertyJSON = mapper.readTree(propertyJSON);
-					JsonNode propertyElements = fullpropertyJSON.get("elements");
-					if ((propertyElements == null)||(propertyElements.get(0)==null)) // elements will be null if the json returned with error
+					if(element.get("type").toString().replace("\"", "").equals("Class"))
 					{
-						// return false;
-						System.out.println(propertyElements);
-					}
-					else
-					{
-						String propertyNameString = propertyElements.get(0).get("name").toString().replace("\"", "");
-						System.out.println("PropertyName: "+propertyNameString);
-						if(propertyName.equals(propertyNameString))
+						ArrayNode ownedAttributeIds = (ArrayNode) element.get("ownedAttributeIds");
+						for(JsonNode ownedAttribute:ownedAttributeIds)
 						{
-							definingFeatureID = attributeID;
+							String attributeID = ownedAttribute.toString().replace("\"", "");
+							for(JsonNode nestedSearchElement: elements)
+							{
+								if(nestedSearchElement.get("id").toString().replace("\"", "").equals(attributeID))
+								{
+									String propertyNameString = nestedSearchElement.get("name").toString().replace("\"", "");
+									if(propertyName.equals(propertyNameString))
+									{
+										System.out.println("Found PropertyName: "+propertyNameString);
+										definingFeatureID = attributeID;
+									}
+								}
+							}
 						}
 					}
 				}
+				
 			}
 
 			// for loop
@@ -1206,7 +1315,7 @@ public class MMSUtil {
 		{
 			String projectID = "PROJECT-58b59e19-35d0-46e1-acb7-97f974823b1c";
 			String ownerID = "_18_5_1_40a019f_1498057623506_316834_18928";
-			String token = "TICKET_e335c4e343d80bd58c47f8d6697d80e733e91901";
+			String token = "TICKET_24cf71d3b692def570fbd828ce94e897ab3a6dab";
 			String server = "opencae-int.jpl.nasa.gov";
 			
 //			String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
@@ -1227,45 +1336,36 @@ public class MMSUtil {
 
 			String sysmlID = mmsUtil.createId();
 			
+			String jobID = "_18_5_1_40a019f_1499898367904_56649_17676";
+//			ObjectMapper mapper = new ObjectMapper();
+//			try {
+//				String jobJSON = mmsUtil.getJobElement(server, projectID, refID, jobID).getBody();
+//				JsonNode fullJson = mapper.readTree(jobJSON).get("jobs").get(0);
+//				if(fullJson!=null)
+//				{
+//					System.out.println(fullJson.get("associatedElementID"));
+//					System.out.println(fullJson.get("command"));
+//					System.out.println(fullJson.get("schedule").toString());
+//				}
+//
+//			} catch (JsonProcessingException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+		
+			
 //			System.out.println(mmsUtil.getDefiningFeatureID(server, projectID, refID, "_18_5_1_40a019f_1499898367904_56649_17676", "projectId"));
 			
 //			ObjectNode on2 = mmsUtil.buildDocgenJobElementJSON(sysmlID, ownerID, jobName, associatedElementID, type, schedule, refID, projectID);
 //			System.out.println(on2.toString());
 //			mmsUtil.post(server, projectID,refID, on2);
-
-			ObjectMapper mapper = new ObjectMapper();	
-			ObjectNode payload = mapper.createObjectNode();
-			ArrayNode elements = mapper.createArrayNode();
-			ObjectNode instanceSpecificationNode = mmsUtil.buildInstanceSpecificationNode("_18_5_1_40a019f_1498057623506_316834_18928", "_18_5_1_40a019f_1499898367904_56649_17676", "Test Instance", false);
-			String associatedElementDefiningFeatureId = mmsUtil.getDefiningFeatureID(server, projectID, refID, "_18_5_1_40a019f_1499898367904_56649_17676", "associatedElementId");
-			ObjectNode associatedElementIDSlotNode = mmsUtil.buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "12345",associatedElementDefiningFeatureId);
 			
-			String typeDefiningFeatureId = mmsUtil.getDefiningFeatureID(server, projectID, refID, "_18_5_1_40a019f_1499898367904_56649_17676", "type");
-			ObjectNode typeSlotNode = mmsUtil.buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "12345",typeDefiningFeatureId);
-			
-			/*
-			 * Adding the property id's to the ownedAttributes key in the instance specification JSON
-			 */
-
-			ArrayNode slotIds = mapper.createArrayNode();
-			slotIds.add(associatedElementIDSlotNode.get("id"));
-			slotIds.add(typeSlotNode.get("id"));
-			
-			instanceSpecificationNode.put("slotIds",slotIds);
-			
-			elements.add(instanceSpecificationNode);
-			elements.add(associatedElementIDSlotNode);
-			elements.add(typeSlotNode);
-			
-			payload.put("elements",elements);
-			payload.put("source","pma");
-			payload.put("pmaVersion","3.1");
-			System.out.println(payload.toString());
-			mmsUtil.post(server, projectID,refID, payload);
-			
-//			ObjectNode on3 = mmsUtil.buildJobInstanceJSON("PMA_"+timestamp.getTime()+"_instance",jobElementID,"jobInstance","1");
-//			System.out.println(on3.toString());
-//			mmsUtil.post(server, projectID,refID, on3);
+			ObjectNode on3 = mmsUtil.buildDocGenJobInstanceJSON(sysmlID, ownerID, "test job instance", buildNumber, jobStatus, server, projectID, refID,jobID);
+			System.out.println(on3.toString());
+			mmsUtil.post(server, projectID,refID, on3);
 			
 //			String elementID = "PMA_1491324925592";
 //			String buildNumber = "55";
