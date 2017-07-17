@@ -432,7 +432,7 @@ public class ClientEndpointController {
 		
 		// Delete job element on MMS.
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-		String elementDeleteResponse = mmsUtil.delete(mmsServer, projectID, refID, jobSysmlID);
+		String elementDeleteResponse = mmsUtil.delete(mmsServer, projectID, refID, "jobs_bin_"+jobSysmlID);
 		System.out.println("Element delete response: "+elementDeleteResponse);
 		logger.info( "Element delete response: "+elementDeleteResponse);
 		
