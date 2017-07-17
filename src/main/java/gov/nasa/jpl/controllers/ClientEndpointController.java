@@ -3,8 +3,10 @@ package gov.nasa.jpl.controllers;
 /**
  * Endpoints for applications to interface with PMA.
  */
-import java.sql.Timestamp;
+
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,20 +177,37 @@ public class ClientEndpointController {
 		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		
-		Boolean jobPackageExists = mmsUtil.jobPackageExists(mmsServer, projectID, refID);
+		Boolean jobsBinExists = mmsUtil.jobPackageExists(mmsServer, projectID, refID);
+
 		
-		if(!jobPackageExists) // create jobs bin package if it doesn't exist.
+		if(!jobsBinExists) // create jobs bin package if it doesn't exist.
 		{
-			logger.info("Job Package Does not exist");
-//			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm"); // creating the package inside the project
-			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID); // creating the package one level above the package, wont get synced back to the model.
+			logger.info("Jobs Bin Does not exist");
+//			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm","Jobs Bin"); // creating the package inside the project
+			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID,"Jobs Bin"); // creating the package one level above the package, wont get synced back to the model.
 //			System.out.println(packageNode.toString());
 			mmsUtil.post(mmsServer, projectID, refID, packageNode);
 		}
 		
 		
 		String jobElementID = mmsUtil.createId();
-		ObjectNode on = mmsUtil.buildDocgenJobElementJSON(jobElementID, "jobs_bin_"+projectID, jobName, associatedElementID, command, schedule, refID, projectID); // Job elements should be created in the jobs bin package
+		
+		/*
+		 *  Create jobs package if it doesn't exist.
+		 *  Jobs package is named after the job element ID.
+		 *  It contains the job element and job instance specifications
+		 */
+		Boolean jobPackageExists = mmsUtil.jobPackageExists(mmsServer, jobElementID, refID);
+		if(!jobPackageExists) 
+		{
+			logger.info("Job Package Does not exist");
+			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+jobElementID,"jobs_bin_"+projectID,jobElementID); // Creating the package. The owner of the package is the Jobs Bin package.
+//			System.out.println(packageNode.toString());
+			mmsUtil.post(mmsServer, projectID, refID, packageNode);
+		}
+		
+		
+		ObjectNode on = mmsUtil.buildDocgenJobElementJSON(jobElementID, "jobs_bin_"+jobElementID, jobName, associatedElementID, command, schedule, refID, projectID); // Job elements should be created in the jobs bin package
 		
 //		System.out.println("Job class JSON: "+on.toString());
 		logger.info("Job class JSON: "+on.toString());
@@ -325,13 +344,19 @@ public class ClientEndpointController {
     		
     		// Create job instance element. Use the jobSysmlID as the owner.
     		
-    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
           	
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
     		String jobInstanceElementID = mmsUtil.createId();
-    		ObjectNode on = mmsUtil.buildJobInstanceJSON(jobInstanceElementID, jobSysmlID, jobSysmlID+"_instance_"+timestamp.getTime(),nextBuildNumber,"pending"); //job element will be the owner of the instance element
+    		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+jobSysmlID, jobSysmlID+"_instance_"+currentTimestamp,nextBuildNumber,"pending", mmsServer, projectID, refID,jobSysmlID); //job element will be the owner of the instance element
 //    		System.out.println("job instance JSON: "+on.toString());
-    		logger.info("job instance JSON: "+on.toString());
+    		logger.info("job instance JSON: "+on);
+    		if(on.get("message")!=null)
+    		{
+				jobResponse = on.toString();
+				
+				return new ResponseEntity<String>(jobResponse,status);
+    		}
     		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
     		
 //    		System.out.println("job instance element creation response"+elementCreationResponse);

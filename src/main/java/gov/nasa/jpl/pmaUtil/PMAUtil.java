@@ -34,10 +34,9 @@ public class PMAUtil
 		ObjectNode jobElement = mapper.createObjectNode();
 		jobElement.put("id",jobMap.get("id"));
 		jobElement.put("name",jobMap.get("name"));
-		jobElement.put("command",jobMap.get("command"));
-		jobElement.put("associatedElementID",jobMap.get("associatedElementID"));
+		jobElement.put("command",jobMap.get("type"));
+		jobElement.put("associatedElementID",jobMap.get("associatedElementId"));
 		jobElement.put("schedule",jobMap.get("schedule"));
-		jobElement.put("arguments",jobMap.get("arguments"));
 		
 		return jobElement;
 		
