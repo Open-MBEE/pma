@@ -53,7 +53,7 @@ public class MMSUtil {
 		alfrescoToken = alfToken;
 	}
 
-	public ObjectNode buildPackageJSON(String id, String ownerID) {
+	public ObjectNode buildPackageJSON(String id, String ownerID,String name) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		ObjectNode payload = mapper.createObjectNode();
@@ -71,7 +71,7 @@ public class MMSUtil {
 		packageElement.put("appliedStereotypeInstanceId", nullNode);
 		packageElement.put("clientDependencyIds", mapper.createArrayNode());
 		packageElement.put("supplierDependencyIds", mapper.createArrayNode());
-		packageElement.put("name", "Jobs Bin");
+		packageElement.put("name",name);
 		packageElement.put("nameExpression", nullNode);
 		packageElement.put("visibility", "public");
 		packageElement.put("templateParameterId", nullNode);
@@ -523,30 +523,43 @@ public class MMSUtil {
 		String associatedElementID = "";
 		
 		try {
-			String jobJSON = getJobElement(server, projectID, refID, jobID).getBody();
-			JsonNode fullJson = mapper.readTree(jobJSON).get("jobs").get(0);
+			String jobJsonString = getJobElement(server, projectID, refID, jobID).getBody();
+			JsonNode fullJson = mapper.readTree(jobJsonString);
 			if(fullJson!=null)
 			{
-				String scheduleValue = fullJson.get("schedule").toString();
-				String typeValue = fullJson.get("command").toString();
-				String associatedElementIDValue = fullJson.get("associatedElementID").toString();
-				
-				if(scheduleValue!=null)
+				JsonNode jobJson = fullJson.get("jobs");
+				if(jobJson!=null)
 				{
-					schedule = scheduleValue.replace("\"", "");
+					JsonNode job = jobJson.get(0);
+					String scheduleValue = job.get("schedule").toString();
+					String typeValue = job.get("command").toString();
+					String associatedElementIDValue = job.get("associatedElementID").toString();
+
+					if (scheduleValue != null) {
+						schedule = scheduleValue.replace("\"", "");
+					}
+					if (typeValue != null) {
+						type = typeValue.replace("\"", "");
+					}
+					if (associatedElementIDValue != null) {
+						associatedElementID = associatedElementIDValue.replace("\"", "");
+					}
 				}
-				if(typeValue!=null)
+				else
 				{
-					type = typeValue.replace("\"", "");
-				}
-				if(associatedElementIDValue!=null)
-				{
-					associatedElementID = associatedElementIDValue.replace("\"", "");
+
+					ObjectNode responseJSON = mapper.createObjectNode();
+					responseJSON.put("message", jobJsonString); 
+
+					return(responseJSON); // If jobJson was null, then the job element must not exist or mms returned an error
 				}
 			}
 			else
 			{
-				return(null); // If fullJson was null, then the job element must not exist because mms returned an empty json.
+				ObjectNode responseJSON = mapper.createObjectNode();
+				responseJSON.put("message", jobJsonString); 
+
+				return(responseJSON); // If fullJson was null, then the job element must not exist because mms returned an empty json or mms returned an error.
 			}
 
 		} catch (JsonProcessingException e) {
@@ -1119,11 +1132,11 @@ public class MMSUtil {
 		}
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+//			e.printStackTrace();
 			return false;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+//			e.printStackTrace();
 			return false;
 		}
 		return true;
