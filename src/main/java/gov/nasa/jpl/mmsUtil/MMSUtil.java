@@ -8,7 +8,6 @@ package gov.nasa.jpl.mmsUtil;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -46,6 +45,26 @@ import org.json.JSONObject;
 public class MMSUtil {
 	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	/*
+	 * Hardcoded element ID's from sysml extensions
+	 */
+	public static final String valuePropertyStereotypeID = "_12_0_be00301_1164123483951_695645_2041";
+	
+	public static final String docgenJobBlockID = "_18_5_1_40a019f_1499898145957_571809_17594";
+	public static final String typePropertyID = "_18_5_1_40a019f_1499898145958_112751_17595";
+	public static final String schedulePropertyID = "_18_5_1_40a019f_1499898145959_694022_17596";
+	public static final String buildNumberPropertyID = "_18_5_1_40a019f_1499898145959_884244_17597";
+	public static final String jobStatusID = "_18_5_1_40a019f_1499898145959_630987_17598";
+	public static final String logUrlPropertyID = "_18_5_1_40a019f_1499898145959_58347_17599";
+	public static final String startedPropertyID = "_18_5_1_40a019f_1499898145959_366173_17600";
+	public static final String completedPropertyID = "_18_5_1_40a019f_1499898145959_892705_17601";
+	public static final String associatedElementIdPropertyID = "_18_5_1_40a019f_1499898210580_818758_17660";
+	public static final String refIdPropertyID = "_18_5_1_40a019f_1499898283219_617170_17669";
+	public static final String projectIdPropertyID = "_18_5_1_40a019f_1499898288594_457150_17672";
+	
+	
+	
 	String alfrescoToken = "";
 	
 	
@@ -408,22 +427,6 @@ public class MMSUtil {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = buildClassElement(sysmlID,ownerID,name);
-		
-		/*
-		 * Hardcoded element ID's from sysml extensions
-		 */
-		String docgenJobBlockID = "_18_5_1_40a019f_1499898145957_571809_17594";
-		String typePropertyID = "_18_5_1_40a019f_1499898145958_112751_17595";
-		String schedulePropertyID = "_18_5_1_40a019f_1499898145959_694022_17596";
-		String buildNumberPropertyID = "_18_5_1_40a019f_1499898145959_884244_17597";
-		String jobStatusID = "_18_5_1_40a019f_1499898145959_630987_17598";
-		String logUrlPropertyID = "_18_5_1_40a019f_1499898145959_58347_17599";
-		String startedPropertyID = "_18_5_1_40a019f_1499898145959_366173_17600";
-		String completedPropertyID = "_18_5_1_40a019f_1499898145959_892705_17601";
-		String associatedElementIdPropertyID = "_18_5_1_40a019f_1499898210580_818758_17660";
-		String refIdPropertyID = "_18_5_1_40a019f_1499898283219_617170_17669";
-		String projectIdPropertyID = "_18_5_1_40a019f_1499898288594_457150_17672";
-		String valuePropertyStereotypeID = "_12_0_be00301_1164123483951_695645_2041";
 		
 		ObjectNode generalizationNode = buildGeneralizationNode(sysmlID, sysmlID, docgenJobBlockID);
 		ObjectNode typePropertyNode = buildPropertyNode(sysmlID,"type",type,typePropertyID);
@@ -1061,20 +1064,65 @@ public class MMSUtil {
 	{
 		// recursive get job sysmlid
 		
-		String jsonString = get(server, project,refID, jobInstanceElementID, true);
+//		String jsonString = get(server, project,refID, jobInstanceElementID, true);
+////		System.out.println(jsonString);
+//		PMAUtil pmaUtil = new PMAUtil();
+//		
+//		return pmaUtil.generateJobInstanceArrayJSON(jsonString,jobSysmlID);
+//		
+		String jobInstanceElements = getJobInstanceElements(server, project, refID, jobSysmlID).getBody();
 		
-		PMAUtil pmaUtil = new PMAUtil();
+		ObjectMapper mapper = new ObjectMapper();
 		
-		return pmaUtil.generateJobInstanceArrayJSON(jsonString,jobSysmlID);
+		ObjectNode returnInstance = mapper.createObjectNode();
+		ArrayNode jobInstanceArray = mapper.createArrayNode();
+		try {
+			JsonNode fullJson = mapper.readTree(jobInstanceElements);
+			JsonNode jobInstances = fullJson.get("jobInstances");
+			if (jobInstances == null)  // instances will be null if the json returned with error
+			{
+				return jobInstanceElements;
+			}
+			else
+			{
+				for(JsonNode instance:jobInstances)
+				{
+					String instanceId = instance.get("id").toString().replace("\"", "");
+					if(instanceId.equals(jobInstanceElementID))
+					{
+						jobInstanceArray.add(instance);
+						returnInstance.put("jobInstances", jobInstanceArray);
+						return returnInstance.toString();
+					}
+				}
+			}
+			
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return "";
 	}
 	
+	/**
+	 * Retrieves all the instance specifications for a job element
+	 * @param server MMS server
+	 * @param project MagicDraw project ID
+	 * @param refID 
+	 * @param jobElementID ID of job element. Used to look up the job instances.
+	 * @return
+	 */
 	public ResponseEntity<String> getJobInstanceElements(String server, String project, String refID, String jobElementID)
 	{
 		
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 		String returnJSONString = "";
 		
-		String jsonString = get(server, project,refID, jobElementID, true); // recursive get job sysmlid
+		String jsonString = get(server, project,refID, "jobs_bin_"+jobElementID, true); // recursive get job sysmlid
 		
 		PMAUtil pmaUtil = new PMAUtil();
 		if(isElementJSON(jsonString)) // It will be an error if the json string is not an element JSON.
@@ -1328,14 +1376,31 @@ public class MMSUtil {
 //				return true;	
 		return definingFeatureID;
 	 }
-
-
+	 
+	 	public static Map getElementIdMap()
+	 	{
+	 		Map elementMap = new HashMap();
+	 		elementMap.put(valuePropertyStereotypeID, "valueProperty");
+	 		elementMap.put(docgenJobBlockID, "docgenJobBlock");
+	 		elementMap.put(typePropertyID, "type");
+	 		elementMap.put(schedulePropertyID, "schedule");
+	 		elementMap.put(buildNumberPropertyID, "buildNumber");
+	 		elementMap.put(jobStatusID, "jobStatus");
+	 		elementMap.put(logUrlPropertyID, "logUrl");
+	 		elementMap.put(startedPropertyID, "started");
+	 		elementMap.put(completedPropertyID, "completed");
+	 		elementMap.put(associatedElementIdPropertyID, "associatedElementId");
+	 		elementMap.put(refIdPropertyID, "refId");
+	 		elementMap.put(projectIdPropertyID, "projectId");	 		
+	 		
+	 		return elementMap;
+	 	}
 	 
 		public static void main(String[] args) 
 		{
-			String projectID = "PROJECT-58b59e19-35d0-46e1-acb7-97f974823b1c";
+			String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
 			String ownerID = "_18_5_1_40a019f_1498057623506_316834_18928";
-			String token = "TICKET_24cf71d3b692def570fbd828ce94e897ab3a6dab";
+			String token = "TICKET_7214d2fd8e9c2c09268da0a3ded72401ef98079a";
 			String server = "opencae-int.jpl.nasa.gov";
 			
 //			String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
@@ -1376,15 +1441,18 @@ public class MMSUtil {
 //				e.printStackTrace();
 //			}
 		
+//			System.out.println(mmsUtil.getJobInstanceElements(server, projectID, refID, "PMA_1500329733457_0b985264-a4c6-448d-ba69-1da41efa92e0").getBody());
+			System.out.println(mmsUtil.getJobInstanceElement(server, projectID, refID, "PMA_1500330591329_fe26ff4d-44a5-47aa-8ad6-5187e771a48a", "PMA_1500329733457_0b985264-a4c6-448d-ba69-1da41efa92e0"));
 			
+//			System.out.println(mmsUtil.get(server, projectID, refID, "PMA_1500329936596_f65fd93d-2b8a-4fa2-882f-759b5e0654a2", true));
 //			System.out.println(mmsUtil.getDefiningFeatureID(server, projectID, refID, "_18_5_1_40a019f_1499898367904_56649_17676", "projectId"));
 			
 //			ObjectNode on2 = mmsUtil.buildDocgenJobElementJSON(sysmlID, ownerID, jobName, associatedElementID, type, schedule, refID, projectID);
 //			System.out.println(on2.toString());
 //			mmsUtil.post(server, projectID,refID, on2);
 			
-			ObjectNode on3 = mmsUtil.buildDocGenJobInstanceJSON(sysmlID, ownerID, "test job instance", buildNumber, jobStatus, server, projectID, refID,"");
-			System.out.println("ON3: "+on3);
+//			ObjectNode on3 = mmsUtil.buildDocGenJobInstanceJSON(sysmlID, ownerID, "test job instance", buildNumber, jobStatus, server, projectID, refID,"");
+//			System.out.println("ON3: "+on3);
 //			mmsUtil.post(server, projectID,refID, on3);
 			
 //			String elementID = "PMA_1491324925592";
