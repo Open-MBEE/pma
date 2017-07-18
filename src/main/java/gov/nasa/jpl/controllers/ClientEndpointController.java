@@ -201,7 +201,7 @@ public class ClientEndpointController {
 		if(!jobPackageExists) 
 		{
 			logger.info("Job Package Does not exist");
-			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+jobElementID,"jobs_bin_"+projectID,jobElementID); // Creating the package. The owner of the package is the Jobs Bin package.
+			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+jobElementID,"jobs_bin_"+projectID,jobName+" - "+jobElementID); // Creating the package. The owner of the package is the Jobs Bin package.
 //			System.out.println(packageNode.toString());
 			mmsUtil.post(mmsServer, projectID, refID, packageNode);
 		}
@@ -342,7 +342,7 @@ public class ClientEndpointController {
     		
     		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectID, refID);
     		
-    		// Create job instance element. Use the jobSysmlID as the owner.
+    		// Create job instance element. Use the jobs package as the owner.
     		
           	
     		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);

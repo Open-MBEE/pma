@@ -524,6 +524,7 @@ public class MMSUtil {
 		String schedule = "";
 		String type = "";
 		String associatedElementID = "";
+		String jobName = "";
 		
 		try {
 			String jobJsonString = getJobElement(server, projectID, refID, jobID).getBody();
@@ -537,6 +538,7 @@ public class MMSUtil {
 					String scheduleValue = job.get("schedule").toString();
 					String typeValue = job.get("command").toString();
 					String associatedElementIDValue = job.get("associatedElementID").toString();
+					String jobValue = job.get("name").toString();
 
 					if (scheduleValue != null) {
 						schedule = scheduleValue.replace("\"", "");
@@ -546,6 +548,9 @@ public class MMSUtil {
 					}
 					if (associatedElementIDValue != null) {
 						associatedElementID = associatedElementIDValue.replace("\"", "");
+					}
+					if (jobValue != null) {
+						jobName = jobValue.replace("\"", "");
 					}
 				}
 				else
@@ -577,7 +582,7 @@ public class MMSUtil {
 		
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = mapper.createArrayNode();
-		ObjectNode instanceSpecificationNode = buildInstanceSpecificationNode(ownerID, jobID,name, false);
+		ObjectNode instanceSpecificationNode = buildInstanceSpecificationNode(ownerID, jobID,jobName+" - "+name, false);
 		instanceSpecificationNode.put("id",id);
 		
 		String typeDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "type");
