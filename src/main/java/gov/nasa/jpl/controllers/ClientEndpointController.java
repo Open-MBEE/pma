@@ -117,7 +117,8 @@ public class ClientEndpointController {
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
     	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
-    	System.out.println("Job Response: "+jobResponse);
+    	logger.info("Jenkins Get Job Response: "+jobResponse);
+    	System.out.println("Jenkins Get Job Response: "+jobResponse);
     	HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
     	PMAUtil pmaUtil = new PMAUtil();
     	if(pmaUtil.isJSON(jobResponse))
