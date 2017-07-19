@@ -49,7 +49,7 @@ public class PMAUtil
 	 * @param jobInstancesMap
 	 * @return
 	 */
-	public ObjectNode createJobInstanceJSON(Map<String,String> jobInstancesMap)
+	public static ObjectNode createJobInstanceJSON(Map<String,String> jobInstancesMap)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		

@@ -857,8 +857,9 @@ public class MMSUtil {
 							
 							// send element to MMS
 //							System.out.println("Payload: "+payload);
-							String response = post(server, projectID, refID, payload); // sending element to MMS
 							
+							String response = post(server, projectID, refID, payload); // sending element to MMS
+							System.out.println("MMS Update Element Response: "+response);
 							/*
 							 * Sending jms messsage with job instance object
 							 */
@@ -866,11 +867,12 @@ public class MMSUtil {
 				    		{
 						    	try
 						    	{
-						    						 	
-								 	String updatedJobInstanceJSON = getJobInstanceElement(server, projectID, refID, jobInstanceInformationMap.get("id"), jobId);
-								 	System.out.println("Updated Job JSON: "+updatedJobInstanceJSON);
+						    		
+						    		jobInstanceInformationMap.put(propertyName, newSlotValue);
+						    		String jobJson = PMAUtil.createJobInstanceJSON(jobInstanceInformationMap).toString();
+						    		
 								 	// build job instance element json to be sent
-								 	JSONObject jobInstanceJSON = new JSONObject(updatedJobInstanceJSON);	
+								 	JSONObject jobInstanceJSON = new JSONObject(jobJson);	
 								 	
 							    	// Sending job instance element to jms.
 							    	JmsConnection jmc = new JmsConnection();
