@@ -145,6 +145,83 @@ public class PMAUtil
 	}
 	
 	/**
+	 * Generates a map with job instance objects and their slot ids. 
+	 * @param mmsJSONString Element data from MMS.
+	 * @return
+	 */
+	public static ArrayList<Map<String,String>> generateJobInstanceIDMapJSON(String mmsJSONString,String jobID)
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ArrayList<String> jobInstanceIDElementList = new ArrayList<String>();
+		Map elementIdMap = MMSUtil.getElementIdMap();
+		ArrayList<Map<String,String>> jobInstancesMapList = new ArrayList<Map<String, String>>();
+		try {
+			JsonNode fullJson = mapper.readTree(mmsJSONString);
+			JsonNode elements = fullJson.get("elements");
+			if (elements != null)  // elements will be null if the json returned with error
+			{
+				for (JsonNode element : elements) {
+					/*
+					 * Find the ID of job instance elements
+					 */
+					if((element.get("type").toString().equals("\"InstanceSpecification\""))&&(element.get("classifierIds").get(0).toString().replace("\"", "").equals(jobID)))
+					{
+						String jobInstanceID = element.get("id").toString().replace("\"", "");//id of owner of part property
+//						System.out.println(jobInstanceID);
+						jobInstanceIDElementList.add(jobInstanceID);// put owner of part property in a list. Owner should be the job element
+					}
+				}
+				//putting the job instance information into an json object.
+				for(String jobInstanceID:jobInstanceIDElementList)
+				{
+					Map<String,String> jobInstanceMap = new HashMap();
+					jobInstanceMap.put("id", jobInstanceID);
+					jobInstanceMap.put("jobId", jobID);
+					for (JsonNode element : elements) 
+					{	
+						String elementOwner = element.get("ownerId").toString().replace("\"", "");
+						if((element.get("type").toString().equals("\"Slot\""))&&(elementOwner.equals(jobInstanceID)))
+						{
+							String slotName = element.get("definingFeatureId").toString().replace("\"", "");
+							String slotValue = element.get("value").get(0).get("value").toString().replace("\"", "");
+							String slotID =  element.get("id").toString().replace("\"", "");
+//							System.out.println(propertyName);
+//							System.out.println(propertyValue);
+							
+							for(JsonNode nestedSearchElement : elements)
+							{
+								if(nestedSearchElement.get("id").toString().replace("\"", "").equals(slotName))
+								{
+									
+									String redefinedPropertyID = nestedSearchElement.get("redefinedPropertyIds").get(0).toString().replace("\"", "");
+									slotName=(String) elementIdMap.get(redefinedPropertyID);
+//									System.out.println(propertyName);
+								}
+							}
+							jobInstanceMap.put(slotName, slotValue);
+							jobInstanceMap.put(slotName+"ID", slotID);
+						}
+					}
+					jobInstancesMapList.add(jobInstanceMap);
+				}
+			}
+			else
+			{
+				return null; // Returns status from mms. Should be an error or empty if the elements were null.
+			}
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return jobInstancesMapList;
+	}
+	
+	
+	/**
 	 * Generates a json array with job instance objects. 
 	 * @param mmsJSONString Element data from MMS.
 	 * @return

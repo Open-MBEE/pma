@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -781,26 +782,165 @@ public class MMSUtil {
 
 	}
 	
+	/**
+	 * Should get the current value of the slot, change it and send it back to mms
+	 * Looking for instance specifications using the build number value.
+	 * @param server MMS server. Ex. opencae-uat.jpl.nasa.gov
+	 * @param projectID Magicdraw project id
+	 * @param refID
+	 * @param jobId ID of job element
+	 * @param buildNumber Build number of the jenkins job. Starts from 1. 
+	 * @param propertyName Name of the part property. Ex: buildNumber,jobStatus,logUrl,etc
+	 * @param newSlotValue New value of the slot
+	 * @param token Alfresco token.
+	 * @return Status code returned from mms.
+	 */
+	public String modifyInstanceSpecificationValue(String server,String projectID,String refID,String jobId,String buildNumber,String propertyName,String newSlotValue,String token)
+	{
+		
+		String mmsReturnString = get(server, projectID,refID, "jobs_bin_"+jobId, true); // recursive get job sysmlid
+		
+		Map<String,String> jobInstanceInformationMap = null;
+		ObjectMapper mapper = new ObjectMapper();
+		
+		if(isElementJSON(mmsReturnString)) // It will be an error if the json string is not an element JSON.
+		{
+			System.out.println("is element json");
+			ArrayList<Map<String,String>> jobInstancesmapList = PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId); // map contains slot id's with their values
+			for(Map jobInstanceMap:jobInstancesmapList)
+			{
+				if(jobInstanceMap.get("buildNumber").equals(buildNumber))
+				{
+					jobInstanceInformationMap = jobInstanceMap;
+					System.out.println(jobInstanceInformationMap);
+				}
+			}
+			if(jobInstanceInformationMap!=null) // Instance was found. 
+			{
+				String jobInstanceSlotID = jobInstanceInformationMap.get(propertyName+"ID");
+				if(jobInstanceSlotID!=null)
+				{
+					// Modify slot json and send back to MMS
+					try {
+						JsonNode fullJson = mapper.readTree(mmsReturnString);
+						JsonNode elements = fullJson.get("elements");
+						ObjectNode instanceSlotElement = null;
+						for(JsonNode element:elements)
+						{
+							if(element.get("id").toString().replace("\"", "").equals(jobInstanceSlotID))
+							{
+								// Found slot
+								logger.info("Found Slot for: "+propertyName);
+								System.out.println("Found Slot for: "+propertyName);
+								instanceSlotElement=(ObjectNode) element;
+								
+							}
+						}
+						if(instanceSlotElement!=null)
+						{
+							// Modify slot 
+							ObjectNode valueNode = (ObjectNode) instanceSlotElement.get("value").get(0);
+							System.out.println("Old Value: "+valueNode.get("value"));
+							valueNode.put("value", newSlotValue);
+							System.out.println("New Value: "+valueNode.get("value"));
+							
+							ArrayNode valueArray = mapper.createArrayNode();
+							valueArray.add(valueNode);
+							instanceSlotElement.put("value", valueArray);
+							
+							// puts the new json object in an elements array that will be sent to mms
+							ObjectNode payload = mapper.createObjectNode();
+							ArrayNode arrayElements = mapper.createArrayNode();
+							arrayElements.add(instanceSlotElement);
+							payload.put("elements",arrayElements);
+							payload.put("source","pma");
+							
+							// send element to MMS
+//							System.out.println("Payload: "+payload);
+							String response = post(server, projectID, refID, payload); // sending element to MMS
+							
+							/*
+							 * Sending jms messsage with job instance object
+							 */
+				    		if (response.equals("HTTP/1.1 200 OK"))
+				    		{
+						    	try
+						    	{
+						    						 	
+								 	String updatedJobInstanceJSON = getJobInstanceElement(server, projectID, refID, jobInstanceInformationMap.get("id"), jobId);
+								 	System.out.println("Updated Job JSON: "+updatedJobInstanceJSON);
+								 	// build job instance element json to be sent
+								 	JSONObject jobInstanceJSON = new JSONObject(updatedJobInstanceJSON);	
+								 	
+							    	// Sending job instance element to jms.
+							    	JmsConnection jmc = new JmsConnection();
+							    	String jmsSettings = MMSUtil.getJMSSettings(server);
+							    	JSONObject connectionJson = new JSONObject(jmsSettings);
+							    	jmc.ingestJson(connectionJson);
+							    	
+							    	JSONObject jmsJSON = new JSONObject();	
+							    	jmsJSON.put("updatedJobs", jobInstanceJSON);
+							    	jmc.publish(jmsJSON, jmc.TYPE_DELTA, refID, projectID);
+							    	logger.info("Sent JMS json: "+jmsJSON.toString());
+							    	System.out.println("Sent JMS json: "+jmsJSON.toString());
+						    	}
+						    	catch(JSONException e)
+						    	{
+						    		e.printStackTrace();
+						    		logger.info(e.toString());
+						    	}
+				    		}
+							
+							return instanceSlotElement.toString();
+						}
+						else
+						{
+							return "Slot element not found on MMS";
+						}
+					} catch (JsonProcessingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return(e.toString());
+					}catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return(e.toString());
+					}
+						
+				}
+				else
+				{
+					return "No slot with this property name";
+				}
+			}
+			else // Instance isn't found, a new one will be created. Happens when a job is ran without being triggered by PMA. EX. (Manual run on Jenkins or a scheduled run.)
+			{
+				
+			}
+		}
+		
+		return mmsReturnString;
+	}
 	
 	/**
 	 * Should get the current value of the property, change it and send it back to mms
 	 * @param server MMS server. Ex. opencae-uat.jpl.nasa.gov
 	 * @param projectID Magicdraw project id
 	 * @param refID
-	 * @param elementID ID of job element (Should be the owner of the job instance element)
+	 * @param jobID ID of job element (Should be the owner of the job instance element)
 	 * @param buildNumber Build number of the jenkins job. Starts from 1. 
 	 * @param propertyName Name of the part property. Ex: buildNumber,jobStatus,jenkinsLog,etc
 	 * @param newPropertyValue New value of the part property
 	 * @param token Alfresco token.
 	 * @return Status code returned from mms.
 	 */
-	public String modifyPartPropertyValue(String server,String projectID,String refID,String elementID,String buildNumber,String propertyName,String newPropertyValue,String token , String jobId)
+	public String modifyPartPropertyValue(String server,String projectID,String refID,String jobID,String buildNumber,String propertyName,String newPropertyValue,String token)
 	{
 		
 		// finding the part property
 		MMSUtil mmsUtil = new MMSUtil(token);
 		
-		String jsonString = mmsUtil.get(server, projectID,refID, elementID,true);
+		String jsonString = mmsUtil.get(server, projectID,refID, jobID,true);
 //		System.out.println("Modify Part Property JSON String: "+jsonString);
 		logger.info("Modify Part Property JSON String: "+jsonString);
 		ObjectMapper mapper = new ObjectMapper();
@@ -889,7 +1029,7 @@ public class MMSUtil {
 					    	}
 					    	
 						 	jobInstanceJSON.put("id", jobInstanceId);
-					    	jobInstanceJSON.put("jobId", jobId);
+					    	jobInstanceJSON.put("jobId", jobID);
 					    	
 					    	// Sending job instance element to jms.
 					    	JmsConnection jmc = new JmsConnection();
@@ -919,7 +1059,7 @@ public class MMSUtil {
 					{
 			          	String jobInstanceElementID = createId();
 			          	String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
-			    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID, "jobs_bin_"+projectID, elementID+"_instance_"+currentTimestamp,buildNumber,newPropertyValue, server, projectID, refID,elementID); //job folder will be the owner of the instance element
+			    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID, "jobs_bin_"+projectID, jobID+"_instance_"+currentTimestamp,buildNumber,newPropertyValue, server, projectID, refID,jobID); //job folder will be the owner of the instance element
 			    		
 			    		if(on==null)
 			    		{
@@ -950,7 +1090,7 @@ public class MMSUtil {
 						    	
 						    	JSONObject jobInstanceJSON = new JSONObject();
 						    	jobInstanceJSON.put("id", jobInstanceElementID);
-						    	jobInstanceJSON.put("jobId", jobId);
+						    	jobInstanceJSON.put("jobId", jobID);
 						    	jobInstanceJSON.put("buildNumber", buildNumber);
 						    	jobInstanceJSON.put("jobStatus", newPropertyValue);
 						    	jobInstanceJSON.put("jenkinsLog", "");
