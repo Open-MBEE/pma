@@ -14,7 +14,7 @@ public class JMSMessageListener
 	public static void main(String[] args) {
 		String intJms = "tcp://cae-ems-alf5int.jpl.nasa.gov:61616";
 		String testJms="tcp://cae-ems-alf5test.jpl.nasa.gov:61616";
-		ConnectionFactory factory = new ActiveMQConnectionFactory(testJms); // ActiveMQ-specific (more)
+		ConnectionFactory factory = new ActiveMQConnectionFactory(intJms); // ActiveMQ-specific (more)
 		try {
 			Connection con = factory.createConnection();
 

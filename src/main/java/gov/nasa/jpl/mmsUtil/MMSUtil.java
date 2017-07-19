@@ -885,6 +885,7 @@ public class MMSUtil {
 							    	jmc.publish(jmsJSON, jmc.TYPE_DELTA, refID, projectID);
 							    	logger.info("Sent JMS json: "+jmsJSON.toString());
 							    	System.out.println("Sent JMS json: "+jmsJSON.toString());
+							    	return "Instance Specification Updated. Property: "+propertyName+", Value: "+newSlotValue;
 						    	}
 						    	catch(JSONException e)
 						    	{
@@ -981,7 +982,7 @@ public class MMSUtil {
 			}
 		}
 		
-		return mmsReturnString;
+		return "Default Return String";
 	}
 	
 	
