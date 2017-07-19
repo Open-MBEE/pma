@@ -130,8 +130,8 @@ public class DBUtil
 			
 			ArrayList valueList = new ArrayList();
 			valueList.addAll(firstRow.values());
-			System.out.println("Value List: "+String.join(", ", valueList));
-			System.out.println("Value Size: "+valueList.size());
+//			System.out.println("Value List: "+String.join(", ", valueList));
+//			System.out.println("Value Size: "+valueList.size());
 			if(valueList.size()==4)
 			{
 				System.out.println("Setting Credentials");

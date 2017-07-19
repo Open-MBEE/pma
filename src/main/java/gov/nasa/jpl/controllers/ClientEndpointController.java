@@ -184,10 +184,13 @@ public class ClientEndpointController {
 		if(!jobsBinExists) // create jobs bin package if it doesn't exist.
 		{
 			logger.info("Jobs Bin Does not exist");
+			System.out.println("Jobs Bin Does not exist");
 //			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm","Jobs Bin"); // creating the package inside the project
 			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID,"Jobs Bin"); // creating the package one level above the package, wont get synced back to the model.
 //			System.out.println(packageNode.toString());
-			mmsUtil.post(mmsServer, projectID, refID, packageNode);
+			String binCreateResponse = mmsUtil.post(mmsServer, projectID, refID, packageNode);
+			System.out.println("Bin Create Response: "+binCreateResponse);
+			logger.info("Bin Create Response: "+binCreateResponse);
 		}
 		
 		
@@ -202,9 +205,12 @@ public class ClientEndpointController {
 		if(!jobPackageExists) 
 		{
 			logger.info("Job Package Does not exist");
+			System.out.println("Job Package Does not exist");
 			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+jobElementID,"jobs_bin_"+projectID,jobName+" - "+jobElementID); // Creating the package. The owner of the package is the Jobs Bin package.
 //			System.out.println(packageNode.toString());
-			mmsUtil.post(mmsServer, projectID, refID, packageNode);
+			String packageCreateResponse = mmsUtil.post(mmsServer, projectID, refID, packageNode);
+			System.out.println("Package Create Response: "+packageCreateResponse);
+			logger.info("Package Create Response: "+packageCreateResponse);
 		}
 		
 		
@@ -214,7 +220,7 @@ public class ClientEndpointController {
 		logger.info("Job class JSON: "+on.toString());
 		
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
-//		System.out.println("MMS Job element response: "+elementCreationResponse);
+		System.out.println("MMS Job element response: "+elementCreationResponse);
 		logger.info("MMS Job element response: "+elementCreationResponse);
 		System.out.println("");
 		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
@@ -251,13 +257,17 @@ public class ClientEndpointController {
 	        {
 	        	if(jobString.equals("Job not found on Jenkins"))
 	        	{
+	        		System.out.println("Creating folder: "+folderName);
 	        		logger.info("Creating folder: "+folderName);
-	        		je.createFolder(folderName);
+	        		String jenkinsCreateFolderReturn = je.createFolder(folderName);
+	        		System.out.println("Jenkins Create Folder Return String: "+jenkinsCreateFolderReturn);
+	        		logger.info("Jenkins Create Folder Return String: "+jenkinsCreateFolderReturn);
 	        	}
 	        }
 	        else
 	        {
-	        	logger.info("Folder already exists");
+	        	System.out.println(folderName+" Folder already exists");
+	        	logger.info(folderName+" Folder already exists");
 	        }
 	        
 	        /*
@@ -272,17 +282,20 @@ public class ClientEndpointController {
 	        	if(jobString.equals("Job not found on Jenkins"))
 	        	{
 	        		logger.info("Creating folder: "+nestedfolderName);
-	        		je.createFolderWithParent(nestedfolderName, folderName);
+	        		String nestedFoldercreateReturn = je.createFolderWithParent(nestedfolderName, folderName);
+	        		System.out.println("Jenkins Create Nested Folder Return String: "+nestedFoldercreateReturn);
+	        		logger.info("Jenkins Create Nested Folder Return String: "+nestedFoldercreateReturn);
 	        	}
 	        }
 	        else
 	        {
+	        	System.out.println(nestedfolderName+" Folder already exists");
 	        	logger.info(nestedfolderName+" Folder already exists");
 	        }
 	        
 	        // Creating the job
 	        String jobCreationResponse = je.postNestedJobConfigXml(jbc, jobElementID,projectID ,refID, true);
-//	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
+	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
 	        
 	        if(jobCreationResponse.equals("HTTP/1.1 200 OK"))
 	        {
