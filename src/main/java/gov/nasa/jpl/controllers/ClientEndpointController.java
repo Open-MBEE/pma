@@ -253,15 +253,22 @@ public class ClientEndpointController {
 	        String jobString = je.getJob(folderName);
 	        
 	        logger.info("JOB STRING: "+jobString);
+	        System.out.println("Jenkins folder check string: "+jobString);
 	        if(!PMAUtil.isJSON(jobString))
 	        {
-	        	if(jobString.equals("Job not found on Jenkins"))
+	        	if((jobString.equals("Job not found on Jenkins"))||(jobString.equals("HTTP/1.1 404 Not Found")))
 	        	{
 	        		System.out.println("Creating folder: "+folderName);
 	        		logger.info("Creating folder: "+folderName);
 	        		String jenkinsCreateFolderReturn = je.createFolder(folderName);
 	        		System.out.println("Jenkins Create Folder Return String: "+jenkinsCreateFolderReturn);
 	        		logger.info("Jenkins Create Folder Return String: "+jenkinsCreateFolderReturn);
+	        	}
+	        	else
+	        	{
+	        		ObjectNode responseJSON = mapper.createObjectNode();
+	        		responseJSON.put("message", jobString+" Jenkins");
+    		        return new ResponseEntity<String>(jobString,status);
 	        	}
 	        }
 	        else
@@ -275,16 +282,23 @@ public class ClientEndpointController {
 	         */
 	        String nestedfolderName = refID;
 	        jobString = je.getNestedJob(nestedfolderName, folderName);
-	        
+	        System.out.println("Jenkins nested folder check string: "+jobString);
 	        logger.info("JOB STRING: "+jobString);
 	        if(!PMAUtil.isJSON(jobString))
 	        {
-	        	if(jobString.equals("Job not found on Jenkins"))
+	        	
+	        	if((jobString.equals("Job not found on Jenkins"))||(jobString.equals("HTTP/1.1 404 Not Found")))
 	        	{
 	        		logger.info("Creating folder: "+nestedfolderName);
 	        		String nestedFoldercreateReturn = je.createFolderWithParent(nestedfolderName, folderName);
 	        		System.out.println("Jenkins Create Nested Folder Return String: "+nestedFoldercreateReturn);
 	        		logger.info("Jenkins Create Nested Folder Return String: "+nestedFoldercreateReturn);
+	        	}
+	        	else
+	        	{
+	        		ObjectNode responseJSON = mapper.createObjectNode();
+	        		responseJSON.put("message", jobString+" Jenkins");
+    		        return new ResponseEntity<String>(jobString,status);
 	        	}
 	        }
 	        else

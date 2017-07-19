@@ -606,7 +606,7 @@ public class JenkinsEngine {
 		JSONObject json = null;
 		System.out.println("jenkins get job");
 		String allJobResponse = getAllJobs(jobParentFolderName);
-		System.out.println("ALL JOB RESPONSE: "+allJobResponse);
+//		System.out.println("ALL JOB RESPONSE: "+allJobResponse);
 		if (allJobResponse != null&&allJobResponse.startsWith("{")) {
 			try {
 				JSONObject allJobs = new JSONObject(allJobResponse);
@@ -658,13 +658,13 @@ public class JenkinsEngine {
 		}
 		String url = this.url + "/job/PMA/job/"+nestedPMAFolder+"api/json?tree=jobs[name,color]"; // Jenkins 2
 
-		System.out.println("Current construction url is " + url);
+//		System.out.println("Current construction url is " + url);
 		this.executeUrl = url;
-		System.out.println("Execution url is " + this.executeUrl);
+//		System.out.println("Execution url is " + this.executeUrl);
 		
-		System.out.println("before execute");
+//		System.out.println("before execute");
 		String allJobs = execute(); // execute returns not null when theres an error
-		System.out.println("all jobs inside getAllJobs");
+//		System.out.println("all jobs inside getAllJobs");
 		if (allJobs != null) {
 			return allJobs;
 		}
