@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.nasa.jpl.mmsUtil.MMSUtil;
+
 public class PMAUtil 
 {
 	public PMAUtil()
@@ -43,7 +45,7 @@ public class PMAUtil
 	}
 	
 	/**
-	 * 
+	 * Creates a json object that contains the job instance information
 	 * @param jobInstancesMap
 	 * @return
 	 */
@@ -56,9 +58,12 @@ public class PMAUtil
 		jobInstanceElement.put("jobId",jobInstancesMap.get("jobId"));
 		jobInstanceElement.put("buildNumber",jobInstancesMap.get("buildNumber"));
 		jobInstanceElement.put("jobStatus",jobInstancesMap.get("jobStatus"));
-		jobInstanceElement.put("jenkinsLog",jobInstancesMap.get("jenkinsLog"));
-		jobInstanceElement.put("created",jobInstancesMap.get("created"));
+		jobInstanceElement.put("jenkinsLog",jobInstancesMap.get("logUrl"));
+		jobInstanceElement.put("created",jobInstancesMap.get("started"));
 		jobInstanceElement.put("completed",jobInstancesMap.get("completed"));
+		
+		jobInstanceElement.put("type",jobInstancesMap.get("type"));
+		jobInstanceElement.put("refId",jobInstancesMap.get("refId"));
 		return jobInstanceElement;
 	}
 	
@@ -150,7 +155,7 @@ public class PMAUtil
 		ObjectNode jobJSON = mapper.createObjectNode();
 		ArrayNode jobInstanceElements = mapper.createArrayNode();
 		ArrayList<String> jobInstanceIDElementList = new ArrayList<String>();
-		
+		Map elementIdMap = MMSUtil.getElementIdMap();
 		try {
 			JsonNode fullJson = mapper.readTree(mmsJSONString);
 			JsonNode elements = fullJson.get("elements");
@@ -158,12 +163,12 @@ public class PMAUtil
 			{
 				for (JsonNode element : elements) {
 					/*
-					 * Find the ID of job element by looking for the owner of the command property
-					 * only job elements have the command part property
+					 * Find the ID of job instance elements
 					 */
-					if((element.get("type").toString().equals("\"Property\""))&&(element.get("name").toString().equals("\"jobStatus\"")))
+					if((element.get("type").toString().equals("\"InstanceSpecification\""))&&(element.get("classifierIds").get(0).toString().replace("\"", "").equals(jobID)))
 					{
-						String jobInstanceID = element.get("ownerId").toString().replace("\"", "");//id of owner of part property
+						String jobInstanceID = element.get("id").toString().replace("\"", "");//id of owner of part property
+//						System.out.println(jobInstanceID);
 						jobInstanceIDElementList.add(jobInstanceID);// put owner of part property in a list. Owner should be the job element
 					}
 				}
@@ -176,12 +181,23 @@ public class PMAUtil
 					for (JsonNode element : elements) 
 					{	
 						String elementOwner = element.get("ownerId").toString().replace("\"", "");
-						if((element.get("type").toString().equals("\"Property\""))&&(elementOwner.equals(jobInstanceID)))
+						if((element.get("type").toString().equals("\"Slot\""))&&(elementOwner.equals(jobInstanceID)))
 						{
-							String propertyName = element.get("name").toString().replace("\"", "");
-							String propertyValue = element.get("defaultValue").get("value").toString().replace("\"", "");
-							System.out.println(propertyName);
-							System.out.println(propertyValue);
+							String propertyName = element.get("definingFeatureId").toString().replace("\"", "");
+							String propertyValue = element.get("value").get(0).get("value").toString().replace("\"", "");
+//							System.out.println(propertyName);
+//							System.out.println(propertyValue);
+							
+							for(JsonNode nestedSearchElement : elements)
+							{
+								if(nestedSearchElement.get("id").toString().replace("\"", "").equals(propertyName))
+								{
+									
+									String redefinedPropertyID = nestedSearchElement.get("redefinedPropertyIds").get(0).toString().replace("\"", "");
+									propertyName=(String) elementIdMap.get(redefinedPropertyID);
+//									System.out.println(propertyName);
+								}
+							}
 							jobInstanceMap.put(propertyName, propertyValue);
 						}
 					}
