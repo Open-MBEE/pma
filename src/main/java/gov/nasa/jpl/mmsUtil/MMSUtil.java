@@ -892,8 +892,10 @@ public class MMSUtil {
 						    		logger.info(e.toString());
 						    	}
 				    		}
-							
-							return instanceSlotElement.toString();
+				    		else
+				    		{
+				    			return response;
+				    		}
 						}
 						else
 						{
@@ -917,133 +919,56 @@ public class MMSUtil {
 			}
 			else // Instance isn't found, a new one will be created. Happens when a job is ran without being triggered by PMA. EX. (Manual run on Jenkins or a scheduled run.)
 			{
-				
-			}
-		}
-		
-		return mmsReturnString;
-	}
-	
-	/**
-	 * Should get the current value of the property, change it and send it back to mms
-	 * @param server MMS server. Ex. opencae-uat.jpl.nasa.gov
-	 * @param projectID Magicdraw project id
-	 * @param refID
-	 * @param jobID ID of job element (Should be the owner of the job instance element)
-	 * @param buildNumber Build number of the jenkins job. Starts from 1. 
-	 * @param propertyName Name of the part property. Ex: buildNumber,jobStatus,jenkinsLog,etc
-	 * @param newPropertyValue New value of the part property
-	 * @param token Alfresco token.
-	 * @return Status code returned from mms.
-	 */
-	public String modifyPartPropertyValue(String server,String projectID,String refID,String jobID,String buildNumber,String propertyName,String newPropertyValue,String token)
-	{
-		
-		// finding the part property
-		MMSUtil mmsUtil = new MMSUtil(token);
-		
-		String jsonString = mmsUtil.get(server, projectID,refID, jobID,true);
-//		System.out.println("Modify Part Property JSON String: "+jsonString);
-		logger.info("Modify Part Property JSON String: "+jsonString);
-		ObjectMapper mapper = new ObjectMapper();
-		
-		try {
-			JsonNode fullJson = mapper.readTree(jsonString);
-			JsonNode elements = fullJson.get("elements");
-			String jobInstanceId = ""; // owner of the instance part properties
-			if (elements != null)  // elements will be null if the json returned with error
-			{
-				for (JsonNode element : elements) {
-					// Find the ID of the job instance element.
-					if((element.get("type").toString().equals("\"Property\""))&&(element.get("defaultValue").get("value").toString().equals("\""+buildNumber+"\"")))
-					{
-						jobInstanceId = element.get("ownerId").toString().replace("\"", "");
-					}
-				}
-				ObjectNode propertyElement = null;
-				for (JsonNode element : elements) {
-					/*
-					 * Find the property element that contains the value to be replaced.
-					 */
-					if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().replace("\"", "").equals(jobInstanceId))&&(element.get("name").toString().equals("\""+propertyName+"\"")))
-					{
-//						System.out.println("Found: "+propertyName);
-//						System.out.println("Value: "+element.get("defaultValue").get("value").toString());
-						propertyElement = (ObjectNode) element;
-						logger.info("Found: "+propertyName);
-						logger.info("Value: "+element.get("defaultValue").get("value").toString());
-					}
-				}
-				if(propertyElement!=null) // will be null if the property element isn't found
+				System.out.println("INSIDE ELSE");
+				System.out.println(propertyName);
+				// Creating job instance for the job run because it doesn't currently exist.
+				if(propertyName.equals("jobStatus")) // creates the job instance
 				{
-					/*
-					 * Replace the value in the json object
-					 */
-//					System.out.println("Before: "+propertyElement);
-					ObjectNode propertyElementValue = (ObjectNode) propertyElement.get("defaultValue");
-					propertyElementValue.put("value", newPropertyValue);
-					propertyElement.put("defaultValue", propertyElementValue);
-					
-					// puts the new json object in an elements array that will be sent to mms
-					ObjectNode payload = mapper.createObjectNode();
-					ArrayNode arrayElements = mapper.createArrayNode();
-					arrayElements.add(propertyElement);
-					payload.put("elements",arrayElements);
-					payload.put("source","pma");
-					
-					// send element to MMS
-//					System.out.println("Payload: "+payload);
-					String response = mmsUtil.post(server, projectID, refID, payload); // sending element to MMS . Expecting 200 OK response
-//					System.out.println("Response: "+response);
-					
+		          	String jobInstanceElementID = createId();
+		          	String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+		          	ObjectNode on = buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+jobId, jobId+"_instance_"+currentTimestamp,buildNumber,newSlotValue, server, projectID, refID,jobId); //job element will be the owner of the instance element
+		    		if(on==null)
+		    		{
+		    			logger.info("buildDocGenJobInstanceJSON output was null");
+		    			return "Job Element doesn't exist on MMS";
+		    		}
+		    		
+		    		String elementCreationResponse = this.post(server, projectID, refID, on);
+		    		
+		    		System.out.println("ELEMENT CREATION RESPONSE: "+elementCreationResponse);
+			    	
 					/*
 					 * Sending jms messsage with job instance object
 					 */
-		    		if (response.equals("HTTP/1.1 200 OK"))
+		    		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
 		    		{
-				    	try
+			    		try
 				    	{
-				    		// Retrieving job instance values 
-				    		Map<String,String> jobInstanceValues = new HashMap<String,String>();
-							for (JsonNode element : elements) {
-								/*
-								 * Find property elements
-								 */
-								if((element.get("type").toString().equals("\"Property\""))&&(element.get("ownerId").toString().replace("\"", "").equals(jobInstanceId)))
-								{
-									String elementName = element.get("name").toString().replace("\"", "");
-									String elementValue = element.get("defaultValue").get("value").toString().replace("\"", "");
-									jobInstanceValues.put(elementName, elementValue);
-									System.out.println("Found: "+elementName);
-									System.out.println("Value: "+elementValue);
-									logger.info("Found: "+elementName);
-									logger.info("Value: "+elementValue);
-								}
-							}
-							jobInstanceValues.put(propertyName, newPropertyValue); // overwrites the old value
-				    		
-							// build job instance element json to be sent
-						 	JSONObject jobInstanceJSON = new JSONObject();			
-					    	
-					    	for (Map.Entry entry : jobInstanceValues.entrySet()) {
-					    		jobInstanceJSON.put((String) entry.getKey(), entry.getValue());
-					    		System.out.println("key: "+entry.getKey() + " value: "+entry.getValue());
-					    	}
-					    	
-						 	jobInstanceJSON.put("id", jobInstanceId);
-					    	jobInstanceJSON.put("jobId", jobID);
-					    	
-					    	// Sending job instance element to jms.
+				    		/*
+				    		 * When the job instance is first created, it will have these values by default. 
+				    		 * Couldn't retrieve the job instance part property values from MMS, since the job instance was just created a couple lines above. 
+				    		 *
+				    		 */
 					    	JmsConnection jmc = new JmsConnection();
 					    	String jmsSettings = MMSUtil.getJMSSettings(server);
 					    	JSONObject connectionJson = new JSONObject(jmsSettings);
 					    	jmc.ingestJson(connectionJson);
 					    	
+					    	JSONObject jobInstanceJSON = new JSONObject();
+					    	jobInstanceJSON.put("id", jobInstanceElementID);
+					    	jobInstanceJSON.put("jobId", jobId);
+					    	jobInstanceJSON.put("buildNumber", buildNumber);
+					    	jobInstanceJSON.put("jobStatus", newSlotValue);
+					    	jobInstanceJSON.put("jenkinsLog", "");
+					    	jobInstanceJSON.put("created", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date())); //ex. 2017-06-08T13:37:19.483-0700);
+					    	jobInstanceJSON.put("completed", "");
+					    	
 					    	JSONObject jmsJSON = new JSONObject();	
 					    	jmsJSON.put("updatedJobs", jobInstanceJSON);
-					    	jmc.publish(jmsJSON, jmc.TYPE_DELTA, refID, projectID);
-					    	logger.info("Sent JMS json: "+jmsJSON.toString());
-					    	System.out.println("Sent JMS json: "+jmsJSON.toString());
+					    	
+					    	jmc.publish(jobInstanceJSON, jmc.TYPE_DELTA, refID, projectID);
+					    	logger.info("Sent JMS json: "+jobInstanceJSON.toString());
+					    	System.out.println("Sent JMS json: "+jobInstanceJSON.toString());
 				    	}
 				    	catch(JSONException e)
 				    	{
@@ -1051,84 +976,14 @@ public class MMSUtil {
 				    		logger.info(e.toString());
 				    	}
 		    		}
-					return response;
-				}
-				else 
-				{
-					
-					// Creating job instance for the job run because it doesn't currently exist.
-					if(propertyName.equals("jobStatus")) // creates the job instance
-					{
-			          	String jobInstanceElementID = createId();
-			          	String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
-			    		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID, "jobs_bin_"+projectID, jobID+"_instance_"+currentTimestamp,buildNumber,newPropertyValue, server, projectID, refID,jobID); //job folder will be the owner of the instance element
-			    		
-			    		if(on==null)
-			    		{
-			    			logger.info("buildDocGenJobInstanceJSON output was null");
-			    			return "Job Element doesn't exist on MMS";
-			    		}
-			    		
-			    		String elementCreationResponse = mmsUtil.post(server, projectID, refID, on);
-			    		
-			    		System.out.println(elementCreationResponse);
-				    	
-						/*
-						 * Sending jms messsage with job instance object
-						 */
-			    		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
-			    		{
-				    		try
-					    	{
-					    		/*
-					    		 * When the job instance is first created, it will have these values by default. 
-					    		 * Couldn't retrieve the job instance part property values from MMS, since the job instance was just created a couple lines above. 
-					    		 *
-					    		 */
-						    	JmsConnection jmc = new JmsConnection();
-						    	String jmsSettings = MMSUtil.getJMSSettings(server);
-						    	JSONObject connectionJson = new JSONObject(jmsSettings);
-						    	jmc.ingestJson(connectionJson);
-						    	
-						    	JSONObject jobInstanceJSON = new JSONObject();
-						    	jobInstanceJSON.put("id", jobInstanceElementID);
-						    	jobInstanceJSON.put("jobId", jobID);
-						    	jobInstanceJSON.put("buildNumber", buildNumber);
-						    	jobInstanceJSON.put("jobStatus", newPropertyValue);
-						    	jobInstanceJSON.put("jenkinsLog", "");
-						    	jobInstanceJSON.put("created", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date())); //ex. 2017-06-08T13:37:19.483-0700);
-						    	jobInstanceJSON.put("completed", "");
-						    	
-						    	JSONObject jmsJSON = new JSONObject();	
-						    	jmsJSON.put("updatedJobs", jobInstanceJSON);
-						    	
-						    	jmc.publish(jobInstanceJSON, jmc.TYPE_DELTA, refID, projectID);
-						    	logger.info("Sent JMS json: "+jobInstanceJSON.toString());
-						    	System.out.println("Sent JMS json: "+jobInstanceJSON.toString());
-					    	}
-					    	catch(JSONException e)
-					    	{
-					    		e.printStackTrace();
-					    		logger.info(e.toString());
-					    	}
-			    		}
-			    		return elementCreationResponse;
-					}
+		    		return elementCreationResponse;
 				}
 			}
-			else
-			{
-				return jsonString; // Returns status from mms. Should be an error if the elements were null.
-			}
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		return jsonString;
+		
+		return mmsReturnString;
 	}
+	
 	
 	// finds all the job elements in a project
 	public ResponseEntity<String> getJobElements(String server,String projectID,String refID)
