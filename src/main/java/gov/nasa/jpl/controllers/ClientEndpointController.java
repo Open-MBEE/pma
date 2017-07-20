@@ -1,5 +1,7 @@
 package gov.nasa.jpl.controllers;
 
+import java.io.IOException;
+
 /**
  * Endpoints for applications to interface with PMA.
  */
@@ -21,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -194,15 +198,15 @@ public class ClientEndpointController {
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
+		String alfrescoToken = jobInstance.getAlfrescoToken();
+		String mmsServer = jobInstance.getMmsServer();
+		
 		// Check if job exists on jenkins first
     	JenkinsEngine je = login();
     	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
     	System.out.println("Job Response: "+jobResponse);
     	if((!jobResponse.equals("Job not found on Jenkins"))&&(!jobResponse.equals("HTTP/1.1 404 Not Found"))) // Job exists on Jenkins
     	{
-    		System.out.println("");
-    		String alfrescoToken = jobInstance.getAlfrescoToken();
-    		String mmsServer = jobInstance.getMmsServer();
     		
     		return PMAUtilPost.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
 	        
@@ -213,10 +217,90 @@ public class ClientEndpointController {
         	logger.info("Run Job Response: "+jobResponse); // Jenkins issue when checking if job exists.
         	if ((jobResponse.contains("HTTP/1.1 404 Not Found")||(jobResponse.equals("Job not found on Jenkins"))))  // Job doesn't exist on Jenkins
 			{
-				status = HttpStatus.NOT_FOUND; 
-				ObjectNode responseJSON = mapper.createObjectNode();
-				responseJSON.put("message", jobResponse); 
-				jobResponse = responseJSON.toString();
+        		
+        		String schedule = null;
+        		String type = null;
+        		String associatedElementID = null;
+        		String jobName = null;
+        		
+//				status = HttpStatus.NOT_FOUND; 
+//				ObjectNode responseJSON = mapper.createObjectNode();
+//				responseJSON.put("message", jobResponse); 
+//				jobResponse = responseJSON.toString();
+				
+				try {
+					MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
+					String jobJsonString = mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID).getBody();
+					System.out.println("Job JSON String: "+jobJsonString);
+					JsonNode fullJson = mapper.readTree(jobJsonString);
+					if(fullJson!=null)
+					{
+						JsonNode jobJson = fullJson.get("jobs");
+						if(jobJson!=null)
+						{
+							JsonNode job = jobJson.get(0);
+							if(job!=null)
+							{
+								String scheduleValue = job.get("schedule").toString();
+								String typeValue = job.get("command").toString();
+								String associatedElementIDValue = job.get("associatedElementID").toString();
+								String jobValue = job.get("name").toString();
+
+								if (scheduleValue != null) {
+									schedule = scheduleValue.replace("\"", "");
+								}
+								if (typeValue != null) {
+									type = typeValue.replace("\"", "");
+								}
+								if (associatedElementIDValue != null) {
+									associatedElementID = associatedElementIDValue.replace("\"", "");
+								}
+								if (jobValue != null) {
+									jobName = jobValue.replace("\"", "");
+								}
+							}
+							else
+							{
+								ObjectNode responseJSON = mapper.createObjectNode();
+								responseJSON.put("message", "Job Element Doesn't Exist on MMS"); 
+								return new ResponseEntity<String>(responseJSON.toString(),HttpStatus.NOT_FOUND); // Job element was not found since jobs array was blank
+							}
+						}
+						else
+						{
+							ObjectNode responseJSON = mapper.createObjectNode();
+							responseJSON.put("message", jobJsonString); 
+							return new ResponseEntity<String>(responseJSON.toString(),status); // If jobJson was null, then the job element must not exist or mms returned an error
+						}
+					}
+					else
+					{
+						ObjectNode responseJSON = mapper.createObjectNode();
+						responseJSON.put("message", jobJsonString); 
+						return new ResponseEntity<String>(jobJsonString,status); // If fullJson was null, then the job element must not exist because mms returned an empty json or mms returned an error.
+					}
+
+				} catch (JsonProcessingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				System.out.println("Schedule: "+schedule);
+        		System.out.println("type: "+type);
+        		System.out.println("associatedElementID: "+associatedElementID);
+        		System.out.println("jobName: "+jobName);
+        		
+        		
+        		String createJobOutputString = PMAUtilPost.createJob(jobName, alfrescoToken, mmsServer, associatedElementID, schedule, type, projectID, refID, logger).getBody();
+        		ResponseEntity<String> createJobOutput = PMAUtilPost.jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobSysmlID, schedule, type, logger);
+        		System.out.println("Create JOB OUTPUT: "+createJobOutput.getBody());
+        		return createJobOutput;
+//				System.out.println("Create JOB:"+ createJobOutput);
+//				return PMAUtilPost.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
+				
 			}
         	return new ResponseEntity<String>(jobResponse,status);
     	}
