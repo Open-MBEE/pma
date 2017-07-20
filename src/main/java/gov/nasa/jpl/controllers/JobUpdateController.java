@@ -90,7 +90,7 @@ public class JobUpdateController
 			value=value.toLowerCase();
 		}
 
-		String mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, value, ticket);
+		String mmsResponse = mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectID, refID, jobID, buildNumber, propertyName, value, ticket);
 		logger.info("MMS Response: "+mmsResponse);
 		
 		if (propertyName.equals("jobStatus") && (value.toLowerCase().equals("completed")|| value.toLowerCase().equals("failed"))) {
@@ -105,7 +105,7 @@ public class JobUpdateController
 				e.printStackTrace();
 			}
 			String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
-			mmsResponse = mmsUtil.modifyPartPropertyValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, ticket);
+			mmsResponse = mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectID, refID, jobID, buildNumber, "completed", currentTimestamp, ticket);
 			logger.info(mmsResponse);
 		}
 
