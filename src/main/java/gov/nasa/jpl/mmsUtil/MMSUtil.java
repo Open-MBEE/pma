@@ -533,25 +533,34 @@ public class MMSUtil {
 			if(fullJson!=null)
 			{
 				JsonNode jobJson = fullJson.get("jobs");
-				if(jobJson!=null)
+				if (jobJson != null)
 				{
 					JsonNode job = jobJson.get(0);
-					String scheduleValue = job.get("schedule").toString();
-					String typeValue = job.get("command").toString();
-					String associatedElementIDValue = job.get("associatedElementID").toString();
-					String jobValue = job.get("name").toString();
+					if (job != null) 
+					{
+						String scheduleValue = job.get("schedule").toString();
+						String typeValue = job.get("command").toString();
+						String associatedElementIDValue = job.get("associatedElementID").toString();
+						String jobValue = job.get("name").toString();
 
-					if (scheduleValue != null) {
-						schedule = scheduleValue.replace("\"", "");
+						if (scheduleValue != null) {
+							schedule = scheduleValue.replace("\"", "");
+						}
+						if (typeValue != null) {
+							type = typeValue.replace("\"", "");
+						}
+						if (associatedElementIDValue != null) {
+							associatedElementID = associatedElementIDValue.replace("\"", "");
+						}
+						if (jobValue != null) {
+							jobName = jobValue.replace("\"", "");
+						}
 					}
-					if (typeValue != null) {
-						type = typeValue.replace("\"", "");
-					}
-					if (associatedElementIDValue != null) {
-						associatedElementID = associatedElementIDValue.replace("\"", "");
-					}
-					if (jobValue != null) {
-						jobName = jobValue.replace("\"", "");
+					else
+					{
+						ObjectNode responseJSON = mapper.createObjectNode();
+						responseJSON.put("message", "Job Element Doesn't Exist on MMS"); 
+						return(responseJSON); // Job element was not found since jobs array was blank
 					}
 				}
 				else
