@@ -35,7 +35,7 @@ import gov.nasa.jpl.mmsUtil.MMSUtil;
 import gov.nasa.jpl.model.JobFromClient;
 import gov.nasa.jpl.model.JobInstanceFromClient;
 import gov.nasa.jpl.pmaUtil.PMAUtil;
-import gov.nasa.jpl.pmaUtil.PMAUtilPost;
+import gov.nasa.jpl.pmaUtil.PMAPostUtil;
 
 @CrossOrigin(origins = "*")
 @Controller
@@ -174,7 +174,7 @@ public class ClientEndpointController {
 		String schedule = jobFromVE.getSchedule();
 		String command = jobFromVE.getCommand();
 		
-		return PMAUtilPost.createJob(jobName, alfrescoToken, mmsServer, associatedElementID, schedule, command, projectID, refID, logger);
+		return PMAPostUtil.createJob(jobName, alfrescoToken, mmsServer, associatedElementID, schedule, command, projectID, refID, logger);
 	}
 	
 	/**
@@ -208,7 +208,7 @@ public class ClientEndpointController {
     	if((!jobResponse.equals("Job not found on Jenkins"))&&(!jobResponse.equals("HTTP/1.1 404 Not Found"))) // Job exists on Jenkins
     	{
     		
-    		return PMAUtilPost.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
+    		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
 	        
     	}
     	else 
@@ -222,7 +222,7 @@ public class ClientEndpointController {
         		String type = null;
         		String associatedElementID = null;
         		String jobName = null;
-        		
+
 //				status = HttpStatus.NOT_FOUND; 
 //				ObjectNode responseJSON = mapper.createObjectNode();
 //				responseJSON.put("message", jobResponse); 
@@ -294,13 +294,31 @@ public class ClientEndpointController {
         		System.out.println("jobName: "+jobName);
         		
         		
-        		String createJobOutputString = PMAUtilPost.createJob(jobName, alfrescoToken, mmsServer, associatedElementID, schedule, type, projectID, refID, logger).getBody();
-        		ResponseEntity<String> createJobOutput = PMAUtilPost.jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobSysmlID, schedule, type, logger);
+        		ResponseEntity<String> createJobOutput = PMAPostUtil.jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobSysmlID, schedule, type, logger);
         		System.out.println("Create JOB OUTPUT: "+createJobOutput.getBody());
-        		return createJobOutput;
+//        		return createJobOutput;
 //				System.out.println("Create JOB:"+ createJobOutput);
 //				return PMAUtilPost.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
 				
+        		
+        		String jobCreationResponse = createJobOutput.getBody();
+    	        if(PMAUtil.isJSON(jobCreationResponse))
+    	        {
+    	        	return createJobOutput; // returning Jenkins error
+    	        }
+    	        
+    	        if(jobCreationResponse.equals("HTTP/1.1 200 OK")) // If job was created succesfully on Jenkins
+    	        {	
+    	        	System.out.println("Running Job");
+    	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
+    	        }
+    	        else
+    	        {
+    	      		ObjectNode responseJSON = mapper.createObjectNode();
+    	    		responseJSON.put("message", jobCreationResponse + " Jenkins"); // Jenkins issue when creating job instance
+    		        return new ResponseEntity<String>(responseJSON.toString(),status);
+    	        }
+    	        
 			}
         	return new ResponseEntity<String>(jobResponse,status);
     	}

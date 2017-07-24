@@ -19,10 +19,10 @@ import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 
-public class PMAUtilPost 
+public class PMAPostUtil 
 {
 	
-	public PMAUtilPost()
+	public PMAPostUtil()
 	{
 		
 	}
@@ -185,90 +185,34 @@ public class PMAUtilPost
 	        jbc.setJobType(type);
 //	        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
 	        
-	        JenkinsEngine je = new JenkinsEngine();
-	        je.setCredentials();
-	        je.login();
 	        
-	        /*
-	         *  Creating a folder for the projectID if it doesn't exist
-	         */
-	        String folderName = projectID;
-	        String jobString = je.getJob(folderName);
+	        ResponseEntity<String> jobPostResponse = jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobElementID, schedule, type, logger);
 	        
-	        logger.info("JOB STRING: "+jobString);
-	        System.out.println("Jenkins folder check string: "+jobString);
-	        if(!PMAUtil.isJSON(jobString)) // When folder doesn't exist, the jobString won't be a json.
+	        String jobCreationResponse = jobPostResponse.getBody();
+	        if(PMAUtil.isJSON(jobCreationResponse))
 	        {
-	        	if((jobString.equals("Job not found on Jenkins"))||(jobString.equals("HTTP/1.1 404 Not Found")))
-	        	{
-	        		System.out.println("Creating folder: "+folderName);
-	        		logger.info("Creating folder: "+folderName);
-	        		String jenkinsCreateFolderReturn = je.createFolder(folderName);
-	        		System.out.println("Jenkins Create Folder Return String: "+jenkinsCreateFolderReturn);
-	        		logger.info("Jenkins Create Folder Return String: "+jenkinsCreateFolderReturn);
-	        	}
-	        	else
-	        	{
-	        		ObjectNode responseJSON = mapper.createObjectNode();
-	        		responseJSON.put("message", jobString+" Jenkins");
-    		        return new ResponseEntity<String>(jobString,status);
-	        	}
-	        }
-	        else
-	        {
-	        	System.out.println(folderName+" Folder already exists");
-	        	logger.info(folderName+" Folder already exists");
+	        	return jobPostResponse; // returning Jenkins error
 	        }
 	        
-	        /*
-	         *  Creating a folder for the ref if it doesn't exist
-	         */
-	        String nestedfolderName = refID;
-	        jobString = je.getNestedJob(nestedfolderName, folderName);
-	        System.out.println("Jenkins nested folder check string: "+jobString);
-	        logger.info("JOB STRING: "+jobString);
-	        if(!PMAUtil.isJSON(jobString))
-	        {
-	        	
-	        	if((jobString.equals("Job not found on Jenkins"))||(jobString.equals("HTTP/1.1 404 Not Found")))
-	        	{
-	        		logger.info("Creating folder: "+nestedfolderName);
-	        		String nestedFoldercreateReturn = je.createFolderWithParent(nestedfolderName, folderName);
-	        		System.out.println("Jenkins Create Nested Folder Return String: "+nestedFoldercreateReturn);
-	        		logger.info("Jenkins Create Nested Folder Return String: "+nestedFoldercreateReturn);
-	        	}
-	        	else
-	        	{
-	        		ObjectNode responseJSON = mapper.createObjectNode();
-	        		responseJSON.put("message", jobString+" Jenkins");
-    		        return new ResponseEntity<String>(jobString,status);
-	        	}
-	        }
-	        else
-	        {
-	        	System.out.println(nestedfolderName+" Folder already exists");
-	        	logger.info(nestedfolderName+" Folder already exists");
-	        }
-	        
-	        // Creating the job
-	        String jobCreationResponse = je.postNestedJobConfigXml(jbc, jobElementID,projectID ,refID, true);
-	        System.out.println("Jenkins Job creation response: "+jobCreationResponse);
-	        
-	        if(jobCreationResponse.equals("HTTP/1.1 200 OK"))
+	        if(jobCreationResponse.equals("HTTP/1.1 200 OK")) // If job was created succesfully on Jenkins
 	        {
 	        	logger.info("Return message: "+jobCreationResponse + " " + jobElementID);
 	    		
 	        	return mmsUtil.getJobElement(mmsServer, projectID, refID, jobElementID);
 	        }
-	        
-	        mmsUtil.delete(mmsServer, projectID, refID, jobElementID); // Delete the job element since the job wasn't created on Jenkins.
-	        
-	        logger.info("Return message: "+jobCreationResponse +" Jenkins"); // job not created on jenkins 
-	        System.out.println("jobCreationResponse");
-    		ObjectNode responseJSON = mapper.createObjectNode();
-    		responseJSON.put("message", jobCreationResponse+" Jenkins");
-    		jobCreationResponse = responseJSON.toString();
-	        return new ResponseEntity<String>(jobCreationResponse,status);
+	        else
+	        {
+		        
+		        mmsUtil.delete(mmsServer, projectID, refID, jobElementID); // Delete the job element since the job wasn't created on Jenkins.
+		        
+		        logger.info("Return message: "+jobCreationResponse +" Jenkins"); // job not created on jenkins 
+		        System.out.println("jobCreationResponse");
+	    		ObjectNode responseJSON = mapper.createObjectNode();
+	    		responseJSON.put("message", jobCreationResponse+" Jenkins");
+	    		jobCreationResponse = responseJSON.toString();
+		        return new ResponseEntity<String>(jobCreationResponse,status);
+	        }
+
 		}
 		else {
     		ObjectNode responseJSON = mapper.createObjectNode();
