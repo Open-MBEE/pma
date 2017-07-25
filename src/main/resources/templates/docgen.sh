@@ -44,7 +44,7 @@ param='"'$status'"'
 
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/$REF_ID/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse
 
 DISPLAY=:9001
@@ -83,7 +83,7 @@ param='"'$status'"'
 
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/$REF_ID/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse
 
 artifactLink=$BUILD_URL"artifact/MDNotificationWindowText.html"
@@ -91,7 +91,7 @@ artifactLink=$BUILD_URL"artifact/MDNotificationWindowText.html"
 param='"'$artifactLink'"'
 
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
-pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/master/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/logUrl?mmsServer=${MMS_HOST})
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/$REF_ID/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/logUrl?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse
 
 exit $mdExitCode
