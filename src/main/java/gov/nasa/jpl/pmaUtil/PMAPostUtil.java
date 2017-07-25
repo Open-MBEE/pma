@@ -158,7 +158,7 @@ public class PMAPostUtil
 		ObjectNode on = mmsUtil.buildDocgenJobElementJSON(jobElementID, "jobs_bin_"+jobElementID, jobName, associatedElementID, type, schedule, refID, projectID); // Job elements should be created in the jobs bin package
 		
 //		System.out.println("Job class JSON: "+on.toString());
-		logger.info("Job class JSON: "+on.toString());
+//		logger.info("Job class JSON: "+on.toString());
 		
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
 		System.out.println("MMS Job element response: "+elementCreationResponse);
