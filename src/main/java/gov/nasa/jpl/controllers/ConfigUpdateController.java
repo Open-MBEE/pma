@@ -3,8 +3,6 @@ package gov.nasa.jpl.controllers;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Arrays;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -22,10 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nasa.jpl.dbUtil.DBUtil;
-import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
-import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
-import gov.nasa.jpl.mmsUtil.MMSUtil;
-import gov.nasa.jpl.model.JobFromClient;
 
 @Controller
 public class ConfigUpdateController {

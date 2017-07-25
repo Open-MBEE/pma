@@ -6,10 +6,6 @@ import java.io.IOException;
  * Endpoints for applications to interface with PMA.
  */
 
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -28,8 +24,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nasa.jpl.dbUtil.DBUtil;
-import gov.nasa.jpl.jenkinsUtil.JenkinsBuildConfig;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 import gov.nasa.jpl.model.JobFromClient;
@@ -208,27 +202,24 @@ public class ClientEndpointController {
     	if((!jobResponse.equals("Job not found on Jenkins"))&&(!jobResponse.equals("HTTP/1.1 404 Not Found"))) // Job exists on Jenkins
     	{
     		
+    	   	System.out.println("Running Job: "+jobSysmlID);
+        	logger.info("Running Job: "+jobSysmlID);
     		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
 	        
     	}
     	else 
     	{	
     		System.out.println("JOB NOT FOUND ELSE");
-        	logger.info("Run Job Response: "+jobResponse); // Jenkins issue when checking if job exists.
+        	logger.info("First Run Job Response: "+jobResponse); // Jenkins issue when checking if job exists.
         	if ((jobResponse.contains("HTTP/1.1 404 Not Found")||(jobResponse.equals("Job not found on Jenkins"))))  // Job doesn't exist on Jenkins
 			{
         		
+        		// Creating job on Jenkins if the job exists on MMS.
         		String schedule = null;
         		String type = null;
         		String associatedElementID = null;
-        		String jobName = null;
-
-//				status = HttpStatus.NOT_FOUND; 
-//				ObjectNode responseJSON = mapper.createObjectNode();
-//				responseJSON.put("message", jobResponse); 
-//				jobResponse = responseJSON.toString();
-				
-				try {
+        		try {
+        			// Checking if job element exists on MMS and retrieves the job information if it does.
 					MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 					String jobJsonString = mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID).getBody();
 					System.out.println("Job JSON String: "+jobJsonString);
@@ -256,7 +247,6 @@ public class ClientEndpointController {
 									associatedElementID = associatedElementIDValue.replace("\"", "");
 								}
 								if (jobValue != null) {
-									jobName = jobValue.replace("\"", "");
 								}
 							}
 							else
@@ -287,19 +277,15 @@ public class ClientEndpointController {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-
-				System.out.println("Schedule: "+schedule);
-        		System.out.println("type: "+type);
-        		System.out.println("associatedElementID: "+associatedElementID);
-        		System.out.println("jobName: "+jobName);
         		
+        		logger.info("Creating Job on Jenkins using job element Information");
+        		System.out.println("Creating Job on Jenkins using job element Information");
         		
+        		// Creating job on Jenkins with the job element info pulled from MMS.
         		ResponseEntity<String> createJobOutput = PMAPostUtil.jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobSysmlID, schedule, type, logger);
+        		
+        		logger.info("Create JOB OUTPUT: "+createJobOutput.getBody());
         		System.out.println("Create JOB OUTPUT: "+createJobOutput.getBody());
-//        		return createJobOutput;
-//				System.out.println("Create JOB:"+ createJobOutput);
-//				return PMAUtilPost.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
-				
         		
         		String jobCreationResponse = createJobOutput.getBody();
     	        if(PMAUtil.isJSON(jobCreationResponse))
@@ -309,7 +295,8 @@ public class ClientEndpointController {
     	        
     	        if(jobCreationResponse.equals("HTTP/1.1 200 OK")) // If job was created succesfully on Jenkins
     	        {	
-    	        	System.out.println("Running Job");
+    	        	System.out.println("Running Job: "+jobSysmlID);
+    	        	logger.info("Running Job: "+jobSysmlID);
     	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
     	        }
     	        else
