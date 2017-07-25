@@ -54,7 +54,7 @@ public class PMAPostUtil
 		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+jobSysmlID, jobSysmlID+"_instance_"+currentTimestamp,nextBuildNumber,"pending", mmsServer, projectID, refID,jobSysmlID); //job element will be the owner of the instance element
 //		System.out.println("job instance JSON: "+on.toString());
-		logger.info("job instance JSON: "+on);
+//		logger.info("job instance JSON: "+on);
 		if(on.get("message")!=null)
 		{
 			jobResponse = on.toString();
