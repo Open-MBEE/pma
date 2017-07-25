@@ -70,30 +70,37 @@ public class ClientEndpointController {
 		logger.info("Get Job was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
 		
-		// Check if job exists on jenkins first
-    	JenkinsEngine je = login();
-    	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
-    	System.out.println("Job Response: "+jobResponse);
-    	HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-    	if(PMAUtil.isJSON(jobResponse)) // The job response will be a json if the job exists.
-    	{
-    		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-    		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
-    	}
-    	else
-    	{
-    		ObjectMapper mapper = new ObjectMapper();
-    		ObjectNode jobJSON = mapper.createObjectNode();
-    		jobJSON.put("message", jobResponse);
-    		jobResponse = jobJSON.toString();
-    		
-    		if(!jobResponse.contains("Exception"))
-    		{
-    			status = HttpStatus.NOT_FOUND;
-    		}
-    	}
-    	logger.info("Get Job Response: "+jobResponse); // Jenkins issue when checking if job exists
-    	return new ResponseEntity<String>(jobResponse,status);
+		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
+		
+//		// Check if job exists on jenkins first
+//    	JenkinsEngine je = login();
+//    	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
+//    	System.out.println("Job Response: "+jobResponse);
+//    	HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+//    	if(PMAUtil.isJSON(jobResponse)) // The job response will be a json if the job exists.
+//    	{
+//    		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+//    		return mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID);
+//    	}
+//    	else
+//    	{
+//    		ObjectMapper mapper = new ObjectMapper();
+//    		ObjectNode jobJSON = mapper.createObjectNode();
+//    		
+//       		if(!jobResponse.contains("Exception"))
+//    		{
+//    			jobJSON.put("message", "Job Not Found On Jenkins: "+jobResponse);
+//    			status = HttpStatus.NOT_FOUND;
+//    		}
+//    		else
+//    		{
+//    			jobJSON.put("message", jobResponse);
+//    		}
+//       		jobResponse = jobJSON.toString();
+//    	}
+//    	logger.info("Get Job Response: "+jobResponse); // Jenkins issue when checking if job exists
+//    	return new ResponseEntity<String>(jobResponse,status);
 		
 	}
 	
@@ -111,33 +118,41 @@ public class ClientEndpointController {
 		logger.info("Get Job Instances was called");
 		logger.info( "projectID: "+ projectID + "\n" +"refID: "+ refID+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
 		
-		// Check if job exists on jenkins first
-    	JenkinsEngine je = login();
-    	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
-    	logger.info("Jenkins Get Job Response: "+jobResponse);
-    	System.out.println("Jenkins Get Job Response: "+jobResponse);
-    	HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-    	if(PMAUtil.isJSON(jobResponse))
-    	{
-    		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-    		
-    		return mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
-    	}
-    	else
-    	{
-    		ObjectMapper mapper = new ObjectMapper();
-    		ObjectNode jobJSON = mapper.createObjectNode();
-    		jobJSON.put("message", jobResponse);
-    		jobResponse = jobJSON.toString();
-    		
-    		if(!jobResponse.contains("Exception"))
-    		{
-    			status = HttpStatus.NOT_FOUND;
-    		}
-    	}
-    	
-      	logger.info("Get Job Response: "+jobResponse); // Jenkins issue when checking if job exists
-    	return new ResponseEntity<String>(jobResponse,status);
+		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+		return mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
+		
+//		// Check if job exists on jenkins first
+//    	JenkinsEngine je = login();
+//    	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
+//    	logger.info("Jenkins Get Job Response: "+jobResponse);
+//    	System.out.println("Jenkins Get Job Response: "+jobResponse);
+//    	HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+//    	if(PMAUtil.isJSON(jobResponse))
+//    	{
+//    		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+//    		
+//    		return mmsUtil.getJobInstanceElements(mmsServer, projectID, refID, jobSysmlID);
+//    	}
+//    	else
+//    	{
+//    		ObjectMapper mapper = new ObjectMapper();
+//    		ObjectNode jobJSON = mapper.createObjectNode();
+//    		
+//    		if(!jobResponse.contains("Exception"))
+//    		{
+//    			jobJSON.put("message", "Job Not Found On Jenkins: "+jobResponse);
+//    			status = HttpStatus.NOT_FOUND;
+//    		}
+//    		else
+//    		{
+//    			jobJSON.put("message", jobResponse);
+//    		}
+//    		
+//    		jobResponse = jobJSON.toString();
+//    	}
+//    	
+//      	logger.info("Get Job Response: "+jobResponse); // Jenkins issue when checking if job exists
+//    	return new ResponseEntity<String>(jobResponse,status);
 
 	}
 
