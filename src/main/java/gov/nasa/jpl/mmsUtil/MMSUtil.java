@@ -818,7 +818,7 @@ public class MMSUtil {
 			ArrayList<Map<String,String>> jobInstancesmapList = PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId); // map contains slot id's with their values
 			for(Map jobInstanceMap:jobInstancesmapList)
 			{
-				if(jobInstanceMap.get("buildNumber").equals(buildNumber))
+				if((jobInstanceMap.get("buildNumber").equals(buildNumber))&&(jobInstanceMap.get("refId").equals(refID)))
 				{
 					jobInstanceInformationMap = jobInstanceMap;
 					System.out.println(jobInstanceInformationMap);
