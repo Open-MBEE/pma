@@ -203,6 +203,7 @@ public class DBUtil
 		}
 		else // Org isn't in the table
 		{
+			jdbcTemplate.execute("CREATE TABLE if not exists credentials (username TEXT, password TEXT, server TEXT, agent TEXT,org TEXT)"); //creates the table that will store the credentials
 			logger.info("Creating new row for org: "+org);
 			System.out.println("Creating new row for org: "+org);
 			// Adding new row
