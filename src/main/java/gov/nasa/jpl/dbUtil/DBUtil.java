@@ -256,13 +256,9 @@ public class DBUtil
 		{
 			for(Map<String, Object> org:list)
 			{
-				for(Object key:org.keySet())
-				{
-					System.out.println(key.toString()+" :"+org.get(key));
-				}
 				if(org.get(searchKey).equals(searchValue))
 				{
-					System.out.println("FOUND IT");
+					System.out.println("FOUND Org: "+searchValue);
 					return true;
 				}
 				System.out.println("");
