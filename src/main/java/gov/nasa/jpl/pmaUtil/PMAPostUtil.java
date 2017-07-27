@@ -169,9 +169,30 @@ public class PMAPostUtil
 //			System.out.println("Created Job Element ID: "+jobElementID);
 			
 			// Post to jenkins using jobElementID as the job name
-	       
+			
+			String org = mmsUtil.getProjectOrg(mmsServer, projectID);
+			
+			if(PMAUtil.isJSON(org)||(org==null)) // Checking if mms response came back with an error.
+		    {
+				
+		        logger.info("Get org response: "+org); 
+		        System.out.println("Get org response: "+org);
+	    		ObjectNode responseJSON = mapper.createObjectNode();
+	    		if(org==null)
+				{
+					status = HttpStatus.NOT_FOUND;
+					responseJSON.put("message", "Project not found on MMS");
+				}
+	    		else
+	    		{
+	    			responseJSON.put("message", org+" MMS");
+	    		}
+	    		
+		        return new ResponseEntity<String>(responseJSON.toString(),status);
+		    }
+			
 			DBUtil dbUtil = new DBUtil();
-			dbUtil.getCredentials();
+			dbUtil.getCredentials(org);
 			String jenkinsAgent = dbUtil.getJenkinsAgent();
 	        
 	        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
@@ -186,7 +207,7 @@ public class PMAPostUtil
 //	        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
 	        
 	        
-	        ResponseEntity<String> jobPostResponse = jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobElementID, schedule, type, logger);
+	        ResponseEntity<String> jobPostResponse = jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobElementID, schedule, type, logger,org);
 	        
 	        String jobCreationResponse = jobPostResponse.getBody();
 	        if(PMAUtil.isJSON(jobCreationResponse))
@@ -224,7 +245,7 @@ public class PMAPostUtil
 		}
 	}
 	
-	public static ResponseEntity<String> jenkinsJobPost(String associatedElementID, String mmsServer, String projectID, String refID, String jobElementID, String schedule, String type,Logger logger)
+	public static ResponseEntity<String> jenkinsJobPost(String associatedElementID, String mmsServer, String projectID, String refID, String jobElementID, String schedule, String type,Logger logger,String org)
 	{
 	
 		ObjectMapper mapper = new ObjectMapper();
@@ -232,9 +253,9 @@ public class PMAPostUtil
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // By default, the return status code is 500 Internal Server error
 		
 		// Post to jenkins using jobElementID as the job name
-	       
+	    
 		DBUtil dbUtil = new DBUtil();
-		dbUtil.getCredentials();
+		dbUtil.getCredentials(org);
 		String jenkinsAgent = dbUtil.getJenkinsAgent();
         
         JenkinsBuildConfig jbc = new JenkinsBuildConfig();

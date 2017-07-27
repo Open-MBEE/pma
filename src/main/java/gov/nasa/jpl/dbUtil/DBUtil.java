@@ -31,6 +31,7 @@ public class DBUtil
 	String jenkinsPassword = "";
 	String jenkinsURL = "";
 	String jenkinsAgent = "";
+	String org = "";
 			
 	public DBUtil()
 	{
@@ -110,44 +111,76 @@ public class DBUtil
 	/**
 	 * Retrieving the jenkins username, jenkins password, jenkins url, and jenkins agent from the credentials table in the database.
 	 */
-	public void getCredentials()
-	{
-		System.out.println("Retrieving credentials from DB");
-		logger.info("Retrieving credentials from DB");
+	public void getCredentials(String org)
+	{		
 		JdbcTemplate jdbcTemplate = createJdbcTemplate();
-
+		
+		if((!isOrgInTable(jdbcTemplate, "org", org))||(org==null))
+		{
+			org="cae";
+		}
+		
 		String sql = "SELECT * FROM CREDENTIALS";
 		try
 		{
+		System.out.println("Retrieving credentials from DB");
+		logger.info("Retrieving credentials from DB");
 		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
 
 		if(!list.isEmpty())
 		{
-			/*
-			 * Getting first row of the CREDENTIALS table.
-			 * Contains the Jenkins username, password, server url, and agent.
-			 * Example values of the first row: tempUSER, tempPassword, tempURL ,tempAgent
-			 */
-			Map<String, Object> firstRow = list.get(0); 
-			
-			ArrayList valueList = new ArrayList();
-			valueList.addAll(firstRow.values());
-//			System.out.println("Value List: "+String.join(", ", valueList));
-//			System.out.println("Value Size: "+valueList.size());
-			if(valueList.size()==4)
+			for(Map<String, Object> orgMap:list)
 			{
-				System.out.println("Setting Credentials");
-				this.setJenkinsUsername((String) valueList.get(0));
-				this.setJenkinsPassword((String) valueList.get(1));
-				this.setJenkinsURL((String) valueList.get(2));
-				this.setJenkinsAgent((String) valueList.get(3));
+				if(orgMap.get("org").equals(org))
+				{
+					this.setJenkinsUsername(orgMap.get("USERNAME").toString());
+					this.setJenkinsPassword(orgMap.get("PASSWORD").toString());
+					this.setJenkinsURL(orgMap.get("SERVER").toString());
+					this.setJenkinsAgent(orgMap.get("AGENT").toString());
+				}
 			}
 
-			}
-		} catch (Exception e) {
-			logger.info(e.toString());
-			e.printStackTrace();
 		}
+		else
+		{
+			System.out.println("EMPTY");
+		}
+		} catch (Exception e) {
+			System.out.println(e.toString());
+		}
+		
+//		String sql = "SELECT * FROM CREDENTIALS";
+//		try
+//		{
+//		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
+//
+//		if(!list.isEmpty())
+//		{
+//			/*
+//			 * Getting first row of the CREDENTIALS table.
+//			 * Contains the Jenkins username, password, server url, and agent.
+//			 * Example values of the first row: tempUSER, tempPassword, tempURL ,tempAgent
+//			 */
+//			Map<String, Object> firstRow = list.get(0); 
+//			
+//			ArrayList valueList = new ArrayList();
+//			valueList.addAll(firstRow.values());
+////			System.out.println("Value List: "+String.join(", ", valueList));
+////			System.out.println("Value Size: "+valueList.size());
+//			if(valueList.size()==4)
+//			{
+//				System.out.println("Setting Credentials");
+//				this.setJenkinsUsername((String) valueList.get(0));
+//				this.setJenkinsPassword((String) valueList.get(1));
+//				this.setJenkinsURL((String) valueList.get(2));
+//				this.setJenkinsAgent((String) valueList.get(3));
+//			}
+//
+//			}
+//		} catch (Exception e) {
+//			logger.info(e.toString());
+//			e.printStackTrace();
+//		}
 	}
 
 	public void updateDbCredentials(String username, String password, String url, String agent, String org)
@@ -157,32 +190,93 @@ public class DBUtil
 			org = "cae";
 		}
 		
-		JdbcTemplate jdbcTemplate = createJdbcTemplate();
+		DBUtil dbUtil = new DBUtil();
+		JdbcTemplate jdbcTemplate = dbUtil.createJdbcTemplate();
+
+		if(isOrgInTable(jdbcTemplate,"org", org))
+		{
+			logger.info("Modifying config for org: "+org);
+			System.out.println("Modifying config for org: "+org);
+			// Modifying row
+			String sqlModify = "UPDATE CREDENTIALS SET username=?,password=?,server=?,agent=? WHERE org=?";
+			jdbcTemplate.update(sqlModify, new Object[] {username,password,url,agent,org});
+		}
+		else // Org isn't in the table
+		{
+			logger.info("Creating new row for org: "+org);
+			System.out.println("Creating new row for org: "+org);
+			// Adding new row
+			String sqlModify = "INSERT INTO CREDENTIALS (username, password, server,agent,org) VALUES (?, ?, ?,?,?)";
+			jdbcTemplate.update(sqlModify, new Object[] { username,password,url,agent,org});
+		}
 		
-		jdbcTemplate.execute("drop table if exists credentials"); // deletes the previous table if there is one.
-		jdbcTemplate.execute("CREATE TABLE if not exists credentials (username TEXT, password TEXT, server TEXT, agent TEXT)"); //creates the table that will store the credentials
-		jdbcTemplate.execute("insert into CREDENTIALS (username, password, server, agent) values ('tempUSER', 'tempPassword', 'tempURL' ,'tempAgent')"); // inserts temp values for first row
-		
-		String updateJenkinsUsernameSQL = "UPDATE CREDENTIALS SET username = ?";
-		String updateJenkinsPassword = "UPDATE CREDENTIALS SET password = ?";
-		String updateJenkinsURL = "UPDATE CREDENTIALS SET server = ?";
-		String updateJenkinsAgent = "UPDATE CREDENTIALS SET agent = ?";
-		
-		executeSanitizedQueury(jdbcTemplate,updateJenkinsUsernameSQL,username);
-		executeSanitizedQueury(jdbcTemplate,updateJenkinsPassword,password);
-		executeSanitizedQueury(jdbcTemplate,updateJenkinsURL,url);
-		executeSanitizedQueury(jdbcTemplate,updateJenkinsAgent,agent);
 	}
-	
-	public void executeSanitizedQueury(JdbcTemplate jdbcTemplate,String sqlQuery,String value)
+	public void printTable(JdbcTemplate jdbcTemplate)
 	{
-		try {
-			PreparedStatement ps = jdbcTemplate.getDataSource().getConnection().prepareStatement(sqlQuery);
-			ps.setString(1, value);
-			ps.execute();
-		} catch (SQLException e) {
-			logger.info(e.getMessage());
-			e.printStackTrace();
+		String sql = "SELECT * FROM CREDENTIALS";
+		try
+		{
+		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
+
+		if(!list.isEmpty())
+		{
+			for(Map<String, Object> org:list)
+			{
+				for(Object key:org.keySet())
+				{
+					System.out.println(key.toString()+" :"+org.get(key));
+				}
+			}
+
+		}
+		else
+		{
+			System.out.println("EMPTY");
+		}
+		} catch (Exception e) {
+			System.out.println(e.toString());
 		}
 	}
+	
+	/**
+	 * 
+	 * @param jdbcTemplate
+	 * @param searchKey
+	 * @param searchValue
+	 * @return
+	 */
+	public boolean isOrgInTable(JdbcTemplate jdbcTemplate,String searchKey, String searchValue)
+	{
+		String sql = "SELECT * FROM CREDENTIALS";
+		try
+		{
+		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
+
+		if(!list.isEmpty())
+		{
+			for(Map<String, Object> org:list)
+			{
+				for(Object key:org.keySet())
+				{
+					System.out.println(key.toString()+" :"+org.get(key));
+				}
+				if(org.get(searchKey).equals(searchValue))
+				{
+					System.out.println("FOUND IT");
+					return true;
+				}
+				System.out.println("");
+			}
+
+		}
+		else
+		{
+			System.out.println("EMPTY");
+		}
+		} catch (Exception e) {
+			System.out.println(e.toString());
+		}
+		return false;
+	}
+
 }
