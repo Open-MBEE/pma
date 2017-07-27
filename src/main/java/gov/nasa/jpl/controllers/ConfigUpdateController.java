@@ -1,13 +1,10 @@
 package gov.nasa.jpl.controllers;
 
 import java.io.IOException;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -64,6 +61,7 @@ public class ConfigUpdateController {
 		String jenkinsPassword = "";
 		String jenkinsURL = "";
 		String jenkinsAgent = "";
+		String org = "";
 		
 		ObjectMapper mapper = new ObjectMapper();
 		try {
@@ -75,6 +73,7 @@ public class ConfigUpdateController {
 				jenkinsPassword = fullJson.get("password").toString().replace("\"", "");
 				jenkinsURL = fullJson.get("url").toString().replace("\"", "");
 				jenkinsAgent = fullJson.get("agent").toString().replace("\"", "");
+				org = fullJson.get("org").toString().replace("\"", "");
 				
 				logger.info(jenkinsUsername);
 				logger.info(jenkinsPassword);
@@ -95,38 +94,13 @@ public class ConfigUpdateController {
 		
 		DBUtil dbUtil = new DBUtil();
 		
-		JdbcTemplate jdbcTemplate = dbUtil.createJdbcTemplate();
-		
-		jdbcTemplate.execute("drop table if exists credentials"); // deletes the previous table if there is one.
-		jdbcTemplate.execute("CREATE TABLE if not exists credentials (username TEXT, password TEXT, server TEXT, agent TEXT)"); //creates the table that will store the credentials
-		jdbcTemplate.execute("insert into CREDENTIALS (username, password, server, agent) values ('tempUSER', 'tempPassword', 'tempURL' ,'tempAgent')"); // inserts temp values for first row
-		
-		String updateJenkinsUsernameSQL = "UPDATE CREDENTIALS SET username = ?";
-		String updateJenkinsPassword = "UPDATE CREDENTIALS SET password = ?";
-		String updateJenkinsURL = "UPDATE CREDENTIALS SET server = ?";
-		String updateJenkinsAgent = "UPDATE CREDENTIALS SET agent = ?";
-		
-		executeSanitizedQueury(jdbcTemplate,updateJenkinsUsernameSQL,jenkinsUsername);
-		executeSanitizedQueury(jdbcTemplate,updateJenkinsPassword,jenkinsPassword);
-		executeSanitizedQueury(jdbcTemplate,updateJenkinsURL,jenkinsURL);
-		executeSanitizedQueury(jdbcTemplate,updateJenkinsAgent,jenkinsAgent);
+		dbUtil.updateDbCredentials(jenkinsUsername, jenkinsPassword, jenkinsURL, jenkinsAgent, org);
 		
 		logger.info("Credentials Updated");
 		
 		return "Credentials Updated";
 	}
 	
-	public void executeSanitizedQueury(JdbcTemplate jdbcTemplate,String sqlQuery,String value)
-	{
-		try {
-			PreparedStatement ps = jdbcTemplate.getDataSource().getConnection().prepareStatement(sqlQuery);
-			ps.setString(1, value);
-			ps.execute();
-		} catch (SQLException e) {
-			logger.info(e.getMessage());
-			e.printStackTrace();
-		}
-	}
 	
 	/**
 	 * Creates job element on mms and job on Jenkins.

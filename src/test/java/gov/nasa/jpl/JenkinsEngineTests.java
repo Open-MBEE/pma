@@ -35,7 +35,7 @@ public class JenkinsEngineTests {
             String password = System.getenv("JENKINS_TEST_PASSWORD");
             je.setPassword(password);
             je.setURL("https://cae-jenkins2-int.jpl.nasa.gov");
-            dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int");
+            dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int","cae");
         }
         je.login();
         isConfigured = true;
