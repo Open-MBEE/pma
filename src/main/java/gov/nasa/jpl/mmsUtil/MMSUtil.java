@@ -52,17 +52,17 @@ public class MMSUtil {
 	 */
 	public static final String valuePropertyStereotypeID = "_12_0_be00301_1164123483951_695645_2041";
 	
-	public static final String docgenJobBlockID = "_18_5_1_40a019f_1499898145957_571809_17594";
-	public static final String typePropertyID = "_18_5_1_40a019f_1499898145958_112751_17595";
-	public static final String schedulePropertyID = "_18_5_1_40a019f_1499898145959_694022_17596";
-	public static final String buildNumberPropertyID = "_18_5_1_40a019f_1499898145959_884244_17597";
-	public static final String jobStatusID = "_18_5_1_40a019f_1499898145959_630987_17598";
-	public static final String logUrlPropertyID = "_18_5_1_40a019f_1499898145959_58347_17599";
-	public static final String startedPropertyID = "_18_5_1_40a019f_1499898145959_366173_17600";
-	public static final String completedPropertyID = "_18_5_1_40a019f_1499898145959_892705_17601";
-	public static final String associatedElementIdPropertyID = "_18_5_1_40a019f_1499898210580_818758_17660";
-	public static final String refIdPropertyID = "_18_5_1_40a019f_1499898283219_617170_17669";
-	public static final String projectIdPropertyID = "_18_5_1_40a019f_1499898288594_457150_17672";
+	public static final String docgenJobBlockID = "_18_5_1_8bf0285_1501191821803_878234_16095";
+	public static final String typePropertyID = "_18_5_1_8bf0285_1501191821884_107041_16126";
+	public static final String schedulePropertyID = "_18_5_1_8bf0285_1501191821884_399553_16127";
+	public static final String buildNumberPropertyID = "_18_5_1_8bf0285_1501191821884_977257_16128";
+	public static final String jobStatusID = "_18_5_1_8bf0285_1501191821884_370214_16129";
+	public static final String logUrlPropertyID = "_18_5_1_8bf0285_1501191821885_707280_16130";
+	public static final String startedPropertyID = "_18_5_1_8bf0285_1501191821885_603965_16131";
+	public static final String completedPropertyID = "_18_5_1_8bf0285_1501191821885_292854_16132";
+	public static final String associatedElementIdPropertyID = "_18_5_1_8bf0285_1501191821885_586435_16133";
+	public static final String refIdPropertyID = "_18_5_1_8bf0285_1501191821885_436667_16134";
+	public static final String projectIdPropertyID = "_18_5_1_8bf0285_1501191821885_300964_16135";
 	
 	
 	
