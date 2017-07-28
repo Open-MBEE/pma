@@ -310,13 +310,13 @@ public class ClientEndpointController {
 		
 		// Delete job element on MMS.
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-		String elementDeleteResponse = mmsUtil.delete(mmsServer, projectID, refID, "jobs_bin_"+jobSysmlID);
+		String elementDeleteResponse = mmsUtil.delete(mmsServer, projectID, refID, jobSysmlID); // Delete Job Element
 		System.out.println("Element delete response: "+elementDeleteResponse);
 		logger.info( "Element delete response: "+elementDeleteResponse);
 		
 		if(!elementDeleteResponse.equals("HTTP/1.1 200 OK"))
 		{
-			
+			mmsUtil.delete(mmsServer, projectID, refID, "jobs_bin_"+jobSysmlID);  // Delete Job Folder
     		ObjectNode responseJSON = mapper.createObjectNode();
     		responseJSON.put("message", elementDeleteResponse + " MMS"); // mms issue when creating job instance
 	        return new ResponseEntity<String>(responseJSON.toString(),status);
