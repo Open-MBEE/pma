@@ -60,7 +60,7 @@ public class ClientEndpointControllerTests {
                 String password = System.getenv("JENKINS_TEST_PASSWORD");
                 je.setUsername(user);
                 je.setPassword(password);
-                dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int");
+                dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int","cae");
                 je.setURL("cae-jenkins2-int.jpl.nasa.gov");
             }
         }

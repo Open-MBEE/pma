@@ -172,9 +172,9 @@ public class ClientEndpointController {
         		String schedule = null;
         		String type = null;
         		String associatedElementID = null;
+				MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
         		try {
         			// Checking if job element exists on MMS and retrieves the job information if it does.
-					MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 					String jobJsonString = mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID).getBody();
 					System.out.println("Job JSON String: "+jobJsonString);
 					JsonNode fullJson = mapper.readTree(jobJsonString);
@@ -235,8 +235,28 @@ public class ClientEndpointController {
         		logger.info("Creating Job on Jenkins using job element Information");
         		System.out.println("Creating Job on Jenkins using job element Information");
         		
+        		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
+    			
+    			if(PMAUtil.isJSON(org)||(org==null)) // Checking if mms response came back with an error.
+    		    {
+    				
+    		        logger.info("Get org response: "+org); 
+    		        System.out.println("Get org response: "+org);
+    	    		ObjectNode responseJSON = mapper.createObjectNode();
+    	    		if(org==null)
+    				{
+    					status = HttpStatus.NOT_FOUND;
+    					responseJSON.put("message", "Project not found on MMS");
+    				}
+    	    		else
+    	    		{
+    	    			responseJSON.put("message", org+" MMS");
+    	    		}
+    	    		
+    		        return new ResponseEntity<String>(responseJSON.toString(),status);
+    		    }
         		// Creating job on Jenkins with the job element info pulled from MMS.
-        		ResponseEntity<String> createJobOutput = PMAPostUtil.jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobSysmlID, schedule, type, logger);
+        		ResponseEntity<String> createJobOutput = PMAPostUtil.jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobSysmlID, schedule, type, logger,org);
         		
         		logger.info("Create JOB OUTPUT: "+createJobOutput.getBody());
         		System.out.println("Create JOB OUTPUT: "+createJobOutput.getBody());

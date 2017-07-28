@@ -792,6 +792,97 @@ public class MMSUtil {
 	}
 	
 	/**
+	 * Used for getting the JSON of a project
+	 * 
+	 * @param server mms server (ex. opencae-uat.jpl.nasa.gov)
+	 * @param project magicdraw project (ex.PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b)
+	 * @return json string of project.
+	 */
+	public String getProjectJson(String server,String project){
+		
+		server = server.replace("https://", ""); 
+		server = server.replace("/", "");
+		HttpClient httpClient = HttpClientBuilder.create().build();
+		try {
+			String url = "https://"+server+"/alfresco/service/projects/"+project+"?alf_ticket="+alfrescoToken;
+			System.out.println("URL: "+url);
+		    HttpGet request = new HttpGet(url);
+			request.setHeader("Accept", "application/json");
+			request.setHeader("Content-type", "application/json");
+		    HttpResponse response = httpClient.execute(request);
+		    
+			BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+			
+			String result = "";
+			String line = "";
+			while ((line = rd.readLine()) != null) {
+				result = result+line.trim();
+			}
+			return result;
+			
+		}
+		catch (java.net.UnknownHostException e) {
+			logger.info("Unknown Host Exception During Get");
+			System.out.println("Unknown Host Exception During Get");
+			return e.toString();
+		}
+		catch (java.lang.IllegalArgumentException e) {
+			logger.info("Illegal argument during Get");
+			System.out.println("Illegal argument during Get");
+			return e.toString();
+		}
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return e.toString();
+		}
+	}
+	
+	/**
+	 * Used for getting the org a project is in.
+	 * 
+	 * @param server mms server (ex. opencae-uat.jpl.nasa.gov)
+	 * @param project magicdraw project (ex.PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b)
+	 * @return json string of element.
+	 */
+	public String getProjectOrg(String server, String project)
+	{
+		
+		String projectJson = getProjectJson(server, project);
+		ObjectMapper mapper = new ObjectMapper();
+		
+		ArrayNode jobInstanceArray = mapper.createArrayNode();
+		try {
+			JsonNode fullJson = mapper.readTree(projectJson);
+			JsonNode projects = fullJson.get("projects");
+			if (projects == null)  // instances will be null if the json returned with error
+			{
+				return projectJson;
+			}
+			else
+			{
+				if(projects.size()==0)
+				{
+					return null;
+				}
+				for(JsonNode projectNode:projects)
+				{
+					String org = projectNode.get("orgId").toString().replace("\"","");
+					return org;
+				}
+			}
+			
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return projectJson;
+	}
+	
+	/**
 	 * Should get the current value of the slot, change it and send it back to mms
 	 * Looking for instance specifications using the build number value.
 	 * @param server MMS server. Ex. opencae-uat.jpl.nasa.gov
