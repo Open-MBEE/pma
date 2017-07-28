@@ -224,8 +224,7 @@ public class PMAPostUtil
 	        else
 	        {	
 		        
-		        mmsUtil.delete(mmsServer, projectID, refID, jobElementID); // Delete the job element since the job wasn't created on Jenkins.
-		        mmsUtil.delete(mmsServer, projectID, refID, "jobs_bin_"+jobElementID); // Delete the job folder 
+		        mmsUtil.delete(mmsServer, projectID, refID, "jobs_bin_"+jobElementID); // Delete the job element since the job wasn't created on Jenkins.
 		        
 		        logger.info("Return message: "+jobCreationResponse +" Jenkins"); // job not created on jenkins 
 		        System.out.println("jobCreationResponse");
