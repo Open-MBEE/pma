@@ -212,6 +212,32 @@ public class DBUtil
 		}
 		
 	}
+	
+	/**
+	 * Deletes an org row from the CREDENTIALS table.
+	 * @param org Org credentials to be deleted
+	 * @return
+	 */
+	public String deleteDBCredential(String org)
+	{
+		DBUtil dbUtil = new DBUtil();
+		JdbcTemplate jdbcTemplate = dbUtil.createJdbcTemplate();
+
+		if (isOrgInTable(jdbcTemplate, "org", org)) {
+			logger.info("Modifying config for org: " + org);
+			System.out.println("Modifying config for org: " + org);
+			
+			// Deleting row
+			String sqlModify = "DELETE FROM CREDENTIALS WHERE org = ?";
+			jdbcTemplate.update(sqlModify, new Object[] {org });
+			return "Deleted credentials for org: "+org;
+		}
+		else
+		{
+			return org+" Org not in DB";
+		}
+	}
+	
 	public void printTable(JdbcTemplate jdbcTemplate)
 	{
 		String sql = "SELECT * FROM CREDENTIALS";
