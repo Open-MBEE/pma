@@ -148,38 +148,6 @@ public class DBUtil
 			System.out.println(e.toString());
 		}
 		
-//		String sql = "SELECT * FROM CREDENTIALS";
-//		try
-//		{
-//		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
-//
-//		if(!list.isEmpty())
-//		{
-//			/*
-//			 * Getting first row of the CREDENTIALS table.
-//			 * Contains the Jenkins username, password, server url, and agent.
-//			 * Example values of the first row: tempUSER, tempPassword, tempURL ,tempAgent
-//			 */
-//			Map<String, Object> firstRow = list.get(0); 
-//			
-//			ArrayList valueList = new ArrayList();
-//			valueList.addAll(firstRow.values());
-////			System.out.println("Value List: "+String.join(", ", valueList));
-////			System.out.println("Value Size: "+valueList.size());
-//			if(valueList.size()==4)
-//			{
-//				System.out.println("Setting Credentials");
-//				this.setJenkinsUsername((String) valueList.get(0));
-//				this.setJenkinsPassword((String) valueList.get(1));
-//				this.setJenkinsURL((String) valueList.get(2));
-//				this.setJenkinsAgent((String) valueList.get(3));
-//			}
-//
-//			}
-//		} catch (Exception e) {
-//			logger.info(e.toString());
-//			e.printStackTrace();
-//		}
 	}
 
 	public void updateDbCredentials(String username, String password, String url, String agent, String org)
