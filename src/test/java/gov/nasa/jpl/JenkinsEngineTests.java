@@ -28,7 +28,7 @@ public class JenkinsEngineTests {
     private void login() {
         String user = System.getenv("JENKINS_TEST_USER");
         if (user == null) {
-            je.setCredentials();
+            je.setCredentials(null);
         } else {
             je.setUsername(user);
             System.out.println("\n=======================================================\n FOUND ENV USER \n");

@@ -119,12 +119,11 @@ public class DBUtil
 		{
 			org="cae";
 		}
-		
 		String sql = "SELECT * FROM CREDENTIALS";
 		try
 		{
-		System.out.println("Retrieving credentials from DB");
-		logger.info("Retrieving credentials from DB");
+		System.out.println("Retrieving credentials from DB for org: "+org);
+		logger.info("Retrieving credentials from DB for org: "+org);
 		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
 
 		if(!list.isEmpty())

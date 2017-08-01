@@ -54,7 +54,7 @@ public class ClientEndpointControllerTests {
         if (user == null) {
             user = System.getenv("JENKINS_TEST_USER");
             if (user == null) {
-                je.setCredentials();
+                je.setCredentials(null);
             } else {
                 System.out.println("\n=======================================================\n FOUND ENV USER \n");
                 String password = System.getenv("JENKINS_TEST_PASSWORD");

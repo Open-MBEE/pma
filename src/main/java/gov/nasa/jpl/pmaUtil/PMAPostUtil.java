@@ -270,7 +270,7 @@ public class PMAPostUtil
 //        System.out.println("Jenkins XML: "+jbc.generateBaseConfigXML());
         
         JenkinsEngine je = new JenkinsEngine();
-        je.setCredentials();
+        je.setCredentials(org);
         je.login();
         
         /*
