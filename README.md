@@ -18,22 +18,67 @@ The resulting files will be located inside of the target directory.
 
 ## Https requirements
 By default, the server uses http.
-Ssl certificate must be located in /etc/pki/certs/ 
+Ssl certificate must be located in /etc/pki/certs/
 Certificate must be called server.jks
 
 ## Deployment
-scp the jar to the server
-ssh into server
+### Init Script
 
-If https is needed these commands are required:
+Pma script is located $PMASourceFolder/src/main/resources/
+
+pma script is called pma
+
+Put the pma script inside /etc/init.d/
+
+Run these commands inside /etc/init.d/
+
 ```
-export ssl_key_password=sslKeyPassword
-export ssl_key_alias=sslKeyAlias
+sudo chmod u+x pma
+sudo chkconfig pma on
+sudo chkconfig --list
 ```
 
-java -jar pma.jar &
+#### New Server Installation
 
-A log file will be generated when pma starts. File will be called pma.log
+Create directory /opt/local/pma/
+
+sudo chmod -R a+rw /opt/local/pma/ #so PMA can create log files in that directory
+
+create credentials.txt inside /opt/local/pma/
+Add this text inside.
+```
+sslKeyAlias $alias
+sslKeyPassword $password
+```
+Replace $alias and $password with the ssl key alias and the ssl key password
+
+save the file
+
+
+Download the pma jar from artifactory to /opt/local/pma
+
+To run PMA:
+
+    sudo bash /etc/init.d/pma start
+
+
+
+#### Updating PMA on server
+
+Stop PMA:
+```
+    sudo bash /etc/init.d/pma stop
+```
+navigate to /opt/local/pma/
+
+remove all pma jars.
+
+Download the newest pma jar from artifactory to this directory
+
+##### Run PMA:
+
+    sudo bash /etc/init.d/pma start
+
 
 This JSON will need to be posted to the dbUpdate (ex: localhost:8443/dbUpdate) endpoint the first time it is deployed to store the credentials in the database. The cae org will be used by default. Other configurations for different orgs can be posted to this endpoint. Configurations will be overwritten for the org if it is sent again.
 ```
