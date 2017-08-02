@@ -101,6 +101,44 @@ public class ConfigUpdateController {
 		return "Credentials Updated";
 	}
 	
+	/**
+	 * Used for deleting the row in the credentials table associated with an org.
+	 * @param bodyContent
+	 * @return
+	 */
+	@RequestMapping(value = "/dbDelete", method = RequestMethod.POST)
+	@ResponseBody
+	public String dbDelete(@RequestBody String bodyContent) 
+	{
+		String org = "";
+		
+		// Retrieving org parameter from accepted json
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			JsonNode fullJson = mapper.readTree(bodyContent);
+			logger.info(fullJson.toString());
+			if ((fullJson.get("org") != null) ) 
+			{
+				org = fullJson.get("org").toString().replace("\"", "");
+				logger.info(org);
+			}
+			else
+			{
+				return "Invalid JSON";
+			}
+			
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return e.toString();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return e.toString();
+		}
+		DBUtil dbUtil = new DBUtil();
+		return dbUtil.deleteDBCredential(org);
+	}
 	
 	/**
 	 * Creates job element on mms and job on Jenkins.

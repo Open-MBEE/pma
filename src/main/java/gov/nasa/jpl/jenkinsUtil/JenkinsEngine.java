@@ -1041,10 +1041,10 @@ public class JenkinsEngine {
 	/**
 	 * Retrieves credentials and jenkins server from the database.
 	 */
-	public void setCredentials() {
+	public void setCredentials(String org) {
 
 		DBUtil dbUtil = new DBUtil();
-		dbUtil.getCredentials(null);
+		dbUtil.getCredentials(org);
 		System.out.println(dbUtil.getJenkinsUsername());
 		System.out.println(dbUtil.getJenkinsPassword());
 		System.out.println("JenkinsURL: "+dbUtil.getJenkinsURL());
@@ -1338,7 +1338,7 @@ public class JenkinsEngine {
         jbc.setSchedule(schedule); 
         
         JenkinsEngine je = new JenkinsEngine();
-        je.setCredentials();
+        je.setCredentials(null);
         je.login();
         
         String folderName = "merp";

@@ -149,8 +149,30 @@ public class ClientEndpointController {
 		String alfrescoToken = jobInstance.getAlfrescoToken();
 		String mmsServer = jobInstance.getMmsServer();
 		
+		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
+		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
+		
+		if(PMAUtil.isJSON(org)||(org==null)) // Checking if mms response came back with an error.
+	    {
+			
+	        logger.info("Get org response: "+org); 
+	        System.out.println("Get org response: "+org);
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		if(org==null)
+			{
+				status = HttpStatus.NOT_FOUND;
+				responseJSON.put("message", "Project not found on MMS");
+			}
+    		else
+    		{
+    			responseJSON.put("message", org+" MMS");
+    		}
+    		
+	        return new ResponseEntity<String>(responseJSON.toString(),status);
+	    }
+		
 		// Check if job exists on jenkins first
-    	JenkinsEngine je = login();
+    	JenkinsEngine je = login(org);
     	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
     	System.out.println("Job Response: "+jobResponse);
     	if((!jobResponse.equals("Job not found on Jenkins"))&&(!jobResponse.equals("HTTP/1.1 404 Not Found"))) // Job exists on Jenkins
@@ -172,7 +194,6 @@ public class ClientEndpointController {
         		String schedule = null;
         		String type = null;
         		String associatedElementID = null;
-				MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
         		try {
         			// Checking if job element exists on MMS and retrieves the job information if it does.
 					String jobJsonString = mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID).getBody();
@@ -235,26 +256,6 @@ public class ClientEndpointController {
         		logger.info("Creating Job on Jenkins using job element Information");
         		System.out.println("Creating Job on Jenkins using job element Information");
         		
-        		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
-    			
-    			if(PMAUtil.isJSON(org)||(org==null)) // Checking if mms response came back with an error.
-    		    {
-    				
-    		        logger.info("Get org response: "+org); 
-    		        System.out.println("Get org response: "+org);
-    	    		ObjectNode responseJSON = mapper.createObjectNode();
-    	    		if(org==null)
-    				{
-    					status = HttpStatus.NOT_FOUND;
-    					responseJSON.put("message", "Project not found on MMS");
-    				}
-    	    		else
-    	    		{
-    	    			responseJSON.put("message", org+" MMS");
-    	    		}
-    	    		
-    		        return new ResponseEntity<String>(responseJSON.toString(),status);
-    		    }
         		// Creating job on Jenkins with the job element info pulled from MMS.
         		ResponseEntity<String> createJobOutput = PMAPostUtil.jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobSysmlID, schedule, type, logger,org);
         		
@@ -321,9 +322,30 @@ public class ClientEndpointController {
 	        return new ResponseEntity<String>(responseJSON.toString(),status);
 //			return elementDeleteResponse+" MMS";
 		}
+
+		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
+		
+		if(PMAUtil.isJSON(org)||(org==null)) // Checking if mms response came back with an error.
+	    {
+			
+	        logger.info("Get org response: "+org); 
+	        System.out.println("Get org response: "+org);
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		if(org==null)
+			{
+				status = HttpStatus.NOT_FOUND;
+				responseJSON.put("message", "Project not found on MMS");
+			}
+    		else
+    		{
+    			responseJSON.put("message", org+" MMS");
+    		}
+    		
+	        return new ResponseEntity<String>(responseJSON.toString(),status);
+	    }
 		
 		// delete job on jenkins
-    	JenkinsEngine je = login();
+    	JenkinsEngine je = login(org);
     	String jenkinsDeleteResponse = je.deleteNestedJob(jobSysmlID, projectID, refID);
     	System.out.println("Jenkins delete response: "+jenkinsDeleteResponse);
     	logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
@@ -349,10 +371,10 @@ public class ClientEndpointController {
 //		return "HTTP/1.1 200 OK";
 	}
 	
-    public JenkinsEngine login()
+    public JenkinsEngine login(String org)
     {
         JenkinsEngine je = new JenkinsEngine();
-        je.setCredentials();
+        je.setCredentials(org);
         je.login();
     	return je;
     }

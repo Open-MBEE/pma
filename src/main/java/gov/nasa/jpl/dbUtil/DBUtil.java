@@ -6,9 +6,6 @@
 package gov.nasa.jpl.dbUtil;
 
 import java.io.File;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -119,12 +116,11 @@ public class DBUtil
 		{
 			org="cae";
 		}
-		
 		String sql = "SELECT * FROM CREDENTIALS";
 		try
 		{
-		System.out.println("Retrieving credentials from DB");
-		logger.info("Retrieving credentials from DB");
+		System.out.println("Retrieving credentials from DB for org: "+org);
+		logger.info("Retrieving credentials from DB for org: "+org);
 		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
 
 		if(!list.isEmpty())
@@ -149,38 +145,6 @@ public class DBUtil
 			System.out.println(e.toString());
 		}
 		
-//		String sql = "SELECT * FROM CREDENTIALS";
-//		try
-//		{
-//		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
-//
-//		if(!list.isEmpty())
-//		{
-//			/*
-//			 * Getting first row of the CREDENTIALS table.
-//			 * Contains the Jenkins username, password, server url, and agent.
-//			 * Example values of the first row: tempUSER, tempPassword, tempURL ,tempAgent
-//			 */
-//			Map<String, Object> firstRow = list.get(0); 
-//			
-//			ArrayList valueList = new ArrayList();
-//			valueList.addAll(firstRow.values());
-////			System.out.println("Value List: "+String.join(", ", valueList));
-////			System.out.println("Value Size: "+valueList.size());
-//			if(valueList.size()==4)
-//			{
-//				System.out.println("Setting Credentials");
-//				this.setJenkinsUsername((String) valueList.get(0));
-//				this.setJenkinsPassword((String) valueList.get(1));
-//				this.setJenkinsURL((String) valueList.get(2));
-//				this.setJenkinsAgent((String) valueList.get(3));
-//			}
-//
-//			}
-//		} catch (Exception e) {
-//			logger.info(e.toString());
-//			e.printStackTrace();
-//		}
 	}
 
 	public void updateDbCredentials(String username, String password, String url, String agent, String org)
@@ -212,6 +176,32 @@ public class DBUtil
 		}
 		
 	}
+	
+	/**
+	 * Deletes an org row from the CREDENTIALS table.
+	 * @param org Org credentials to be deleted
+	 * @return
+	 */
+	public String deleteDBCredential(String org)
+	{
+		DBUtil dbUtil = new DBUtil();
+		JdbcTemplate jdbcTemplate = dbUtil.createJdbcTemplate();
+
+		if (isOrgInTable(jdbcTemplate, "org", org)) {
+			logger.info("Modifying config for org: " + org);
+			System.out.println("Modifying config for org: " + org);
+			
+			// Deleting row
+			String sqlModify = "DELETE FROM CREDENTIALS WHERE org = ?";
+			jdbcTemplate.update(sqlModify, new Object[] {org });
+			return "Deleted credentials for org: "+org;
+		}
+		else
+		{
+			return org+" Org not in DB";
+		}
+	}
+	
 	public void printTable(JdbcTemplate jdbcTemplate)
 	{
 		String sql = "SELECT * FROM CREDENTIALS";
