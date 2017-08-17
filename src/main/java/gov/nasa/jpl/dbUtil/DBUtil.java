@@ -6,7 +6,6 @@
 package gov.nasa.jpl.dbUtil;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +28,7 @@ public class DBUtil
 	String jenkinsPassword = "";
 	String jenkinsURL = "";
 	String jenkinsAgent = "";
+	String org = "";
 			
 	public DBUtil()
 	{
@@ -108,12 +108,102 @@ public class DBUtil
 	/**
 	 * Retrieving the jenkins username, jenkins password, jenkins url, and jenkins agent from the credentials table in the database.
 	 */
-	public void getCredentials()
-	{
-		System.out.println("Retrieving credentials from DB");
-		logger.info("Retrieving credentials from DB");
+	public void getCredentials(String org)
+	{		
 		JdbcTemplate jdbcTemplate = createJdbcTemplate();
+		
+		if((!isOrgInTable(jdbcTemplate, "org", org))||(org==null))
+		{
+			org="cae";
+		}
+		String sql = "SELECT * FROM CREDENTIALS";
+		try
+		{
+		System.out.println("Retrieving credentials from DB for org: "+org);
+		logger.info("Retrieving credentials from DB for org: "+org);
+		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
 
+		if(!list.isEmpty())
+		{
+			for(Map<String, Object> orgMap:list)
+			{
+				if(orgMap.get("org").equals(org))
+				{
+					this.setJenkinsUsername(orgMap.get("USERNAME").toString());
+					this.setJenkinsPassword(orgMap.get("PASSWORD").toString());
+					this.setJenkinsURL(orgMap.get("SERVER").toString());
+					this.setJenkinsAgent(orgMap.get("AGENT").toString());
+				}
+			}
+
+		}
+		else
+		{
+			System.out.println("EMPTY");
+		}
+		} catch (Exception e) {
+			System.out.println(e.toString());
+		}
+		
+	}
+
+	public void updateDbCredentials(String username, String password, String url, String agent, String org)
+	{
+		if(org==null)
+		{
+			org = "cae";
+		}
+		
+		DBUtil dbUtil = new DBUtil();
+		JdbcTemplate jdbcTemplate = dbUtil.createJdbcTemplate();
+
+		if(isOrgInTable(jdbcTemplate,"org", org))
+		{
+			logger.info("Modifying config for org: "+org);
+			System.out.println("Modifying config for org: "+org);
+			// Modifying row
+			String sqlModify = "UPDATE CREDENTIALS SET username=?,password=?,server=?,agent=? WHERE org=?";
+			jdbcTemplate.update(sqlModify, new Object[] {username,password,url,agent,org});
+		}
+		else // Org isn't in the table
+		{
+			jdbcTemplate.execute("CREATE TABLE if not exists credentials (username TEXT, password TEXT, server TEXT, agent TEXT,org TEXT)"); //creates the table that will store the credentials
+			logger.info("Creating new row for org: "+org);
+			System.out.println("Creating new row for org: "+org);
+			// Adding new row
+			String sqlModify = "INSERT INTO CREDENTIALS (username, password, server,agent,org) VALUES (?, ?, ?,?,?)";
+			jdbcTemplate.update(sqlModify, new Object[] { username,password,url,agent,org});
+		}
+		
+	}
+	
+	/**
+	 * Deletes an org row from the CREDENTIALS table.
+	 * @param org Org credentials to be deleted
+	 * @return
+	 */
+	public String deleteDBCredential(String org)
+	{
+		DBUtil dbUtil = new DBUtil();
+		JdbcTemplate jdbcTemplate = dbUtil.createJdbcTemplate();
+
+		if (isOrgInTable(jdbcTemplate, "org", org)) {
+			logger.info("Modifying config for org: " + org);
+			System.out.println("Modifying config for org: " + org);
+			
+			// Deleting row
+			String sqlModify = "DELETE FROM CREDENTIALS WHERE org = ?";
+			jdbcTemplate.update(sqlModify, new Object[] {org });
+			return "Deleted credentials for org: "+org;
+		}
+		else
+		{
+			return org+" Org not in DB";
+		}
+	}
+	
+	public void printTable(JdbcTemplate jdbcTemplate)
+	{
 		String sql = "SELECT * FROM CREDENTIALS";
 		try
 		{
@@ -121,44 +211,59 @@ public class DBUtil
 
 		if(!list.isEmpty())
 		{
-			/*
-			 * Getting first row of the CREDENTIALS table.
-			 * Contains the Jenkins username, password, server url, and agent.
-			 * Example values of the first row: tempUSER, tempPassword, tempURL ,tempAgent
-			 */
-			Map<String, Object> firstRow = list.get(0); 
-			
-			ArrayList valueList = new ArrayList();
-			valueList.addAll(firstRow.values());
-			System.out.println("Value List: "+String.join(", ", valueList));
-			System.out.println("Value Size: "+valueList.size());
-			if(valueList.size()==4)
+			for(Map<String, Object> org:list)
 			{
-				System.out.println("Setting Credentials");
-				this.setJenkinsUsername((String) valueList.get(0));
-				this.setJenkinsPassword((String) valueList.get(1));
-				this.setJenkinsURL((String) valueList.get(2));
-				this.setJenkinsAgent((String) valueList.get(3));
+				for(Object key:org.keySet())
+				{
+					System.out.println(key.toString()+" :"+org.get(key));
+				}
 			}
 
-			}
+		}
+		else
+		{
+			System.out.println("EMPTY");
+		}
 		} catch (Exception e) {
-			logger.info(e.toString());
-			e.printStackTrace();
+			System.out.println(e.toString());
 		}
 	}
-
-	public void updateDbCredentials(String username, String password, String url, String agent)
+	
+	/**
+	 * 
+	 * @param jdbcTemplate
+	 * @param searchKey
+	 * @param searchValue
+	 * @return
+	 */
+	public boolean isOrgInTable(JdbcTemplate jdbcTemplate,String searchKey, String searchValue)
 	{
-		JdbcTemplate jdbcTemplate = createJdbcTemplate();
+		String sql = "SELECT * FROM CREDENTIALS";
+		try
+		{
+		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql); // Retrieving the CREDENTIALS table.
 
-		jdbcTemplate.execute("drop table if exists credentials"); // deletes the previous table if there is one.
-		jdbcTemplate.execute("CREATE TABLE if not exists credentials (username TEXT, password TEXT, server TEXT, agent TEXT)"); //creates the table that will store the credentials
-		jdbcTemplate.execute("insert into CREDENTIALS (username, password, server, agent) values ('tempUSER', 'tempPassword', 'tempURL' ,'tempAgent')"); // inserts temp values for first row
+		if(!list.isEmpty())
+		{
+			for(Map<String, Object> org:list)
+			{
+				if(org.get(searchKey).equals(searchValue))
+				{
+					System.out.println("FOUND Org: "+searchValue);
+					return true;
+				}
+				System.out.println("");
+			}
 
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET username='"+username+"'");
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET password='"+password+"'");
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET server='"+url+"'");
-		jdbcTemplate.execute("UPDATE CREDENTIALS SET agent='"+agent+"'");
+		}
+		else
+		{
+			System.out.println("EMPTY");
+		}
+		} catch (Exception e) {
+			System.out.println(e.toString());
+		}
+		return false;
 	}
+
 }

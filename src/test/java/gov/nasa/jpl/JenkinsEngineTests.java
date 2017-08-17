@@ -28,14 +28,14 @@ public class JenkinsEngineTests {
     private void login() {
         String user = System.getenv("JENKINS_TEST_USER");
         if (user == null) {
-            je.setCredentials();
+            je.setCredentials(null);
         } else {
             je.setUsername(user);
             System.out.println("\n=======================================================\n FOUND ENV USER \n");
             String password = System.getenv("JENKINS_TEST_PASSWORD");
             je.setPassword(password);
             je.setURL("https://cae-jenkins2-int.jpl.nasa.gov");
-            dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int");
+            dbUtil.updateDbCredentials(user, password, "https://cae-jenkins2-int.jpl.nasa.gov", "CAE-Analysis-Int","cae");
         }
         je.login();
         isConfigured = true;
