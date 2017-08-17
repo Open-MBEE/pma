@@ -303,7 +303,7 @@ public class PMAUtil
 	 * @param jsonString
 	 * @return
 	 */
-	public Boolean isJSON(String jsonString)
+	public static Boolean isJSON(String jsonString)
 	{
 		try {
 			ObjectMapper mapper = new ObjectMapper();
