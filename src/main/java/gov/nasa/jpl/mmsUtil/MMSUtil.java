@@ -22,6 +22,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
@@ -1498,7 +1499,49 @@ public class MMSUtil {
 	 		
 	 		return elementMap;
 	 	}
-	 
+	 	
+	 	public String queryElastic(String server,String project,String refID,String query){
+			
+
+			server = server.replace("https://", ""); 
+			server = server.replace("/", "");
+			HttpClient httpClient = HttpClientBuilder.create().build();
+			try {
+				 HttpPut request = new HttpPut("https://"+server+"/alfresco/service/projects/"+project+"/refs/"+refID+"/search?alf_ticket="+alfrescoToken);
+				 StringEntity params = new StringEntity(query);
+				 request.addHeader("content-type", "application/json");
+				 request.setEntity(params);
+				 HttpResponse response = httpClient.execute(request);
+				 System.out.println("link: "+"https://"+server+"/alfresco/service/projects/"+project+"/refs/"+refID+"/elements?alf_ticket="+alfrescoToken);
+				 BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+
+				String result = "";
+				String line = "";
+				while ((line = rd.readLine()) != null) {
+					result = result + line.trim();
+				}
+				
+				return result;
+					
+			}
+			catch (java.net.UnknownHostException e) {
+				logger.info("Unknown Host Exception During elastic query");
+				System.out.println("Unknown Host Exception During elastic query");
+				return e.toString();
+			}
+			catch (java.lang.IllegalArgumentException e) {
+				logger.info("Illegal argument during elastic query");
+				System.out.println("Illegal argument during elastic query");
+				return e.toString();
+			}
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return e.toString();
+			}
+	 		
+	 	}
+	 	
 		public static void main(String[] args) 
 		{
 			String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
