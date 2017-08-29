@@ -1086,41 +1086,109 @@ public class MMSUtil {
 		return "Default Return String";
 	}
 	
-	
+		
 	// finds all the job elements in a project
-	public ResponseEntity<String> getJobElements(String server,String projectID,String refID)
+	public ResponseEntity<String> getJobElements(String server,String projectId,String refId)
 	{
+		
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 		String returnJSONString = "";
-		// find all elements inside the jobs bin package
-		// recursive get job sysmlid
-		String jsonString = get(server, projectID,refID, "jobs_bin_"+projectID, true);
-		
-//		System.out.println("Get job elements string: "+jsonString);
-		
-		PMAUtil pmaUtil = new PMAUtil();
-		if(isElementJSON(jsonString)) // It will be an error if the json string is not an element JSON.
+		String getJobsQuery = ElasticSearchQueryBuilder.getJobsQuery(projectId, refId);
+		String elasticResponse = queryElastic(server, projectId, refId, getJobsQuery);
+//		System.out.println(elasticResponse);
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode returnJsonObject = mapper.createObjectNode();
+		ArrayNode jobs = mapper.createArrayNode();
+		JsonNode fullJson = PMAUtil.JSONStringToObject(elasticResponse);
+		if(fullJson!=null)
 		{
-			System.out.println("is element json");
-			status = HttpStatus.OK;
-			return new ResponseEntity<String>(pmaUtil.generateJobArrayJSON(jsonString),status);
+			JsonNode elements = fullJson.get("elements");
+			if(elements!=null)
+			{
+				for(JsonNode element:elements)
+				{
+					ArrayNode generalizationIds = (ArrayNode) element.get("generalizationIds");
+					if((generalizationIds!=null)&&(generalizationIds.size()>0))
+					{
+						for(JsonNode generalizaitonId : generalizationIds)
+						{
+							String generalizationIdString = generalizaitonId.toString().replace("\"", "");
+							String mmsResponse = get(server, projectId, refId, generalizationIdString, false);
+							
+							JsonNode mmsResponseJson = PMAUtil.JSONStringToObject(mmsResponse);
+//							System.out.println("mmsResponse: "+mmsResponse);
+							if(mmsResponseJson!=null)
+							{
+								JsonNode generalizationElements = mmsResponseJson.get("elements");
+								if(generalizationElements!=null)
+								{
+									for(JsonNode generalization:generalizationElements)
+									{
+										JsonNode targetIds = generalization.get("_targetIds");
+										for(JsonNode target:targetIds)
+										{
+//											System.out.println("generalization: "+generalization.get("_targetIds"));
+											String targetId = target.toString().replace("\"", "");
+											if(targetId.equals(MMSUtil.docgenJobBlockID))
+											{
+												System.out.println("Found job: "+element.get("name"));
+												if(element.get("id")!=null)
+												{
+													String jobId = element.get("id").toString().replace("\"", "");
+													String mmsJobElementResponseJson = get(server, projectId, refId, jobId, true);
+													String jobsJsonString = PMAUtil.generateJobArrayJSON(mmsJobElementResponseJson);
+													JsonNode jobJson = PMAUtil.JSONStringToObject(jobsJsonString);
+													if(jobJson!=null)
+													{
+														jobs.addAll((ArrayNode) jobJson.get("jobs"));
+													}
+													else
+													{
+														// exception occured or jobsJsonString was not a json string.
+														return new ResponseEntity<String>(mmsJobElementResponseJson,status);
+													}
+												}
+												
+											}
+										}
+										
+									}
+								}
+								else
+								{
+									// elements key isn't in the mmsResponseJson, might be mms error
+									return new ResponseEntity<String>(mmsResponseJson.toString(),status);
+								}
+							}
+							else
+							{
+								// fullJson was not a JSON String
+								return new ResponseEntity<String>(mmsResponse,status);
+							}
+						}
+					}
+				}
+				// Went through for loops successfully
+				returnJsonObject.set("jobs", jobs);
+				System.out.println(returnJsonObject.toString());
+				status=HttpStatus.OK;
+				return new ResponseEntity<String>(returnJsonObject.toString(),status);
+			}
+			else
+			{
+				// Error with mms elastic query or a blank return. 
+				returnJsonObject.set("jobs", jobs);
+				System.out.println(returnJsonObject.toString());
+				status=HttpStatus.OK;
+				return new ResponseEntity<String>(returnJsonObject.toString(),status);
+			}
+		}
+		else
+		{
+			// fullJson was not a JSON String
+			return new ResponseEntity<String>(elasticResponse,status);
 		}
 		
-		if (pmaUtil.isJSON(jsonString)) 
-		{
-			returnJSONString = jsonString;
-		} 
-		else 
-		{
-			ObjectMapper mapper = new ObjectMapper();
-			ObjectNode returnJSON = mapper.createObjectNode();
-			returnJSON.put("message", jsonString);
-			returnJSONString = returnJSON.toString();
-		}
-		
-		logger.info("Get Job element return JSON: "+returnJSONString);
-//		System.out.println("Get Job element return JSON: "+returnJSONString);
-		return new ResponseEntity<String>(returnJSONString,status); // Returning the error
 	}
 	
 	/**
