@@ -22,6 +22,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
@@ -1085,41 +1086,109 @@ public class MMSUtil {
 		return "Default Return String";
 	}
 	
-	
+		
 	// finds all the job elements in a project
-	public ResponseEntity<String> getJobElements(String server,String projectID,String refID)
+	public ResponseEntity<String> getJobElements(String server,String projectId,String refId)
 	{
+		
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 		String returnJSONString = "";
-		// find all elements inside the jobs bin package
-		// recursive get job sysmlid
-		String jsonString = get(server, projectID,refID, "jobs_bin_"+projectID, true);
-		
-//		System.out.println("Get job elements string: "+jsonString);
-		
-		PMAUtil pmaUtil = new PMAUtil();
-		if(isElementJSON(jsonString)) // It will be an error if the json string is not an element JSON.
+		String getJobsQuery = ElasticSearchQueryBuilder.getJobsQuery(projectId, refId);
+		String elasticResponse = queryElastic(server, projectId, refId, getJobsQuery);
+//		System.out.println(elasticResponse);
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode returnJsonObject = mapper.createObjectNode();
+		ArrayNode jobs = mapper.createArrayNode();
+		JsonNode fullJson = PMAUtil.JSONStringToObject(elasticResponse);
+		if(fullJson!=null)
 		{
-			System.out.println("is element json");
-			status = HttpStatus.OK;
-			return new ResponseEntity<String>(pmaUtil.generateJobArrayJSON(jsonString),status);
+			JsonNode elements = fullJson.get("elements");
+			if(elements!=null)
+			{
+				for(JsonNode element:elements)
+				{
+					ArrayNode generalizationIds = (ArrayNode) element.get("generalizationIds");
+					if((generalizationIds!=null)&&(generalizationIds.size()>0))
+					{
+						for(JsonNode generalizaitonId : generalizationIds)
+						{
+							String generalizationIdString = generalizaitonId.toString().replace("\"", "");
+							String mmsResponse = get(server, projectId, refId, generalizationIdString, false);
+							
+							JsonNode mmsResponseJson = PMAUtil.JSONStringToObject(mmsResponse);
+//							System.out.println("mmsResponse: "+mmsResponse);
+							if(mmsResponseJson!=null)
+							{
+								JsonNode generalizationElements = mmsResponseJson.get("elements");
+								if(generalizationElements!=null)
+								{
+									for(JsonNode generalization:generalizationElements)
+									{
+										JsonNode targetIds = generalization.get("_targetIds");
+										for(JsonNode target:targetIds)
+										{
+//											System.out.println("generalization: "+generalization.get("_targetIds"));
+											String targetId = target.toString().replace("\"", "");
+											if(targetId.equals(MMSUtil.docgenJobBlockID))
+											{
+												System.out.println("Found job: "+element.get("name"));
+												if(element.get("id")!=null)
+												{
+													String jobId = element.get("id").toString().replace("\"", "");
+													String mmsJobElementResponseJson = get(server, projectId, refId, jobId, true);
+													String jobsJsonString = PMAUtil.generateJobArrayJSON(mmsJobElementResponseJson);
+													JsonNode jobJson = PMAUtil.JSONStringToObject(jobsJsonString);
+													if(jobJson!=null)
+													{
+														jobs.addAll((ArrayNode) jobJson.get("jobs"));
+													}
+													else
+													{
+														// exception occured or jobsJsonString was not a json string.
+														return new ResponseEntity<String>(mmsJobElementResponseJson,status);
+													}
+												}
+												
+											}
+										}
+										
+									}
+								}
+								else
+								{
+									// elements key isn't in the mmsResponseJson, might be mms error
+									return new ResponseEntity<String>(mmsResponseJson.toString(),status);
+								}
+							}
+							else
+							{
+								// fullJson was not a JSON String
+								return new ResponseEntity<String>(mmsResponse,status);
+							}
+						}
+					}
+				}
+				// Went through for loops successfully
+				returnJsonObject.set("jobs", jobs);
+				System.out.println(returnJsonObject.toString());
+				status=HttpStatus.OK;
+				return new ResponseEntity<String>(returnJsonObject.toString(),status);
+			}
+			else
+			{
+				// Error with mms elastic query or a blank return. 
+				returnJsonObject.set("jobs", jobs);
+				System.out.println(returnJsonObject.toString());
+				status=HttpStatus.OK;
+				return new ResponseEntity<String>(returnJsonObject.toString(),status);
+			}
+		}
+		else
+		{
+			// fullJson was not a JSON String
+			return new ResponseEntity<String>(elasticResponse,status);
 		}
 		
-		if (pmaUtil.isJSON(jsonString)) 
-		{
-			returnJSONString = jsonString;
-		} 
-		else 
-		{
-			ObjectMapper mapper = new ObjectMapper();
-			ObjectNode returnJSON = mapper.createObjectNode();
-			returnJSON.put("message", jsonString);
-			returnJSONString = returnJSON.toString();
-		}
-		
-		logger.info("Get Job element return JSON: "+returnJSONString);
-//		System.out.println("Get Job element return JSON: "+returnJSONString);
-		return new ResponseEntity<String>(returnJSONString,status); // Returning the error
 	}
 	
 	/**
@@ -1498,7 +1567,49 @@ public class MMSUtil {
 	 		
 	 		return elementMap;
 	 	}
-	 
+	 	
+	 	public String queryElastic(String server,String project,String refID,String query){
+			
+
+			server = server.replace("https://", ""); 
+			server = server.replace("/", "");
+			HttpClient httpClient = HttpClientBuilder.create().build();
+			try {
+				 HttpPut request = new HttpPut("https://"+server+"/alfresco/service/projects/"+project+"/refs/"+refID+"/search?alf_ticket="+alfrescoToken);
+				 StringEntity params = new StringEntity(query);
+				 request.addHeader("content-type", "application/json");
+				 request.setEntity(params);
+				 HttpResponse response = httpClient.execute(request);
+				 System.out.println("link: "+"https://"+server+"/alfresco/service/projects/"+project+"/refs/"+refID+"/elements?alf_ticket="+alfrescoToken);
+				 BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+
+				String result = "";
+				String line = "";
+				while ((line = rd.readLine()) != null) {
+					result = result + line.trim();
+				}
+				
+				return result;
+					
+			}
+			catch (java.net.UnknownHostException e) {
+				logger.info("Unknown Host Exception During elastic query");
+				System.out.println("Unknown Host Exception During elastic query");
+				return e.toString();
+			}
+			catch (java.lang.IllegalArgumentException e) {
+				logger.info("Illegal argument during elastic query");
+				System.out.println("Illegal argument during elastic query");
+				return e.toString();
+			}
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return e.toString();
+			}
+	 		
+	 	}
+	 	
 		public static void main(String[] args) 
 		{
 			String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";

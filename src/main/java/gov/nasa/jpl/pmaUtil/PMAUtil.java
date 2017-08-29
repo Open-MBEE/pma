@@ -29,7 +29,7 @@ public class PMAUtil
 	 * @param jobMap
 	 * @return
 	 */
-	public ObjectNode createJobJSON(Map<String,String> jobMap)
+	public static ObjectNode createJobJSON(Map<String,String> jobMap)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		
@@ -72,7 +72,7 @@ public class PMAUtil
 	 * @param mmsJSONString Element data from MMS.
 	 * @return
 	 */
-	public String generateJobArrayJSON(String mmsJSONString)
+	public static String generateJobArrayJSON(String mmsJSONString)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode jobJSON = mapper.createObjectNode();
@@ -312,7 +312,7 @@ public class PMAUtil
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode fullJson = mapper.readTree(jsonString);
-			System.out.println("jobs "+fullJson.get("jobs"));
+//			System.out.println("jobs "+fullJson.get("jobs"));
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 //			e.printStackTrace();
@@ -323,6 +323,36 @@ public class PMAUtil
 			return false;
 		}
 		return true;
+	}
+	
+	/**
+	 * Turns a json string to a JsonNode Object
+	 * @param jsonString
+	 * @return
+	 */
+	public static JsonNode JSONStringToObject(String jsonString)
+	{
+		if(isJSON(jsonString))
+		{
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				JsonNode fullJson = mapper.readTree(jsonString);
+				return fullJson;
+				
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null; // There was an exception
+		}
+		else
+		{
+			return null; // String wasn't a json.
+		}
+		
 	}
 	
 	// Accepts the get job instances json and returns the most recent instance.
