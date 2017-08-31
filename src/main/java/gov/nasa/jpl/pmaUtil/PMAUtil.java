@@ -226,7 +226,7 @@ public class PMAUtil
 	 * @param mmsJSONString Element data from MMS.
 	 * @return
 	 */
-	public String generateJobInstanceArrayJSON(String mmsJSONString,String jobID)
+	public static String generateJobInstanceArrayJSON(String mmsJSONString,String jobID)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode jobJSON = mapper.createObjectNode();
@@ -258,21 +258,21 @@ public class PMAUtil
 					for (JsonNode element : elements) 
 					{	
 						String elementOwner = element.get("ownerId").toString().replace("\"", "");
-						if((element.get("type").toString().equals("\"Slot\""))&&(elementOwner.equals(jobInstanceID)))
+						if((element.get("type").toString().equals("\"Slot\""))&&(elementOwner.equals(jobInstanceID))) // Retrieving values from instance specification slots
 						{
 							String propertyName = element.get("definingFeatureId").toString().replace("\"", "");
 							String propertyValue = element.get("value").get(0).get("value").toString().replace("\"", "");
-//							System.out.println(propertyName);
-//							System.out.println(propertyValue);
+//							System.out.println("PropertyName:"+propertyName);
 							
-							for(JsonNode nestedSearchElement : elements)
+							for(JsonNode nestedSearchElement : elements) // Looking for the property names inside the Job Class properties
 							{
 								if(nestedSearchElement.get("id").toString().replace("\"", "").equals(propertyName))
 								{
-									
+	
 									String redefinedPropertyID = nestedSearchElement.get("redefinedPropertyIds").get(0).toString().replace("\"", "");
 									propertyName=(String) elementIdMap.get(redefinedPropertyID);
-//									System.out.println(propertyName);
+//									System.out.println("PropertyName:"+propertyName);
+//									System.out.println("propertyValue: "+propertyValue);
 								}
 							}
 							jobInstanceMap.put(propertyName, propertyValue);
