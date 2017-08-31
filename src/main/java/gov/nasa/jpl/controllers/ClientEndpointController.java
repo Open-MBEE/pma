@@ -351,14 +351,13 @@ public class ClientEndpointController {
     	logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
     	if(!jenkinsDeleteResponse.equals("HTTP/1.1 302 Found"))
 		{
-			if (jenkinsDeleteResponse.equals("HTTP/1.1 404 Not Found")) 
+			if (!jenkinsDeleteResponse.equals("HTTP/1.1 404 Not Found")) // Not founds are ok.
 			{
-				status = HttpStatus.NOT_FOUND; 
-				jenkinsDeleteResponse="Job Not Found";
+		 		ObjectNode responseJSON = mapper.createObjectNode();
+	    		responseJSON.put("message", jenkinsDeleteResponse); 
+	    		return new ResponseEntity<String>(responseJSON.toString(),status); // returning error during Jenkins job delete 
 			}
-    		ObjectNode responseJSON = mapper.createObjectNode();
-    		responseJSON.put("message", jenkinsDeleteResponse); 
-    		return new ResponseEntity<String>(responseJSON.toString(),status);
+   
 //			return jenkinsDeleteResponse+" Jenkins";
 		}
     	

@@ -226,7 +226,7 @@ public class PMAUtil
 	 * @param mmsJSONString Element data from MMS.
 	 * @return
 	 */
-	public String generateJobInstanceArrayJSON(String mmsJSONString,String jobID)
+	public static String generateJobInstanceArrayJSON(String mmsJSONString,String jobId,String refId)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode jobJSON = mapper.createObjectNode();
@@ -242,7 +242,7 @@ public class PMAUtil
 					/*
 					 * Find the ID of job instance elements
 					 */
-					if((element.get("type").toString().equals("\"InstanceSpecification\""))&&(element.get("classifierIds").get(0).toString().replace("\"", "").equals(jobID)))
+					if((element.get("type").toString().equals("\"InstanceSpecification\""))&&(element.get("classifierIds").get(0).toString().replace("\"", "").equals(jobId)))
 					{
 						String jobInstanceID = element.get("id").toString().replace("\"", "");//id of owner of part property
 //						System.out.println(jobInstanceID);
@@ -254,31 +254,34 @@ public class PMAUtil
 				{
 					Map<String,String> jobInstanceMap = new HashMap();
 					jobInstanceMap.put("id", jobInstanceID);
-					jobInstanceMap.put("jobId", jobID);
+					jobInstanceMap.put("jobId", jobId);
 					for (JsonNode element : elements) 
 					{	
 						String elementOwner = element.get("ownerId").toString().replace("\"", "");
-						if((element.get("type").toString().equals("\"Slot\""))&&(elementOwner.equals(jobInstanceID)))
+						if((element.get("type").toString().equals("\"Slot\""))&&(elementOwner.equals(jobInstanceID))) // Retrieving values from instance specification slots
 						{
 							String propertyName = element.get("definingFeatureId").toString().replace("\"", "");
 							String propertyValue = element.get("value").get(0).get("value").toString().replace("\"", "");
-//							System.out.println(propertyName);
-//							System.out.println(propertyValue);
+//							System.out.println("PropertyName:"+propertyName);
 							
-							for(JsonNode nestedSearchElement : elements)
+							for(JsonNode nestedSearchElement : elements) // Looking for the property names inside the Job Class properties
 							{
 								if(nestedSearchElement.get("id").toString().replace("\"", "").equals(propertyName))
 								{
-									
+	
 									String redefinedPropertyID = nestedSearchElement.get("redefinedPropertyIds").get(0).toString().replace("\"", "");
 									propertyName=(String) elementIdMap.get(redefinedPropertyID);
-//									System.out.println(propertyName);
+//									System.out.println("PropertyName:"+propertyName);
+//									System.out.println("propertyValue: "+propertyValue);
 								}
 							}
 							jobInstanceMap.put(propertyName, propertyValue);
 						}
 					}
-					jobInstanceElements.add(createJobInstanceJSON(jobInstanceMap));
+					if(jobInstanceMap.get("refId").equals(refId))
+					{
+						jobInstanceElements.add(createJobInstanceJSON(jobInstanceMap));
+					}
 				}
 			}
 			else
