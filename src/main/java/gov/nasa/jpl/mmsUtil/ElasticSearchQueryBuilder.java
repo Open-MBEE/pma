@@ -29,7 +29,7 @@ public class ElasticSearchQueryBuilder
 		ObjectNode term = mapper.createObjectNode();
 		ObjectNode term1 = mapper.createObjectNode();
 		ObjectNode term2 = mapper.createObjectNode();
-		ObjectNode exists = mapper.createObjectNode();
+		ObjectNode term3 = mapper.createObjectNode();
 		
 		sort.add("_score");
 		ObjectNode modified = mapper.createObjectNode();
@@ -41,13 +41,13 @@ public class ElasticSearchQueryBuilder
 		
 		term.put("_projectId", projectId);
 		term1.put("_inRefIds", refId);
-		term2.put("type", "Class");
-		exists.put("field", "generalizationIds");
+		term2.put("type", "Generalization");
+		term3.put("generalId", MMSUtil.docgenJobBlockID);
 		
 		condition.set("term", term);
 		condition1.set("term", term1); 
 		condition2.set("term", term2); 
-		condition3.set("exists", exists); 
+		condition3.set("term", term3); 
 		
 		must.add(condition);
 		must.add(condition1);

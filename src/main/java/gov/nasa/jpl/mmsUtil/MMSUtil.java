@@ -1155,90 +1155,70 @@ public class MMSUtil {
 		String elasticResponse = queryElastic(server, projectId, refId, getJobsQuery);
 //		System.out.println(elasticResponse);
 		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode returnJsonObject = mapper.createObjectNode();
-		ArrayNode jobs = mapper.createArrayNode();
+
+
 		JsonNode fullJson = PMAUtil.JSONStringToObject(elasticResponse);
 		if(fullJson!=null)
 		{
 			JsonNode elements = fullJson.get("elements");
 			if(elements!=null)
 			{
+				ArrayNode jobIds = mapper.createArrayNode();
 				for(JsonNode element:elements)
 				{
-					ArrayNode generalizationIds = (ArrayNode) element.get("generalizationIds");
-					if((generalizationIds!=null)&&(generalizationIds.size()>0))
+					JsonNode jobId = element.get("specificId");
+					if(jobId!=null)
 					{
-						for(JsonNode generalizaitonId : generalizationIds)
-						{
-							String generalizationIdString = generalizaitonId.toString().replace("\"", "");
-							String mmsResponse = get(server, projectId, refId, generalizationIdString, false);
-							
-							JsonNode mmsResponseJson = PMAUtil.JSONStringToObject(mmsResponse);
-//							System.out.println("mmsResponse: "+mmsResponse);
-							if(mmsResponseJson!=null)
-							{
-								JsonNode generalizationElements = mmsResponseJson.get("elements");
-								if(generalizationElements!=null)
-								{
-									for(JsonNode generalization:generalizationElements)
-									{
-										JsonNode targetIds = generalization.get("_targetIds");
-										for(JsonNode target:targetIds)
-										{
-//											System.out.println("generalization: "+generalization.get("_targetIds"));
-											String targetId = target.toString().replace("\"", "");
-											if(targetId.equals(MMSUtil.docgenJobBlockID))
-											{
-												System.out.println("Found job: "+element.get("name"));
-												if(element.get("id")!=null)
-												{
-													String jobId = element.get("id").toString().replace("\"", "");
-													String mmsJobElementResponseJson = get(server, projectId, refId, jobId, true);
-													String jobsJsonString = PMAUtil.generateJobArrayJSON(mmsJobElementResponseJson);
-													JsonNode jobJson = PMAUtil.JSONStringToObject(jobsJsonString);
-													if(jobJson!=null)
-													{
-														jobs.addAll((ArrayNode) jobJson.get("jobs"));
-													}
-													else
-													{
-														// exception occured or jobsJsonString was not a json string.
-														return new ResponseEntity<String>(mmsJobElementResponseJson,status);
-													}
-												}
-												
-											}
-										}
-										
-									}
-								}
-								else
-								{
-									// elements key isn't in the mmsResponseJson, might be mms error
-									return new ResponseEntity<String>(mmsResponseJson.toString(),status);
-								}
-							}
-							else
-							{
-								// fullJson was not a JSON String
-								return new ResponseEntity<String>(mmsResponse,status);
-							}
-						}
-					}
+						jobIds.add(mapper.createObjectNode().set("id",jobId)); 
+					}		
 				}
-				// Went through for loops successfully
-				returnJsonObject.set("jobs", jobs);
-				System.out.println(returnJsonObject.toString());
-				status=HttpStatus.OK;
-				return new ResponseEntity<String>(returnJsonObject.toString(),status);
+				
+				ObjectNode elementArrayNode = mapper.createObjectNode();
+				elementArrayNode.set("elements", jobIds);
+				
+				String bulkElementGetResponse = put(server, projectId, refId, elementArrayNode, true); // retrieving all job elements from mms.
+				JsonNode bulkElementGetResponseNode = PMAUtil.JSONStringToObject(bulkElementGetResponse);
+//				System.out.println(bulkElementGetResponse);
+				if(bulkElementGetResponseNode!=null)
+				{
+					
+					JsonNode bulkElements = bulkElementGetResponseNode.get("elements");
+					if(bulkElements!=null)
+					{
+						
+						logger.info("Jobs found successfully");
+						String jobsArrayString = PMAUtil.generateJobArrayJSON(bulkElementGetResponse); // converting mms response into a more concise structure
+//						System.out.println(jobArrayString);
+	
+						status=HttpStatus.OK;
+						return new ResponseEntity<String>(jobsArrayString,status);
+					}
+					else
+					{
+						logger.info(" mms error during bulk element get: "+bulkElementGetResponse);
+						return new ResponseEntity<String>(bulkElementGetResponse,status); // mms error during bulk element get
+					}
+
+					
+
+				}
+				else
+				{
+					// bulkElementGetResponse was not a JSON String
+					logger.info("bulkElementGetResponse was not a JSON String: "+bulkElementGetResponse);
+					return new ResponseEntity<String>(bulkElementGetResponse,status); // Returning the error
+				}
+
+				
+				
+
+				
 			}
 			else
 			{
 				// Error with mms elastic query or a blank return. 
-				returnJsonObject.set("jobs", jobs);
-				System.out.println(returnJsonObject.toString());
 				status=HttpStatus.OK;
-				return new ResponseEntity<String>(returnJsonObject.toString(),status);
+				return new ResponseEntity<String>(elasticResponse,status);
 			}
 		}
 		else
@@ -1344,35 +1324,7 @@ public class MMSUtil {
 	{
 		
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-		String returnJSONString = "";
-//		
-//		String jsonString = get(server, project,refID, "jobs_bin_"+jobElementID, true); // recursive get job sysmlid
-//		
-//		PMAUtil pmaUtil = new PMAUtil();
-//		if(isElementJSON(jsonString)) // It will be an error if the json string is not an element JSON.
-//		{
-//			System.out.println("is element json");
-//			status = HttpStatus.OK;
-//			return new ResponseEntity<String>(pmaUtil.generateJobInstanceArrayJSON(jsonString,jobElementID),status);
-//		}
-//		
-//		if (pmaUtil.isJSON(jsonString)) 
-//		{
-//			returnJSONString = jsonString;
-//		} 
-//		else 
-//		{
-//			ObjectMapper mapper = new ObjectMapper();
-//			ObjectNode returnJSON = mapper.createObjectNode();
-//			returnJSON.put("message", jsonString);
-//			returnJSONString = returnJSON.toString();
-//		}
-//		
-//		logger.info("Get Job element return JSON: "+returnJSONString);
-////		System.out.println("Get Job element return JSON: "+returnJSONString);
-//		return new ResponseEntity<String>(returnJSONString,status); // Returning the error
-////		return pmaUtil.generateJobInstanceArrayJSON(jsonString);
-		
+
 		String getJobsQuery = ElasticSearchQueryBuilder.getJobInstancesQuery(projectId, refId,jobElementId);
 		
 		String elasticResponse = queryElastic(server, projectId, refId, getJobsQuery);
@@ -1413,7 +1365,6 @@ public class MMSUtil {
 						String jobInstanceArrayString = PMAUtil.generateJobInstanceArrayJSON(bulkElementGetResponse,jobElementId);
 						status = HttpStatus.OK;
 						return new ResponseEntity<String>(jobInstanceArrayString,status);
-//						System.out.println(PMAUtil.generateJobInstanceArrayJSON(mmsResponse,jobId));
 					}
 					else
 					{
