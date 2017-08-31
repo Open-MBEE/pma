@@ -35,8 +35,10 @@ public class ClientEndpointControllerTests {
     MMSUtil mmsUtil = new MMSUtil("");
 
     private String alfTicket = "tempTicket";
-    private String testServer = "opencae-int.jpl.nasa.gov";
+    private String testServer = "opencae-uat.jpl.nasa.gov";
     private String jobName = "PMA_1493825038894_5fcafd6e-6e5a-4d03-a6e2-f47ff29286de";
+    private String testProject = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
+    private String testDocument = "MMS_1504206271283_f31ab743-1d52-48b1-978d-66038d9c33f3";
     private JobFromClient job;
     private boolean isConfigured = false;
     private DBUtil dbUtil = new DBUtil();
@@ -87,7 +89,7 @@ public class ClientEndpointControllerTests {
         job.setJobName(jobName);
         job.setAlfrescoToken(alfTicket);
         job.setArguments(new String[0]);
-        job.setAssociatedElementID("");
+        job.setAssociatedElementID(testDocument);
         job.setCommand("");
         job.setSchedule("");
         isConfigured = true;
@@ -140,7 +142,7 @@ public class ClientEndpointControllerTests {
         response = clientEndpointController.createJob("TestingJob", refId, job);
         try {
        
-        response = clientEndpointController.createJob("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", refId, job);
+        response = clientEndpointController.createJob(testProject, refId, job);
         } catch (java.lang.IllegalArgumentException e) {
 //        	e.printStackTrace();
             System.out.println(e.getMessage());
@@ -160,7 +162,7 @@ public class ClientEndpointControllerTests {
         	JSONObject responseBody;
             responseBody = new JSONObject(response.getBody());
             String id = responseBody.getJSONArray("jobs").getJSONObject(0).getString("id");
-            deleteJob("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", refId, id);
+            deleteJob(testProject, refId, id);
         } catch (JSONException e) {
             System.out.println("[ JSONException ] " + e.getMessage());
         } catch (Exception e) {
@@ -176,9 +178,9 @@ public class ClientEndpointControllerTests {
         configVeEndpointController();
         System.out.println("AFTER: " + this.alfTicket);
 
-        String id = createJobGetId("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", "master");
+        String id = createJobGetId(testProject, "master");
         assert (id != null);
-        deleteJob("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", "master", id);
+        deleteJob(testProject, "master", id);
         System.out.println("\n----------------------------------------------------------------------------------------\n");
     }
 
@@ -192,11 +194,11 @@ public class ClientEndpointControllerTests {
         jobInstanceFromClient.setArguments(null);
         jobInstanceFromClient.setAlfrescoToken(alfTicket);
 
-        String id = createJobGetId("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", "master");
-        clientEndpointController.runJob("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", "master", id, jobInstanceFromClient);
+        String id = createJobGetId(testProject, "master");
+        clientEndpointController.runJob(testProject, "master", id, jobInstanceFromClient);
 
         assert (id != null);
-        deleteJob("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", "master", id);
+        deleteJob(testProject, "master", id);
         System.out.println("\n-------------------------------------------------------------------------------\n");
     }
 
@@ -210,9 +212,9 @@ public class ClientEndpointControllerTests {
         jobInstanceFromClient.setArguments(null);
         jobInstanceFromClient.setAlfrescoToken(alfTicket);
 
-        String id = createJobGetId("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", "master");
+        String id = createJobGetId(testProject, "master");
         assert (id != null);
-        ResponseEntity<String> responseEntity = clientEndpointController.getJobs("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", "master", alfTicket, "opencae-int.jpl.nasa.gov");
+        ResponseEntity<String> responseEntity = clientEndpointController.getJobs(testProject, "master", alfTicket, testServer);
 
         try {
             JSONObject jsonObject = new JSONObject(responseEntity.getBody());
@@ -232,7 +234,7 @@ public class ClientEndpointControllerTests {
             System.out.println(e.getMessage());
         }
 
-        deleteJob("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", "master", id);
+        deleteJob(testProject, "master", id);
         System.out.println("\n-------------------------------------------------------------------------------\n");
 
     }
@@ -271,7 +273,7 @@ public class ClientEndpointControllerTests {
 //        jobInstanceFromClient.setAlfrescoToken(alfTicket);
 //
 //        try {
-//            String id = createJobGetId("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", "master");
+//            String id = createJobGetId(testProject, "master");
 //            assert (false);
 //        } catch (Exception e) {
 //            System.out.println(e.getMessage());
@@ -284,7 +286,7 @@ public class ClientEndpointControllerTests {
 //        System.out.println("\n----------------------- [ Incorrect Jenkins Credentials ] -----------------------\n");
 //        configVeEndpointController(null,null, "someUser");
 //
-//        String id = createJobGetId("PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c", "master");
+//        String id = createJobGetId(testProject, "master");
 //
 //        assert (id == null);
 //        System.out.println("\n-------------------------------------------------------------------------------\n");
