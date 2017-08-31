@@ -1362,7 +1362,7 @@ public class MMSUtil {
 					if(bulkElements!=null)
 					{
 						logger.info("Job Instances found successfully");
-						String jobInstanceArrayString = PMAUtil.generateJobInstanceArrayJSON(bulkElementGetResponse,jobElementId);
+						String jobInstanceArrayString = PMAUtil.generateJobInstanceArrayJSON(bulkElementGetResponse,jobElementId,refId);
 						status = HttpStatus.OK;
 						return new ResponseEntity<String>(jobInstanceArrayString,status);
 					}

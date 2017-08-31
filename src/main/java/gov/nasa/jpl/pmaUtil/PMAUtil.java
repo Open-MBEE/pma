@@ -226,7 +226,7 @@ public class PMAUtil
 	 * @param mmsJSONString Element data from MMS.
 	 * @return
 	 */
-	public static String generateJobInstanceArrayJSON(String mmsJSONString,String jobID)
+	public static String generateJobInstanceArrayJSON(String mmsJSONString,String jobId,String refId)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode jobJSON = mapper.createObjectNode();
@@ -242,7 +242,7 @@ public class PMAUtil
 					/*
 					 * Find the ID of job instance elements
 					 */
-					if((element.get("type").toString().equals("\"InstanceSpecification\""))&&(element.get("classifierIds").get(0).toString().replace("\"", "").equals(jobID)))
+					if((element.get("type").toString().equals("\"InstanceSpecification\""))&&(element.get("classifierIds").get(0).toString().replace("\"", "").equals(jobId)))
 					{
 						String jobInstanceID = element.get("id").toString().replace("\"", "");//id of owner of part property
 //						System.out.println(jobInstanceID);
@@ -254,7 +254,7 @@ public class PMAUtil
 				{
 					Map<String,String> jobInstanceMap = new HashMap();
 					jobInstanceMap.put("id", jobInstanceID);
-					jobInstanceMap.put("jobId", jobID);
+					jobInstanceMap.put("jobId", jobId);
 					for (JsonNode element : elements) 
 					{	
 						String elementOwner = element.get("ownerId").toString().replace("\"", "");
@@ -278,7 +278,10 @@ public class PMAUtil
 							jobInstanceMap.put(propertyName, propertyValue);
 						}
 					}
-					jobInstanceElements.add(createJobInstanceJSON(jobInstanceMap));
+					if(jobInstanceMap.get("refId").equals(refId))
+					{
+						jobInstanceElements.add(createJobInstanceJSON(jobInstanceMap));
+					}
 				}
 			}
 			else
