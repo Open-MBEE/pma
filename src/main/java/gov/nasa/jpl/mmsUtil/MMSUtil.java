@@ -81,29 +81,29 @@ public class MMSUtil {
 		ArrayNode elements = mapper.createArrayNode();
 		ObjectNode packageElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
-		packageElement.put("_appliedStereotypeIds", mapper.createArrayNode());
+		packageElement.set("_appliedStereotypeIds", mapper.createArrayNode());
 		packageElement.put("documentation", "");
 		packageElement.put("_isSite", Boolean.FALSE);
 		packageElement.put("type", "Package");
 		packageElement.put("id", id);
-		packageElement.put("mdExtensionsIds", mapper.createArrayNode());
+		packageElement.set("mdExtensionsIds", mapper.createArrayNode());
 		packageElement.put("ownerId", ownerID);
-		packageElement.put("syncElementId", nullNode);
-		packageElement.put("appliedStereotypeInstanceId", nullNode);
-		packageElement.put("clientDependencyIds", mapper.createArrayNode());
-		packageElement.put("supplierDependencyIds", mapper.createArrayNode());
+		packageElement.set("syncElementId", nullNode);
+		packageElement.set("appliedStereotypeInstanceId", nullNode);
+		packageElement.set("clientDependencyIds", mapper.createArrayNode());
+		packageElement.set("supplierDependencyIds", mapper.createArrayNode());
 		packageElement.put("name",name);
-		packageElement.put("nameExpression", nullNode);
+		packageElement.set("nameExpression", nullNode);
 		packageElement.put("visibility", "public");
-		packageElement.put("templateParameterId", nullNode);
-		packageElement.put("elementImportIds", mapper.createArrayNode());
-		packageElement.put("packageImportIds", mapper.createArrayNode());
-		packageElement.put("templateBindingIds", mapper.createArrayNode());
+		packageElement.set("templateParameterId", nullNode);
+		packageElement.set("elementImportIds", mapper.createArrayNode());
+		packageElement.set("packageImportIds", mapper.createArrayNode());
+		packageElement.set("templateBindingIds", mapper.createArrayNode());
 		packageElement.put("URI", "");
-		packageElement.put("packageMergeIds", mapper.createArrayNode());
-		packageElement.put("profileApplicationIds", mapper.createArrayNode());
+		packageElement.set("packageMergeIds", mapper.createArrayNode());
+		packageElement.set("profileApplicationIds", mapper.createArrayNode());
 		elements.add(packageElement);
-		payload.put("elements",elements);
+		payload.set("elements",elements);
 		payload.put("source","pma");
 		payload.put("pmaVersion","3.1");
 		
@@ -124,61 +124,61 @@ public class MMSUtil {
 		ArrayNode elements = mapper.createArrayNode();
 		ObjectNode classElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
-		classElement.put("_appliedStereotypeIds", mapper.createArrayNode().add("_11_5EAPbeta_be00301_1147424179914_458922_958"));
+		classElement.set("_appliedStereotypeIds", mapper.createArrayNode().add("_11_5EAPbeta_be00301_1147424179914_458922_958"));
 		classElement.put("documentation", "");
 		classElement.put("type", "Class");
 		classElement.put("id", id);
-		classElement.put("mdExtensionsIds", mapper.createArrayNode());
+		classElement.set("mdExtensionsIds", mapper.createArrayNode());
 		classElement.put("ownerId", ownerID);
-		classElement.put("syncElementId", nullNode);		
+		classElement.set("syncElementId", nullNode);		
 		classElement.put("appliedStereotypeInstanceId", id+"_asi");
-		classElement.put("clientDependencyIds", mapper.createArrayNode());
-		classElement.put("supplierDependencyIds", mapper.createArrayNode());
+		classElement.set("clientDependencyIds", mapper.createArrayNode());
+		classElement.set("supplierDependencyIds", mapper.createArrayNode());
 		classElement.put("name", name);
-		classElement.put("nameExpression", nullNode);
-		classElement.put("visibility", nullNode);
-		classElement.put("templateParameterId", nullNode);
-		classElement.put("elementImportIds", mapper.createArrayNode());
-		classElement.put("packageImportIds", mapper.createArrayNode());
+		classElement.set("nameExpression", nullNode);
+		classElement.set("visibility", nullNode);
+		classElement.set("templateParameterId", nullNode);
+		classElement.set("elementImportIds", mapper.createArrayNode());
+		classElement.set("packageImportIds", mapper.createArrayNode());
 		classElement.put("isLeaf", Boolean.FALSE);
-		classElement.put("templateBindingIds", mapper.createArrayNode());
-		classElement.put("useCaseIds", mapper.createArrayNode());
-		classElement.put("representationId", nullNode);
-		classElement.put("collaborationUseIds", mapper.createArrayNode());
-		classElement.put("generalizationIds", mapper.createArrayNode());
-		classElement.put("powertypeExtentIds", mapper.createArrayNode());
+		classElement.set("templateBindingIds", mapper.createArrayNode());
+		classElement.set("useCaseIds", mapper.createArrayNode());
+		classElement.set("representationId", nullNode);
+		classElement.set("collaborationUseIds", mapper.createArrayNode());
+		classElement.set("generalizationIds", mapper.createArrayNode());
+		classElement.set("powertypeExtentIds", mapper.createArrayNode());
 		classElement.put("isAbstract", Boolean.FALSE);
 		classElement.put("isFinalSpecialization", Boolean.FALSE);
-		classElement.put("redefinedClassifierIds", mapper.createArrayNode());
-		classElement.put("substitutionIds", mapper.createArrayNode());
-		classElement.put("ownedAttributeIds", mapper.createArrayNode());
-		classElement.put("classifierBehaviorId", nullNode);
-		classElement.put("interfaceRealizationIds", mapper.createArrayNode());
-		classElement.put("ownedOperationIds", mapper.createArrayNode());
+		classElement.set("redefinedClassifierIds", mapper.createArrayNode());
+		classElement.set("substitutionIds", mapper.createArrayNode());
+		classElement.set("ownedAttributeIds", mapper.createArrayNode());
+		classElement.set("classifierBehaviorId", nullNode);
+		classElement.set("interfaceRealizationIds", mapper.createArrayNode());
+		classElement.set("ownedOperationIds", mapper.createArrayNode());
 		classElement.put("isActive", Boolean.FALSE);
 		
 		elements.add(classElement);
 		
 		ObjectNode instanceSpecificationElement = mapper.createObjectNode();
 		
-		instanceSpecificationElement.put("_appliedStereotypeIds",mapper.createArrayNode());
+		instanceSpecificationElement.set("_appliedStereotypeIds",mapper.createArrayNode());
 		instanceSpecificationElement.put("documentation", "");
 		instanceSpecificationElement.put("type", "InstanceSpecification");
 		instanceSpecificationElement.put("id", id+"_asi");
-		instanceSpecificationElement.put("mdExtensionsIds", mapper.createArrayNode());
+		instanceSpecificationElement.set("mdExtensionsIds", mapper.createArrayNode());
 		instanceSpecificationElement.put("ownerId", id);
-		instanceSpecificationElement.put("syncElementId", nullNode);
-		instanceSpecificationElement.put("appliedStereotypeInstanceId", nullNode);
-		instanceSpecificationElement.put("clientDependencyIds", mapper.createArrayNode());
-		instanceSpecificationElement.put("supplierDependencyIds", mapper.createArrayNode());
+		instanceSpecificationElement.set("syncElementId", nullNode);
+		instanceSpecificationElement.set("appliedStereotypeInstanceId", nullNode);
+		instanceSpecificationElement.set("clientDependencyIds", mapper.createArrayNode());
+		instanceSpecificationElement.set("supplierDependencyIds", mapper.createArrayNode());
 		instanceSpecificationElement.put("name", name);
-		instanceSpecificationElement.put("nameExpression", nullNode);
-		instanceSpecificationElement.put("visibility", nullNode);
-		instanceSpecificationElement.put("templateParameterId", nullNode);
-		instanceSpecificationElement.put("deploymentIds", mapper.createArrayNode());
-		instanceSpecificationElement.put("slotIds", mapper.createArrayNode());
-		instanceSpecificationElement.put("specification", nullNode);
-		instanceSpecificationElement.put("classifierIds", mapper.createArrayNode().add("_11_5EAPbeta_be00301_1147424179914_458922_958"));
+		instanceSpecificationElement.set("nameExpression", nullNode);
+		instanceSpecificationElement.set("visibility", nullNode);
+		instanceSpecificationElement.set("templateParameterId", nullNode);
+		instanceSpecificationElement.set("deploymentIds", mapper.createArrayNode());
+		instanceSpecificationElement.set("slotIds", mapper.createArrayNode());
+		instanceSpecificationElement.set("specification", nullNode);
+		instanceSpecificationElement.set("classifierIds", mapper.createArrayNode().add("_11_5EAPbeta_be00301_1147424179914_458922_958"));
 		instanceSpecificationElement.put("stereotypedElementId", id);
 		
 		elements.add(instanceSpecificationElement);
@@ -202,7 +202,7 @@ public class MMSUtil {
 		
 		ObjectNode instanceSpecificationElement = mapper.createObjectNode();
 		
-		instanceSpecificationElement.put("_appliedStereotypeIds",mapper.createArrayNode());
+		instanceSpecificationElement.set("_appliedStereotypeIds",mapper.createArrayNode());
 		instanceSpecificationElement.put("documentation", "");
 		instanceSpecificationElement.put("type", "InstanceSpecification");
 		
@@ -215,20 +215,20 @@ public class MMSUtil {
 			instanceSpecificationElement.put("id", createId());
 		}
 		
-		instanceSpecificationElement.put("mdExtensionsIds", mapper.createArrayNode());
+		instanceSpecificationElement.set("mdExtensionsIds", mapper.createArrayNode());
 		instanceSpecificationElement.put("ownerId", ownerID);
-		instanceSpecificationElement.put("syncElementId", nullNode);
-		instanceSpecificationElement.put("appliedStereotypeInstanceId", nullNode);
-		instanceSpecificationElement.put("clientDependencyIds", mapper.createArrayNode());
-		instanceSpecificationElement.put("supplierDependencyIds", mapper.createArrayNode());
+		instanceSpecificationElement.set("syncElementId", nullNode);
+		instanceSpecificationElement.set("appliedStereotypeInstanceId", nullNode);
+		instanceSpecificationElement.set("clientDependencyIds", mapper.createArrayNode());
+		instanceSpecificationElement.set("supplierDependencyIds", mapper.createArrayNode());
 		instanceSpecificationElement.put("name", name);
-		instanceSpecificationElement.put("nameExpression", nullNode);
-		instanceSpecificationElement.put("visibility", nullNode);
-		instanceSpecificationElement.put("templateParameterId", nullNode);
-		instanceSpecificationElement.put("deploymentIds", mapper.createArrayNode());
-		instanceSpecificationElement.put("slotIds", mapper.createArrayNode());
-		instanceSpecificationElement.put("specification", nullNode);
-		instanceSpecificationElement.put("classifierIds", mapper.createArrayNode().add(classifierID));
+		instanceSpecificationElement.set("nameExpression", nullNode);
+		instanceSpecificationElement.set("visibility", nullNode);
+		instanceSpecificationElement.set("templateParameterId", nullNode);
+		instanceSpecificationElement.set("deploymentIds", mapper.createArrayNode());
+		instanceSpecificationElement.set("slotIds", mapper.createArrayNode());
+		instanceSpecificationElement.set("specification", nullNode);
+		instanceSpecificationElement.set("classifierIds", mapper.createArrayNode().add(classifierID));
 		
 		if(stereotypesElement)
 		{
@@ -236,7 +236,7 @@ public class MMSUtil {
 		}
 		else
 		{
-			instanceSpecificationElement.put("stereotypedElementId", nullNode);
+			instanceSpecificationElement.set("stereotypedElementId", nullNode);
 		}
 
 		return instanceSpecificationElement;
@@ -257,38 +257,38 @@ public class MMSUtil {
 		ObjectNode slotElement = mapper.createObjectNode();
 		
 		String slotElementID = ownerID+"-slot-"+definingFeatureId;
-		slotElement.put("_appliedStereotypeIds",mapper.createArrayNode());
+		slotElement.set("_appliedStereotypeIds",mapper.createArrayNode());
 		slotElement.put("documentation", "");
 		slotElement.put("type", "Slot");
 		slotElement.put("id", ownerID+"-slot-"+definingFeatureId);
-		slotElement.put("mdExtensionsIds", mapper.createArrayNode());
+		slotElement.set("mdExtensionsIds", mapper.createArrayNode());
 		
 		slotElement.put("ownerId", ownerID);
-		slotElement.put("syncElementId", nullNode);
-		slotElement.put("appliedStereotypeInstanceId", nullNode);
+		slotElement.set("syncElementId", nullNode);
+		slotElement.set("appliedStereotypeInstanceId", nullNode);
 		
 		ArrayNode valueNode = mapper.createArrayNode();
 		ObjectNode nestedValue = mapper.createObjectNode();
-		nestedValue.put("_appliedStereotypeIds", mapper.createArrayNode());
+		nestedValue.set("_appliedStereotypeIds", mapper.createArrayNode());
 		nestedValue.put("documentation", "");
 		nestedValue.put("type", "LiteralString");
 		nestedValue.put("id",ownerID+"-slot-"+definingFeatureId+"-slotvalue-0-literalstring");
-		nestedValue.put("mdExtensionsIds", mapper.createArrayNode());
+		nestedValue.set("mdExtensionsIds", mapper.createArrayNode());
 		nestedValue.put("ownerId",slotElementID);
-		nestedValue.put("syncElementId", nullNode);
-		nestedValue.put("appliedStereotypeInstanceId", nullNode);
-		nestedValue.put("clientDependencyIds", mapper.createArrayNode());
-		nestedValue.put("supplierDependencyIds", mapper.createArrayNode());
+		nestedValue.set("syncElementId", nullNode);
+		nestedValue.set("appliedStereotypeInstanceId", nullNode);
+		nestedValue.set("clientDependencyIds", mapper.createArrayNode());
+		nestedValue.set("supplierDependencyIds", mapper.createArrayNode());
 		nestedValue.put("name", "");
-		nestedValue.put("nameExpression", nullNode);
-		nestedValue.put("visibility", nullNode);
-		nestedValue.put("templateParameterId", nullNode);
-		nestedValue.put("typeId", nullNode);
+		nestedValue.set("nameExpression", nullNode);
+		nestedValue.set("visibility", nullNode);
+		nestedValue.set("templateParameterId", nullNode);
+		nestedValue.set("typeId", nullNode);
 		nestedValue.put("value", value);
 		
 		valueNode.add(nestedValue);
 		
-		slotElement.put("value", valueNode);
+		slotElement.set("value", valueNode);
 		
 		slotElement.put("definingFeatureId",definingFeatureId);
 		
@@ -311,79 +311,79 @@ public class MMSUtil {
 		ObjectNode classElement = mapper.createObjectNode();
 		ObjectNode nullNode = null;
 		
-		classElement.put("_appliedStereotypeIds", mapper.createArrayNode().add("_12_0_be00301_1164123483951_695645_2041"));
+		classElement.set("_appliedStereotypeIds", mapper.createArrayNode().add("_12_0_be00301_1164123483951_695645_2041"));
 		classElement.put("documentation", "");
 		classElement.put("type", "Property");
 		classElement.put("id", propertyID);
-		classElement.put("mdExtensionsIds", mapper.createArrayNode());
+		classElement.set("mdExtensionsIds", mapper.createArrayNode());
 		classElement.put("ownerId", ownerID);
-		classElement.put("syncElementId", nullNode);
+		classElement.set("syncElementId", nullNode);
 		classElement.put("appliedStereotypeInstanceId", propertyID+"_asi");
-		classElement.put("clientDependencyIds", mapper.createArrayNode());
-		classElement.put("supplierDependencyIds", mapper.createArrayNode());
+		classElement.set("clientDependencyIds", mapper.createArrayNode());
+		classElement.set("supplierDependencyIds", mapper.createArrayNode());
 		classElement.put("name", name);
-		classElement.put("nameExpression", nullNode);
-		classElement.put("visibility", nullNode);
+		classElement.set("nameExpression", nullNode);
+		classElement.set("visibility", nullNode);
 		classElement.put("isLeaf", Boolean.FALSE);
 		classElement.put("isStatic", Boolean.FALSE);
 		classElement.put("typeId", "_16_5_1_12c903cb_1245415335546_479030_4092");
 		classElement.put("isOrdered", Boolean.FALSE);
 		classElement.put("isUnique", Boolean.TRUE);
-		classElement.put("lowerValue", nullNode);
-		classElement.put("upperValue", nullNode);
+		classElement.set("lowerValue", nullNode);
+		classElement.set("upperValue", nullNode);
 		classElement.put("isReadOnly", Boolean.FALSE);
-		classElement.put("templateParameterId", nullNode);
-		classElement.put("endIds", mapper.createArrayNode());
-		classElement.put("deploymentIds", mapper.createArrayNode());
+		classElement.set("templateParameterId", nullNode);
+		classElement.set("endIds", mapper.createArrayNode());
+		classElement.set("deploymentIds", mapper.createArrayNode());
 		classElement.put("aggregation", "composite");
-		classElement.put("associationEndId", nullNode);
-		classElement.put("qualifierIds", mapper.createArrayNode());
-		classElement.put("datatypeId", nullNode);
+		classElement.set("associationEndId", nullNode);
+		classElement.set("qualifierIds", mapper.createArrayNode());
+		classElement.set("datatypeId", nullNode);
 		
 		if (value != null) 
 		{
 			ObjectNode defaultValue = mapper.createObjectNode(); // value element
 
-			defaultValue.put("_appliedStereotypeIds", mapper.createArrayNode());
+			defaultValue.set("_appliedStereotypeIds", mapper.createArrayNode());
 			defaultValue.put("documentation", "");
 			defaultValue.put("type", "LiteralString");
 			defaultValue.put("id", createId());
-			defaultValue.put("mdExtensionsIds", mapper.createArrayNode());
+			defaultValue.set("mdExtensionsIds", mapper.createArrayNode());
 			defaultValue.put("ownerId", propertyID);
-			defaultValue.put("syncElementId", nullNode);
-			defaultValue.put("appliedStereotypeInstanceId", nullNode);
-			defaultValue.put("clientDependencyIds", mapper.createArrayNode());
-			defaultValue.put("supplierDependencyIds", mapper.createArrayNode());
+			defaultValue.set("syncElementId", nullNode);
+			defaultValue.set("appliedStereotypeInstanceId", nullNode);
+			defaultValue.set("clientDependencyIds", mapper.createArrayNode());
+			defaultValue.set("supplierDependencyIds", mapper.createArrayNode());
 			defaultValue.put("name", "");
-			defaultValue.put("nameExpression", nullNode);
+			defaultValue.set("nameExpression", nullNode);
 			defaultValue.put("visibility", "public");
-			defaultValue.put("templateParameterId", nullNode);
-			defaultValue.put("typeId", nullNode);
+			defaultValue.set("templateParameterId", nullNode);
+			defaultValue.set("typeId", nullNode);
 			defaultValue.put("value", value);
 
-			classElement.put("defaultValue", defaultValue);
+			classElement.set("defaultValue", defaultValue);
 		}
 		else
 		{
-			classElement.put("defaultValue", nullNode);
+			classElement.set("defaultValue", nullNode);
 		}
 		
 		
-		classElement.put("interfaceId", nullNode);
+		classElement.set("interfaceId", nullNode);
 		classElement.put("isDerived", Boolean.FALSE);
 		classElement.put("isDerivedUnion", Boolean.FALSE);
 		classElement.put("isID", Boolean.FALSE);
 		
 		if(redefinedPropertyId!=null)
 		{
-			classElement.put("redefinedPropertyIds", mapper.createArrayNode().add(redefinedPropertyId));
+			classElement.set("redefinedPropertyIds", mapper.createArrayNode().add(redefinedPropertyId));
 		}
 		else
 		{
-			classElement.put("redefinedPropertyIds", mapper.createArrayNode());
+			classElement.set("redefinedPropertyIds", mapper.createArrayNode());
 		}
-		classElement.put("subsettedPropertyIds", mapper.createArrayNode());
-		classElement.put("associationId", nullNode);
+		classElement.set("subsettedPropertyIds", mapper.createArrayNode());
+		classElement.set("associationId", nullNode);
 		
 		return classElement;
 	}
@@ -394,18 +394,18 @@ public class MMSUtil {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode generalization = mapper.createObjectNode();
 		ObjectNode nullNode = null;
-		generalization.put("_appliedStereotypeIds", mapper.createArrayNode());
+		generalization.set("_appliedStereotypeIds", mapper.createArrayNode());
 		generalization.put("documentation", "");
 		generalization.put("type", "Generalization");
 		generalization.put("id", generalizationID);
-		generalization.put("mdExtensionsIds", mapper.createArrayNode());
+		generalization.set("mdExtensionsIds", mapper.createArrayNode());
 		generalization.put("ownerId", ownerID);
-		generalization.put("syncElementId", nullNode);
-		generalization.put("appliedStereotypeInstanceId", nullNode);
-		generalization.put("_sourceIds", mapper.createArrayNode().add(sourceID));
-		generalization.put("_targetIds", mapper.createArrayNode().add(targetID));
+		generalization.set("syncElementId", nullNode);
+		generalization.set("appliedStereotypeInstanceId", nullNode);
+		generalization.set("_sourceIds", mapper.createArrayNode().add(sourceID));
+		generalization.set("_targetIds", mapper.createArrayNode().add(targetID));
 		generalization.put("generalId", targetID);
-		generalization.put("generalizationSetIds", mapper.createArrayNode());
+		generalization.set("generalizationSetIds", mapper.createArrayNode());
 		generalization.put("isSubstitutable", Boolean.TRUE);
 		generalization.put("specificId", ownerID);
 		
@@ -493,12 +493,12 @@ public class MMSUtil {
 		ownedAttributes.add(refIdPropertyNode.get("id"));
 		ownedAttributes.add(projectIdPropertyNode.get("id"));
 				
-		jobClass.put("ownedAttributeIds",ownedAttributes);
-		jobClass.put("generalizationIds",mapper.createArrayNode().add(generalizationNode.get("id")));
+		jobClass.set("ownedAttributeIds",ownedAttributes);
+		jobClass.set("generalizationIds",mapper.createArrayNode().add(generalizationNode.get("id")));
 
 		elements.set(0, jobClass);
 		
-		payload.put("elements",elements);
+		payload.set("elements",elements);
 		payload.put("source","pma");
 		payload.put("pmaVersion","3.1");
 		
@@ -642,7 +642,7 @@ public class MMSUtil {
 		slotIds.add(projectIdSlotNode.get("id"));
 		slotIds.add(refIdSlotNode.get("id"));
 		
-		instanceSpecificationNode.put("slotIds",slotIds);
+		instanceSpecificationNode.set("slotIds",slotIds);
 		
 		elements.add(instanceSpecificationNode);
 		
@@ -658,7 +658,7 @@ public class MMSUtil {
 		elements.add(refIdSlotNode);
 
 		
-		payload.put("elements",elements);
+		payload.set("elements",elements);
 		payload.put("source","pma");
 		payload.put("pmaVersion","3.1");
 		
@@ -945,8 +945,8 @@ public class MMSUtil {
 	 * Should get the current value of the slot, change it and send it back to mms
 	 * Looking for instance specifications using the build number value.
 	 * @param server MMS server. Ex. opencae-uat.jpl.nasa.gov
-	 * @param projectID Magicdraw project id
-	 * @param refID
+	 * @param projectId Magicdraw project id
+	 * @param refId
 	 * @param jobId ID of job element
 	 * @param buildNumber Build number of the jenkins job. Starts from 1. 
 	 * @param propertyName Name of the part property. Ex: buildNumber,jobStatus,logUrl,etc
@@ -954,10 +954,14 @@ public class MMSUtil {
 	 * @param token Alfresco token.
 	 * @return Status code returned from mms.
 	 */
-	public String modifyInstanceSpecificationValue(String server,String projectID,String refID,String jobId,String buildNumber,String propertyName,String newSlotValue,String token)
+	public String modifyInstanceSpecificationValue(String server,String projectId,String refId,String jobId,String buildNumber,String propertyName,String newSlotValue,String token)
 	{
 		
-		String mmsReturnString = get(server, projectID,refID, "jobs_bin_"+jobId, true); // recursive get job sysmlid
+		
+		String mmsReturnString = getJobInstancesJson(server, projectId, refId, jobId); // retrieving job Instances and Job
+		
+		// Get all the job instances and the job element.
+		
 		
 		Map<String,String> jobInstanceInformationMap = null;
 		ObjectMapper mapper = new ObjectMapper();
@@ -968,7 +972,7 @@ public class MMSUtil {
 			ArrayList<Map<String,String>> jobInstancesmapList = PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId); // map contains slot id's with their values
 			for(Map jobInstanceMap:jobInstancesmapList)
 			{
-				if((jobInstanceMap.get("buildNumber").equals(buildNumber))&&(jobInstanceMap.get("refId").equals(refID)))
+				if((jobInstanceMap.get("buildNumber").equals(buildNumber))&&(jobInstanceMap.get("refId").equals(refId)))
 				{
 					jobInstanceInformationMap = jobInstanceMap;
 					System.out.println(jobInstanceInformationMap);
@@ -1005,7 +1009,7 @@ public class MMSUtil {
 							
 							ArrayNode valueArray = mapper.createArrayNode();
 							valueArray.add(valueNode);
-							instanceSlotElement.put("value", valueArray);
+							instanceSlotElement.set("value", valueArray);
 							
 							// puts the new json object in an elements array that will be sent to mms
 							ObjectNode payload = mapper.createObjectNode();
@@ -1017,7 +1021,7 @@ public class MMSUtil {
 							// send element to MMS
 //							System.out.println("Payload: "+payload);
 							
-							String response = post(server, projectID, refID, payload); // sending element to MMS
+							String response = post(server, projectId, refId, payload); // sending element to MMS
 							System.out.println("MMS Update Element Response: "+response);
 							/*
 							 * Sending jms messsage with job instance object
@@ -1041,7 +1045,7 @@ public class MMSUtil {
 							    	
 							    	JSONObject jmsJSON = new JSONObject();	
 							    	jmsJSON.put("updatedJobs", jobInstanceJSON);
-							    	jmc.publish(jmsJSON, jmc.TYPE_DELTA, refID, projectID);
+							    	jmc.publish(jmsJSON, jmc.TYPE_DELTA, refId, projectId);
 							    	logger.info("Sent JMS json: "+jmsJSON.toString());
 							    	System.out.println("Sent JMS json: "+jmsJSON.toString());
 							    	return "Instance Specification Updated. Property: "+propertyName+", Value: "+newSlotValue;
@@ -1086,14 +1090,14 @@ public class MMSUtil {
 				{
 		          	String jobInstanceElementID = createId();
 		          	String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
-		          	ObjectNode on = buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+jobId, jobId+"_instance_"+currentTimestamp,buildNumber,newSlotValue, server, projectID, refID,jobId); //job element will be the owner of the instance element
+		          	ObjectNode on = buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+jobId, jobId+"_instance_"+currentTimestamp,buildNumber,newSlotValue, server, projectId, refId,jobId); //job element will be the owner of the instance element
 		    		if(on==null)
 		    		{
 		    			logger.info("buildDocGenJobInstanceJSON output was null");
 		    			return "Job Element doesn't exist on MMS";
 		    		}
 		    		
-		    		String elementCreationResponse = this.post(server, projectID, refID, on);
+		    		String elementCreationResponse = this.post(server, projectId, refId, on);
 		    		
 		    		System.out.println("ELEMENT CREATION RESPONSE: "+elementCreationResponse);
 			    	
@@ -1126,7 +1130,7 @@ public class MMSUtil {
 					    	JSONObject jmsJSON = new JSONObject();	
 					    	jmsJSON.put("updatedJobs", jobInstanceJSON);
 					    	
-					    	jmc.publish(jobInstanceJSON, jmc.TYPE_DELTA, refID, projectID);
+					    	jmc.publish(jobInstanceJSON, jmc.TYPE_DELTA, refId, projectId);
 					    	logger.info("Sent JMS json: "+jobInstanceJSON.toString());
 					    	System.out.println("Sent JMS json: "+jobInstanceJSON.toString());
 				    	}
@@ -1313,22 +1317,19 @@ public class MMSUtil {
 	}
 	
 	/**
-	 * Retrieves all the instance specifications for a job element
+	 * Recursively retrieves all the instance specifications of a Job element and the job element with its part properties.
 	 * @param server MMS server
 	 * @param projectId MagicDraw project ID
 	 * @param refId 
 	 * @param jobElementId ID of job element. Used to look up the job instances.
 	 * @return
 	 */
-	public ResponseEntity<String> getJobInstanceElements(String server, String projectId, String refId, String jobElementId)
+	public String getJobInstancesJson(String server, String projectId, String refId, String jobElementId)
 	{
-		
-		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 
 		String getJobsQuery = ElasticSearchQueryBuilder.getJobInstancesQuery(projectId, refId,jobElementId);
 		
 		String elasticResponse = queryElastic(server, projectId, refId, getJobsQuery);
-//		System.out.println(elasticResponse);
 		ObjectMapper mapper = new ObjectMapper();
 
 
@@ -1354,43 +1355,86 @@ public class MMSUtil {
 				
 				//bulk element get
 				String bulkElementGetResponse = put(server, projectId, refId, elementArrayNode, true);
-//				System.out.println(mmsResponse);
 				JsonNode bulkElementGetResponseNode = PMAUtil.JSONStringToObject(bulkElementGetResponse);
+				
 				if(bulkElementGetResponseNode!=null)
 				{
 					JsonNode bulkElements = bulkElementGetResponseNode.get("elements");
 					if(bulkElements!=null)
 					{
 						logger.info("Job Instances found successfully");
-						String jobInstanceArrayString = PMAUtil.generateJobInstanceArrayJSON(bulkElementGetResponse,jobElementId,refId);
-						status = HttpStatus.OK;
-						return new ResponseEntity<String>(jobInstanceArrayString,status);
+						return bulkElementGetResponse;
 					}
 					else
 					{
 						logger.info(" mms error during bulk element get: "+bulkElementGetResponse);
-						return new ResponseEntity<String>(bulkElementGetResponse,status); // mms error during bulk element get
+						return bulkElementGetResponse; // mms error during bulk element get
 					}
 				}
 				else
 				{
 					// bulkElementGetResponse was not a JSON String
 					logger.info("bulkElementGetResponse was not a JSON String: "+bulkElementGetResponse);
-					return new ResponseEntity<String>(bulkElementGetResponse,status); // Returning the error
+					return bulkElementGetResponse; // Returning the error
 				}
 			}
 			else
 			{
 				// Error with mms elastic query or a blank return. 
 				logger.info("Error with mms elastic query or a blank return: "+elasticResponse);
-				return new ResponseEntity<String>(elasticResponse,status);
+				return elasticResponse;
 			}
 		}
 		else
 		{
 			// fullJson was not a JSON String
 			logger.info("fullJson was not a JSON String: "+elasticResponse);
-			return new ResponseEntity<String>(elasticResponse,status); // Returning the error
+			return elasticResponse; // Returning the error
+		}
+		
+	}
+	
+	/**
+	 * Retrieves all the instance specifications for a job element
+	 * @param server MMS server
+	 * @param projectId MagicDraw project ID
+	 * @param refId 
+	 * @param jobElementId ID of job element. Used to look up the job instances.
+	 * @return
+	 */
+	public ResponseEntity<String> getJobInstanceElements(String server, String projectId, String refId, String jobElementId)
+	{
+		
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+		String bulkElementGetResponse = getJobInstancesJson(server, projectId, refId, jobElementId);
+		
+		JsonNode bulkElementGetResponseNode = PMAUtil.JSONStringToObject(bulkElementGetResponse);
+		System.out.println("before null check");
+		if(bulkElementGetResponseNode!=null)
+		{
+			System.out.println("before second null check");
+			JsonNode bulkElements = bulkElementGetResponseNode.get("elements");
+			if(bulkElements!=null)
+			{
+				System.out.println("Job Instances found successfully");
+				logger.info("Job Instances found successfully");
+				String jobInstanceArrayString = PMAUtil.generateJobInstanceArrayJSON(bulkElementGetResponse,jobElementId,refId);
+				status = HttpStatus.OK;
+				return new ResponseEntity<String>(jobInstanceArrayString,status);
+			}
+			else
+			{
+				System.out.println("before null check");
+				logger.info(" mms error during bulk element get: "+bulkElementGetResponse);
+				return new ResponseEntity<String>(bulkElementGetResponse,status); // mms error during bulk element get
+			}
+		}
+		else
+		{
+			// bulkElementGetResponse was not a JSON String
+			logger.info("bulkElementGetResponse was not a JSON String: "+bulkElementGetResponse);
+			return new ResponseEntity<String>(bulkElementGetResponse,status); // Returning the error
 		}
 		
 	}
