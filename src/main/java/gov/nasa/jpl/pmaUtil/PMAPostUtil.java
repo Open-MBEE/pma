@@ -30,45 +30,39 @@ public class PMAPostUtil
 	/**
 	 *  Runs the Jenkins job and creates an Instance specification that will contain the run history.
 	 * @param jobSysmlID
-	 * @param projectID
-	 * @param refID
+	 * @param projectId
+	 * @param refId
 	 * @param alfrescoToken
 	 * @param mmsServer
 	 * @param je
 	 * @param logger
 	 * @return
 	 */
-	public static ResponseEntity<String> runJob(String jobSysmlID,String projectID, String refID, String alfrescoToken, String mmsServer,JenkinsEngine je,Logger logger)
+	public static ResponseEntity<String> runJob(String jobSysmlID,String projectId, String refId, String alfrescoToken, String mmsServer,JenkinsEngine je,Logger logger)
 	{
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
-		String jobResponse = "";
+		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectId, refId);
 		
-		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectID, refID);
-		
-		// Create job instance element. Uses the job package as the owner.
-		
+		//	Modifies the job instance with current run information or creates a new one if it doesn't exist
+
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-		String jobInstanceElementID = mmsUtil.createId();
 		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
-		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+jobSysmlID, jobSysmlID+"_instance_"+currentTimestamp,nextBuildNumber,"pending", mmsServer, projectID, refID,jobSysmlID); //job element will be the owner of the instance element
-//		System.out.println("job instance JSON: "+on.toString());
-//		logger.info("job instance JSON: "+on);
-		if(on.get("message")!=null)
-		{
-			jobResponse = on.toString();
-			
-			return new ResponseEntity<String>(jobResponse,status);
-		}
-		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
+
+		String elementCreationResponse = ""; // TODO find a way to get a response from modify instance spec
 		
-//		System.out.println("job instance element creation response"+elementCreationResponse);
+		mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", "");
+		mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", "");
+		mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "pending");
+		mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "started", currentTimestamp);
+		mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "buildNumber", nextBuildNumber);
+		
 		logger.info("job instance element creation response"+elementCreationResponse);
 		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
 		{
 			// run job on jenkins
-	        String runResponse = je.executeNestedJob(jobSysmlID, projectID, refID); // job name should be the job sysmlID
+	        String runResponse = je.executeNestedJob(jobSysmlID, projectId, refId); // job name should be the job sysmlID
 	        
 //			System.out.println("Job run response: "+runResponse);
 			logger.info("Run job Jenkins response: "+runResponse);
@@ -77,11 +71,17 @@ public class PMAPostUtil
 			{
 				status = HttpStatus.OK;
 				
-				String jobInstanceJSON = mmsUtil.getJobInstanceElement(mmsServer, projectID, refID, jobInstanceElementID,jobSysmlID);
+				String jobInstanceElementId = ""; // TODO get the job instance id
+				
+				String jobInstanceJSON = mmsUtil.getJobInstanceElement(mmsServer, projectId, refId, jobInstanceElementId,jobSysmlID);
 				
 		        return new ResponseEntity<String>(jobInstanceJSON,status);
 			}
-			mmsUtil.delete(mmsServer, projectID, refID, jobInstanceElementID);
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "Didn't Start Due To Jenkins Error");
+			currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", currentTimestamp);
+			
+//			mmsUtil.delete(mmsServer, projectId, refId, jobInstanceElementID);
     		ObjectNode responseJSON = mapper.createObjectNode();
     		responseJSON.put("message", runResponse + " Jenkins"); // jenkins error when running job
     		runResponse = responseJSON.toString();

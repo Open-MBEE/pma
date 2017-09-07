@@ -954,7 +954,7 @@ public class MMSUtil {
 	 * @param token Alfresco token.
 	 * @return Status code returned from mms.
 	 */
-	public String modifyInstanceSpecificationValue(String server,String projectId,String refId,String jobId,String buildNumber,String propertyName,String newSlotValue,String token)
+	public String modifyInstanceSpecificationValue(String server,String projectId,String refId,String jobId,String buildNumber,String propertyName,String newSlotValue)
 	{
 		
 		
@@ -1089,8 +1089,7 @@ public class MMSUtil {
 				if(propertyName.equals("jobStatus")) // creates the job instance
 				{
 		          	String jobInstanceElementID = createId();
-		          	String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
-		          	ObjectNode on = buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+jobId, jobId+"_instance_"+currentTimestamp,buildNumber,newSlotValue, server, projectId, refId,jobId); //job element will be the owner of the instance element
+		          	ObjectNode on = buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+jobId, jobId+"_instance",buildNumber,newSlotValue, server, projectId, refId,jobId); // jobs bin will be the owner of the instance element
 		    		if(on==null)
 		    		{
 		    			logger.info("buildDocGenJobInstanceJSON output was null");
