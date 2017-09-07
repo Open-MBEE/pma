@@ -731,6 +731,60 @@ public class JenkinsEngine {
 		return null;
 	}
 
+	/**
+	 * Disables a job on Jenkins
+	 * @param jobName name of Job
+	 * @param projectId MD Project Id
+	 * @param refId branch Id
+	 * @return
+	 */
+	public String disableNestedJob(String jobName,String projectId,String refId)
+	{
+		String nestedLocation = "";
+		
+		if((!projectId.equals(""))&&(!refId.equals("")))
+		{
+			nestedLocation = projectId+"/job/"+refId+"/job/";	
+		}
+		
+		try {
+			this.executeUrl = this.url + "/job/PMA/job/"+nestedLocation + jobName + "/disable"; // Jenkins2
+			System.out.println("Disable url: "+executeUrl);
+			String response = this.build();
+			return response;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	/**
+	 * Enables a job on Jenkins
+	 * @param jobName name of Job
+	 * @param projectId MD Project Id
+	 * @param refId branch Id
+	 * @return
+	 */
+	public String enableNestedJob(String jobName,String projectId,String refId)
+	{
+		String nestedLocation = "";
+		
+		if((!projectId.equals(""))&&(!refId.equals("")))
+		{
+			nestedLocation = projectId+"/job/"+refId+"/job/";	
+		}
+		
+		try {
+			this.executeUrl = this.url + "/job/PMA/job/"+nestedLocation + jobName + "/enable"; // Jenkins2
+			System.out.println("Disable url: "+executeUrl);
+			String response = this.build();
+			return response;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	public JSONObject isJobInQueue(JSONObject jenkinsJobJson) {
 		try {
 			this.executeUrl = this.url + "/queue/api/json";
@@ -1344,53 +1398,13 @@ public class JenkinsEngine {
         String folderName = "merp";
         String jobString = je.getJob(folderName);
         
-        System.out.println("JOB STRING: "+jobString);
-        if(!PMAUtil.isJSON(jobString))
-        {
-        	if(jobString.equals("Job not found on Jenkins"))
-        	{
-        		System.out.println("create folder");
-        		je.createFolder(folderName);
-        	}
-        }
-        else
-        {
-        	System.out.println("Folder already exists");
-        }
+        String jobName = "PMA_1504646263387_dc1a7015-bf6c-4d0a-964e-c80aeab9461d";
+        String projectId = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
+        String refId = "master";
+//        String disableReturn = je.disableNestedJob(jobName, projectId, refId);
+//        System.out.println(disableReturn);
         
-        String nestedfolderName = "nestedMerp";
-        jobString = je.getNestedJob(nestedfolderName, folderName);
-        
-        System.out.println("JOB STRING: "+jobString);
-        if(!PMAUtil.isJSON(jobString))
-        {
-        	if(jobString.equals("Job not found on Jenkins"))
-        	{
-        		System.out.println("create folder");
-        		je.createFolderWithParent(nestedfolderName, folderName);
-        	}
-        }
-        else
-        {
-        	System.out.println("Folder already exists");
-        }
-        
-        
-        
-//        System.out.println("Job existence: "+je.getJob("master"));
-        
-//        System.out.println(je.createFolder("merp"));
-        
-//        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
-//        je.postConfigXml(jbc, jobElementID, true);
-//        try {
-//			Thread.sleep(20000);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//        je.deleteJob(jobElementID);
-
-        
+        String enableReturn = je.enableNestedJob(jobName, projectId, refId);
+        System.out.println(enableReturn);
 }
 }
