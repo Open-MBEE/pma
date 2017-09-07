@@ -5,6 +5,7 @@
 package gov.nasa.jpl.pmaUtil;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ public class PMAPostUtil
 	}
 	
 	/**
-	 *  Runs the Jenkins job and creates an Instance specification that will contain the run history.
+	 *  Runs the Jenkins job and updates the job instance specification with the current run information.
 	 * @param jobSysmlID
 	 * @param projectId
 	 * @param refId
@@ -43,23 +44,36 @@ public class PMAPostUtil
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
-		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectId, refId);
+		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectId, refId); // next build number from Jenkins
 		
 		//	Modifies the job instance with current run information or creates a new one if it doesn't exist
 
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 
-		String elementCreationResponse = ""; // TODO find a way to get a response from modify instance spec
+		String modifyJobInstanceSpecificationResponse = "";
 		
-		mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", "");
-		mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", "");
-		mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "pending");
-		mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "started", currentTimestamp);
-		mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "buildNumber", nextBuildNumber);
+		// TODO make this a bulk modify to speed it up. 
+		ArrayList<String> modifyResponses = new ArrayList<String>();
+		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", ""));
+		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", ""));
+		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "pending"));
+		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "started", currentTimestamp));
+		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "buildNumber", nextBuildNumber));
 		
-		logger.info("job instance element creation response"+elementCreationResponse);
-		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
+		for(String modifyResponse:modifyResponses)
+		{
+			modifyJobInstanceSpecificationResponse=modifyResponse;
+			if(!modifyResponse.contains("Instance Specification Updated."))
+			{
+				System.out.println("ERROR Response: "+ modifyResponse);
+				break;
+			}
+			System.out.println("Response: "+ modifyResponse);
+		}
+
+		logger.info("modify job instance element response: "+modifyJobInstanceSpecificationResponse);
+		if (modifyJobInstanceSpecificationResponse.contains("Instance Specification Updated."))
 		{
 			// run job on jenkins
 	        String runResponse = je.executeNestedJob(jobSysmlID, projectId, refId); // job name should be the job sysmlID
@@ -72,28 +86,37 @@ public class PMAPostUtil
 				status = HttpStatus.OK;
 				
 				String jobInstanceElementId = ""; // TODO get the job instance id
+//				mmsUtil.getJobInstanceID(server, projectId, refId, jobElementId)
 				
 				String jobInstanceJSON = mmsUtil.getJobInstanceElement(mmsServer, projectId, refId, jobInstanceElementId,jobSysmlID);
 				
 		        return new ResponseEntity<String>(jobInstanceJSON,status);
 			}
+			
 			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "Didn't Start Due To Jenkins Error");
+			modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", runResponse));
 			currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", currentTimestamp);
 			
-//			mmsUtil.delete(mmsServer, projectId, refId, jobInstanceElementID);
     		ObjectNode responseJSON = mapper.createObjectNode();
     		responseJSON.put("message", runResponse + " Jenkins"); // jenkins error when running job
     		runResponse = responseJSON.toString();
 	        return new ResponseEntity<String>(runResponse,status);
 			
 		}
-		logger.info("MMS Element creation response: "+elementCreationResponse);
+		else
+		{
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "Didn't Start Due To MMS Error");
+			modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", modifyJobInstanceSpecificationResponse));
+			currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", currentTimestamp);
+		}
+
 		
 		ObjectNode responseJSON = mapper.createObjectNode();
-		responseJSON.put("message", elementCreationResponse + " MMS"); // mms issue when creating job instance
-		elementCreationResponse = responseJSON.toString();
-        return new ResponseEntity<String>(elementCreationResponse,status);
+		responseJSON.put("message", modifyJobInstanceSpecificationResponse + " (MMS)"); // mms issue when creating job instance
+		modifyJobInstanceSpecificationResponse = responseJSON.toString();
+        return new ResponseEntity<String>(modifyJobInstanceSpecificationResponse,status);
 	}
 	
 	/**

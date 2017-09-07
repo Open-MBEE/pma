@@ -972,10 +972,11 @@ public class MMSUtil {
 			ArrayList<Map<String,String>> jobInstancesmapList = PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId); // map contains slot id's with their values
 			for(Map jobInstanceMap:jobInstancesmapList)
 			{
-				if((jobInstanceMap.get("buildNumber").equals(buildNumber))&&(jobInstanceMap.get("refId").equals(refId)))
+				if(jobInstanceMap.get("refId").equals(refId))
 				{
 					jobInstanceInformationMap = jobInstanceMap;
 					System.out.println(jobInstanceInformationMap);
+					break; // Assuming job instance is the first instance in the jobInstancesmapList
 				}
 			}
 			if(jobInstanceInformationMap!=null) // Instance was found. 
@@ -1063,7 +1064,7 @@ public class MMSUtil {
 						}
 						else
 						{
-							return "Slot element not found on MMS";
+							return "Error during Job Instance Modification. Slot element not found on MMS";
 						}
 					} catch (JsonProcessingException e) {
 						// TODO Auto-generated catch block
@@ -1078,7 +1079,7 @@ public class MMSUtil {
 				}
 				else
 				{
-					return "No slot with this property name";
+					return "Error during Job Instance Modification. No slot with this property name: "+propertyName;
 				}
 			}
 			else // Instance isn't found, a new one will be created. Happens when a job is ran without being triggered by PMA. EX. (Manual run on Jenkins or a scheduled run.)
@@ -1093,7 +1094,7 @@ public class MMSUtil {
 		    		if(on==null)
 		    		{
 		    			logger.info("buildDocGenJobInstanceJSON output was null");
-		    			return "Job Element doesn't exist on MMS";
+		    			return "Error during Job Instance Modification. Job Element doesn't exist on MMS";
 		    		}
 		    		
 		    		String elementCreationResponse = this.post(server, projectId, refId, on);
@@ -1392,6 +1393,49 @@ public class MMSUtil {
 		}
 		
 	}
+	
+	/**
+	 * Retrieves the instance specifications ID for a job element
+	 * @param server MMS server
+	 * @param projectId MagicDraw project ID
+	 * @param refId 
+	 * @param jobElementId ID of job element. Used to look up the job instances.
+	 * @return
+	 */
+	public String getJobInstanceID(String server, String projectId, String refId, String jobElementId)
+	{
+
+		String bulkElementGetResponse = getJobInstancesJson(server, projectId, refId, jobElementId);
+		
+		JsonNode bulkElementGetResponseNode = PMAUtil.JSONStringToObject(bulkElementGetResponse);
+		System.out.println("before null check");
+		if(bulkElementGetResponseNode!=null)
+		{
+			System.out.println("before second null check");
+			JsonNode bulkElements = bulkElementGetResponseNode.get("elements");
+			if(bulkElements!=null)
+			{
+				System.out.println("Job Instances found successfully");
+				logger.info("Job Instances found successfully");
+				String jobInstanceArrayString = PMAUtil.generateJobInstanceArrayJSON(bulkElementGetResponse,jobElementId,refId);
+				return jobInstanceArrayString;
+			}
+			else
+			{
+				System.out.println("before null check");
+				logger.info(" mms error during bulk element get: "+bulkElementGetResponse);
+				return bulkElementGetResponse; // mms error during bulk element get
+			}
+		}
+		else
+		{
+			// bulkElementGetResponse was not a JSON String
+			logger.info("bulkElementGetResponse was not a JSON String: "+bulkElementGetResponse);
+			return bulkElementGetResponse; // Returning the error
+		}
+		
+	}
+	
 	
 	/**
 	 * Retrieves all the instance specifications for a job element
