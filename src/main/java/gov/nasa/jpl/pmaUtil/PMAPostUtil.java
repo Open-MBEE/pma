@@ -52,36 +52,16 @@ public class PMAPostUtil
 
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
-
-		String modifyJobInstanceSpecificationResponse = "";
 		
-		// TODO make this a bulk modify to speed it up. 
-		ArrayList<String> modifyResponses = new ArrayList<String>();
-		Map<String,String> jobInstanceInformationMap = new HashMap<String,String>();
-		jobInstanceInformationMap.put("completed", "");
-		jobInstanceInformationMap.put("logUrl", "");
-		jobInstanceInformationMap.put("jobStatus", "pending");
-		jobInstanceInformationMap.put("started", currentTimestamp);
-		jobInstanceInformationMap.put("buildNumber", nextBuildNumber);
+		Map<String,String> newJobInstanceValues = new HashMap<String,String>();
+		newJobInstanceValues.put("completed", "");
+		newJobInstanceValues.put("logUrl", "");
+		newJobInstanceValues.put("jobStatus", "pending");
+		newJobInstanceValues.put("started", currentTimestamp);
+		newJobInstanceValues.put("buildNumber", nextBuildNumber);
 		
-		modifyResponses.add(mmsUtil.modifyBulkInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber,jobInstanceInformationMap));
-//		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", ""));
-//		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", ""));
-//		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "pending"));
-//		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "started", currentTimestamp));
-//		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "buildNumber", nextBuildNumber));
+		String modifyJobInstanceSpecificationResponse =  mmsUtil.modifyBulkInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber,newJobInstanceValues);
 		
-		for(String modifyResponse:modifyResponses)
-		{
-			modifyJobInstanceSpecificationResponse=modifyResponse;
-			if(!((modifyResponse.contains("Instance Specification Updated."))||(modifyResponse.contains("HTTP/1.1 200 OK"))))
-			{
-				System.out.println("ERROR Response: "+ modifyResponse);
-				break;
-			}
-			System.out.println("Response: "+ modifyResponse);
-		}
-
 		logger.info("modify job instance element response: "+modifyJobInstanceSpecificationResponse);
 		if (modifyJobInstanceSpecificationResponse.contains("Instance Specification Updated.")||modifyJobInstanceSpecificationResponse.contains("HTTP/1.1 200 OK"))
 		{
@@ -112,7 +92,7 @@ public class PMAPostUtil
 			}
 			
 			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "Didn't Start Due To Jenkins Error");
-			modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", runResponse));
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", runResponse);
 			currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", currentTimestamp);
 			
@@ -125,7 +105,7 @@ public class PMAPostUtil
 		else
 		{
 			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "Didn't Start Due To MMS Error");
-			modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", modifyJobInstanceSpecificationResponse));
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", modifyJobInstanceSpecificationResponse);
 			currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", currentTimestamp);
 		}

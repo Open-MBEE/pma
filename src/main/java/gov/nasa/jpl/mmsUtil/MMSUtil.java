@@ -1084,16 +1084,18 @@ public class MMSUtil {
 	 * @param token Alfresco token.
 	 * @return Status code returned from mms.
 	 */
-	public String modifyBulkInstanceSpecificationValue(String server,String projectId,String refId,String jobId,String buildNumber,Map<String,String> jobInstanceInformationMap)
+	public String modifyBulkInstanceSpecificationValue(String server,String projectId,String refId,String jobId,String buildNumber,Map<String,String> newJobInstanceValues)
 	{
 		
 		// Get all the job instances and the job element.
 		String mmsReturnString = getJobInstancesJson(server, projectId, refId, jobId); 
-		
+		Map<String,String> jobInstanceInformationMap = null;
 		ObjectMapper mapper = new ObjectMapper();
 		
 		if(isElementJSON(mmsReturnString)) // It will be an error if the json string is not an element JSON.
 		{
+//			System.out.println("JOBID: "+jobId);
+//			System.out.println("beforeFor: "+PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId));
 			// looking for job instance element
 			ArrayList<Map<String,String>> jobInstancesmapList = PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId); // map contains slot id's with their values
 			for(Map jobInstanceMap:jobInstancesmapList)
@@ -1101,23 +1103,21 @@ public class MMSUtil {
 				if(jobInstanceMap.get("refId").equals(refId))
 				{
 					jobInstanceInformationMap = jobInstanceMap;
-					System.out.println(jobInstanceInformationMap);
+//					System.out.println("INFOMAP: "+jobInstanceInformationMap);
 					break; // Assuming job instance is the first instance in the jobInstancesmapList
 				}
 			}
-			Map<String,String> updateJobInstanceProperties = new HashMap<String,String>();
 	
-		    
+//		    System.out.println("beforeif");
+//		    System.out.println(jobInstanceInformationMap!=null);
 			if(jobInstanceInformationMap!=null) // Instance was found. 
 			{
 				ArrayNode arrayElements = mapper.createArrayNode();
-				Iterator it = updateJobInstanceProperties.entrySet().iterator();
+				Iterator it = newJobInstanceValues.entrySet().iterator();
 			    while (it.hasNext()) {
 			        Map.Entry pair = (Map.Entry)it.next();
 			        String propertyName = (String) pair.getKey();
 			        String newSlotValue = (String) pair.getValue();
-			        System.out.println(pair.getKey() + " = " + pair.getValue());
-			        it.remove(); // avoids a ConcurrentModificationException
 			        
 			        System.out.println("PropertyName: "+propertyName);
 			        System.out.println("newSlotValue: "+newSlotValue);
@@ -1128,7 +1128,6 @@ public class MMSUtil {
 						try {
 							JsonNode fullJson = mapper.readTree(mmsReturnString);
 							JsonNode elements = fullJson.get("elements");
-							
 							ObjectNode instanceSlotElement = null;
 							for(JsonNode element:elements)
 							{
@@ -1175,6 +1174,7 @@ public class MMSUtil {
 					{
 						return "Error during Job Instance Modification. No slot with this property name: "+propertyName;
 					}
+					it.remove(); // avoids a ConcurrentModificationException
 			    }
 			    
 			    // puts the new json object in an elements array that will be sent to mms
@@ -1184,16 +1184,16 @@ public class MMSUtil {
 				payload.put("source","pma");
 				
 				// send element to MMS
-				System.out.println("Payload: "+payload);
+//				System.out.println("Payload: "+payload);
 				
 				String response = post(server, projectId, refId, payload); // sending element to MMS
-				System.out.println("MMS Update Element Response: "+response);
+//				System.out.println("MMS Update Element Response: "+response);
 				/*
 				 * Sending jms messsage with job instance object
 				 */
 	    		if (response.equals("HTTP/1.1 200 OK"))
 	    		{
-			    	return sendJobInstanceJMS(jobInstanceInformationMap,"", "", server, refId, projectId);
+			    	return sendJobInstanceJMS(jobInstanceInformationMap,"Bulk", "Update", server, refId, projectId);
 	    		}
 	    		else
 	    		{
@@ -1204,7 +1204,7 @@ public class MMSUtil {
 			else // Instance isn't found, a new one will be created. Happens when a job is ran without being triggered by PMA. EX. (Manual run on Jenkins or a scheduled run.)
 			{
 				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, "pending");
-				System.out.println("CREATE JOB INSTANCE RESPONSE: "+createJobInstanceElementResponse);
+//				System.out.println("CREATE JOB INSTANCE RESPONSE: "+createJobInstanceElementResponse);
 				return createJobInstanceElementResponse;
 				
 			}
