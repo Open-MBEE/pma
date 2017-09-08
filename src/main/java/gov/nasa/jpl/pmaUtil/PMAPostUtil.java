@@ -7,6 +7,8 @@ package gov.nasa.jpl.pmaUtil;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -55,16 +57,24 @@ public class PMAPostUtil
 		
 		// TODO make this a bulk modify to speed it up. 
 		ArrayList<String> modifyResponses = new ArrayList<String>();
-		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", ""));
-		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", ""));
-		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "pending"));
-		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "started", currentTimestamp));
-		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "buildNumber", nextBuildNumber));
+		Map<String,String> jobInstanceInformationMap = new HashMap<String,String>();
+		jobInstanceInformationMap.put("completed", "");
+		jobInstanceInformationMap.put("logUrl", "");
+		jobInstanceInformationMap.put("jobStatus", "pending");
+		jobInstanceInformationMap.put("started", currentTimestamp);
+		jobInstanceInformationMap.put("buildNumber", nextBuildNumber);
+		
+		modifyResponses.add(mmsUtil.modifyBulkInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber,jobInstanceInformationMap));
+//		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", ""));
+//		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", ""));
+//		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "pending"));
+//		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "started", currentTimestamp));
+//		modifyResponses.add(mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "buildNumber", nextBuildNumber));
 		
 		for(String modifyResponse:modifyResponses)
 		{
 			modifyJobInstanceSpecificationResponse=modifyResponse;
-			if(!modifyResponse.contains("Instance Specification Updated."))
+			if(!((modifyResponse.contains("Instance Specification Updated."))||(modifyResponse.contains("HTTP/1.1 200 OK"))))
 			{
 				System.out.println("ERROR Response: "+ modifyResponse);
 				break;
@@ -73,7 +83,7 @@ public class PMAPostUtil
 		}
 
 		logger.info("modify job instance element response: "+modifyJobInstanceSpecificationResponse);
-		if (modifyJobInstanceSpecificationResponse.contains("Instance Specification Updated."))
+		if (modifyJobInstanceSpecificationResponse.contains("Instance Specification Updated.")||modifyJobInstanceSpecificationResponse.contains("HTTP/1.1 200 OK"))
 		{
 			// run job on jenkins
 	        String runResponse = je.executeNestedJob(jobSysmlID, projectId, refId); // job name should be the job sysmlID
@@ -85,11 +95,19 @@ public class PMAPostUtil
 			{
 				status = HttpStatus.OK;
 				
-				String jobInstanceElementId = ""; // TODO get the job instance id
-//				mmsUtil.getJobInstanceID(server, projectId, refId, jobElementId)
+				String jobInstanceElementId = mmsUtil.getJobInstanceID(mmsServer, projectId, refId, jobSysmlID);
+				if(jobInstanceElementId==null)
+				{
+					ObjectNode responseJSON = mapper.createObjectNode();
+		    		responseJSON.put("message", "Couldn't Find Job Instance Element To Return"); // couldn't find job instance element to return
+		    		runResponse = responseJSON.toString();
+					return new ResponseEntity<String>(runResponse,HttpStatus.NOT_FOUND);
+				}
 				
+				System.out.println("Job instance Id: "+jobInstanceElementId);
 				String jobInstanceJSON = mmsUtil.getJobInstanceElement(mmsServer, projectId, refId, jobInstanceElementId,jobSysmlID);
-				
+				System.out.println("ran succesfully!");
+				System.out.println("Job Instance JSON: "+jobInstanceJSON);
 		        return new ResponseEntity<String>(jobInstanceJSON,status);
 			}
 			
@@ -111,7 +129,7 @@ public class PMAPostUtil
 			currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", currentTimestamp);
 		}
-
+		System.out.println("didn't run succesfully!");
 		
 		ObjectNode responseJSON = mapper.createObjectNode();
 		responseJSON.put("message", modifyJobInstanceSpecificationResponse + " (MMS)"); // mms issue when creating job instance
