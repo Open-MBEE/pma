@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -943,7 +944,7 @@ public class MMSUtil {
 	
 	/**
 	 * Should get the current value of the slot, change it and send it back to mms
-	 * Looking for instance specifications using the build number value.
+	 * Looking for instance specifications using the latest created one in the ref.
 	 * @param server MMS server. Ex. opencae-uat.jpl.nasa.gov
 	 * @param projectId Magicdraw project id
 	 * @param refId
@@ -954,28 +955,26 @@ public class MMSUtil {
 	 * @param token Alfresco token.
 	 * @return Status code returned from mms.
 	 */
-	public String modifyInstanceSpecificationValue(String server,String projectId,String refId,String jobId,String buildNumber,String propertyName,String newSlotValue,String token)
+	public String modifyInstanceSpecificationValue(String server,String projectId,String refId,String jobId,String buildNumber,String propertyName,String newSlotValue)
 	{
 		
-		
-		String mmsReturnString = getJobInstancesJson(server, projectId, refId, jobId); // retrieving job Instances and Job
-		
 		// Get all the job instances and the job element.
-		
+		String mmsReturnString = getJobInstancesJson(server, projectId, refId, jobId); 
 		
 		Map<String,String> jobInstanceInformationMap = null;
 		ObjectMapper mapper = new ObjectMapper();
 		
 		if(isElementJSON(mmsReturnString)) // It will be an error if the json string is not an element JSON.
 		{
-			System.out.println("is element json");
+			// looking for job instance element
 			ArrayList<Map<String,String>> jobInstancesmapList = PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId); // map contains slot id's with their values
 			for(Map jobInstanceMap:jobInstancesmapList)
 			{
-				if((jobInstanceMap.get("buildNumber").equals(buildNumber))&&(jobInstanceMap.get("refId").equals(refId)))
+				if(jobInstanceMap.get("refId").equals(refId))
 				{
 					jobInstanceInformationMap = jobInstanceMap;
 					System.out.println(jobInstanceInformationMap);
+					break; // Assuming job instance is the first instance in the jobInstancesmapList
 				}
 			}
 			if(jobInstanceInformationMap!=null) // Instance was found. 
@@ -1028,33 +1027,7 @@ public class MMSUtil {
 							 */
 				    		if (response.equals("HTTP/1.1 200 OK"))
 				    		{
-						    	try
-						    	{
-						    		
-						    		jobInstanceInformationMap.put(propertyName, newSlotValue);
-						    		String jobJson = PMAUtil.createJobInstanceJSON(jobInstanceInformationMap).toString();
-						    		
-								 	// build job instance element json to be sent
-								 	JSONObject jobInstanceJSON = new JSONObject(jobJson);	
-								 	
-							    	// Sending job instance element to jms.
-							    	JmsConnection jmc = new JmsConnection();
-							    	String jmsSettings = MMSUtil.getJMSSettings(server);
-							    	JSONObject connectionJson = new JSONObject(jmsSettings);
-							    	jmc.ingestJson(connectionJson);
-							    	
-							    	JSONObject jmsJSON = new JSONObject();	
-							    	jmsJSON.put("updatedJobs", jobInstanceJSON);
-							    	jmc.publish(jmsJSON, jmc.TYPE_DELTA, refId, projectId);
-							    	logger.info("Sent JMS json: "+jmsJSON.toString());
-							    	System.out.println("Sent JMS json: "+jmsJSON.toString());
-							    	return "Instance Specification Updated. Property: "+propertyName+", Value: "+newSlotValue;
-						    	}
-						    	catch(JSONException e)
-						    	{
-						    		e.printStackTrace();
-						    		logger.info(e.toString());
-						    	}
+						    	return sendJobInstanceJMS(jobInstanceInformationMap, propertyName, newSlotValue, server, refId, projectId);
 				    		}
 				    		else
 				    		{
@@ -1063,7 +1036,7 @@ public class MMSUtil {
 						}
 						else
 						{
-							return "Slot element not found on MMS";
+							return "Error during Job Instance Modification. Slot element not found on MMS";
 						}
 					} catch (JsonProcessingException e) {
 						// TODO Auto-generated catch block
@@ -1078,74 +1051,280 @@ public class MMSUtil {
 				}
 				else
 				{
-					return "No slot with this property name";
+					return "Error during Job Instance Modification. No slot with this property name: "+propertyName;
 				}
 			}
 			else // Instance isn't found, a new one will be created. Happens when a job is ran without being triggered by PMA. EX. (Manual run on Jenkins or a scheduled run.)
 			{
 				System.out.println("INSIDE ELSE");
-				System.out.println(propertyName);
-				// Creating job instance for the job run because it doesn't currently exist.
-				if(propertyName.equals("jobStatus")) // creates the job instance
+				if(!propertyName.equals("jobStatus")) // By default the job status will be pending.
 				{
-		          	String jobInstanceElementID = createId();
-		          	String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
-		          	ObjectNode on = buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+jobId, jobId+"_instance_"+currentTimestamp,buildNumber,newSlotValue, server, projectId, refId,jobId); //job element will be the owner of the instance element
-		    		if(on==null)
-		    		{
-		    			logger.info("buildDocGenJobInstanceJSON output was null");
-		    			return "Job Element doesn't exist on MMS";
-		    		}
-		    		
-		    		String elementCreationResponse = this.post(server, projectId, refId, on);
-		    		
-		    		System.out.println("ELEMENT CREATION RESPONSE: "+elementCreationResponse);
-			    	
-					/*
-					 * Sending jms messsage with job instance object
-					 */
-		    		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
-		    		{
-			    		try
-				    	{
-				    		/*
-				    		 * When the job instance is first created, it will have these values by default. 
-				    		 * Couldn't retrieve the job instance part property values from MMS, since the job instance was just created a couple lines above. 
-				    		 *
-				    		 */
-					    	JmsConnection jmc = new JmsConnection();
-					    	String jmsSettings = MMSUtil.getJMSSettings(server);
-					    	JSONObject connectionJson = new JSONObject(jmsSettings);
-					    	jmc.ingestJson(connectionJson);
-					    	
-					    	JSONObject jobInstanceJSON = new JSONObject();
-					    	jobInstanceJSON.put("id", jobInstanceElementID);
-					    	jobInstanceJSON.put("jobId", jobId);
-					    	jobInstanceJSON.put("buildNumber", buildNumber);
-					    	jobInstanceJSON.put("jobStatus", newSlotValue);
-					    	jobInstanceJSON.put("jenkinsLog", "");
-					    	jobInstanceJSON.put("created", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date())); //ex. 2017-06-08T13:37:19.483-0700);
-					    	jobInstanceJSON.put("completed", "");
-					    	
-					    	JSONObject jmsJSON = new JSONObject();	
-					    	jmsJSON.put("updatedJobs", jobInstanceJSON);
-					    	
-					    	jmc.publish(jobInstanceJSON, jmc.TYPE_DELTA, refId, projectId);
-					    	logger.info("Sent JMS json: "+jobInstanceJSON.toString());
-					    	System.out.println("Sent JMS json: "+jobInstanceJSON.toString());
-				    	}
-				    	catch(JSONException e)
-				    	{
-				    		e.printStackTrace();
-				    		logger.info(e.toString());
-				    	}
-		    		}
-		    		return elementCreationResponse;
+					newSlotValue = "pending";
 				}
+				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, newSlotValue);
+				System.out.println("CREATE JOB INSTANCE RESPONSE: "+createJobInstanceElementResponse);
+				return createJobInstanceElementResponse;
+				
 			}
 		}
 		
-		return "Default Return String";
+		return mmsReturnString;
+	}
+	
+
+	/**
+	 * Should get the current value of the slot, change it and send it back to mms
+	 * Looking for instance specifications using the latest created one in the ref.
+	 * @param server MMS server. Ex. opencae-uat.jpl.nasa.gov
+	 * @param projectId Magicdraw project id
+	 * @param refId
+	 * @param jobId ID of job element
+	 * @param buildNumber Build number of the jenkins job. Starts from 1. 
+	 * @param newJobInstanceValues Map with the key being the property name and the value being the new value. ex ("jobStatus", "pending")
+	 * @return Status code returned from mms.
+	 */
+	public String modifyBulkInstanceSpecificationValue(String server,String projectId,String refId,String jobId,String buildNumber,Map<String,String> newJobInstanceValues)
+	{
+		
+		// Get all the job instances and the job element.
+		String mmsReturnString = getJobInstancesJson(server, projectId, refId, jobId); 
+		Map<String,String> jobInstanceInformationMap = null;
+		ObjectMapper mapper = new ObjectMapper();
+		
+		if(isElementJSON(mmsReturnString)) // It will be an error if the json string is not an element JSON.
+		{
+//			System.out.println("JOBID: "+jobId);
+//			System.out.println("beforeFor: "+PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId));
+			// looking for job instance element
+			ArrayList<Map<String,String>> jobInstancesmapList = PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId); // map contains slot id's with their values
+			for(Map jobInstanceMap:jobInstancesmapList)
+			{
+				if(jobInstanceMap.get("refId").equals(refId))
+				{
+					jobInstanceInformationMap = jobInstanceMap;
+//					System.out.println("INFOMAP: "+jobInstanceInformationMap);
+					break; // Assuming job instance is the first instance in the jobInstancesmapList
+				}
+			}
+	
+//		    System.out.println("beforeif");
+//		    System.out.println(jobInstanceInformationMap!=null);
+			if(jobInstanceInformationMap!=null) // Instance was found. 
+			{
+				ArrayNode arrayElements = mapper.createArrayNode();
+				Iterator it = newJobInstanceValues.entrySet().iterator();
+			    while (it.hasNext()) {
+			        Map.Entry pair = (Map.Entry)it.next();
+			        String propertyName = (String) pair.getKey();
+			        String newSlotValue = (String) pair.getValue();
+			        
+			        System.out.println("PropertyName: "+propertyName);
+			        System.out.println("newSlotValue: "+newSlotValue);
+			        String jobInstanceSlotID = jobInstanceInformationMap.get(propertyName+"ID");
+					if(jobInstanceSlotID!=null)
+					{
+						// Modify slot json and send back to MMS
+						try {
+							JsonNode fullJson = mapper.readTree(mmsReturnString);
+							JsonNode elements = fullJson.get("elements");
+							ObjectNode instanceSlotElement = null;
+							for(JsonNode element:elements)
+							{
+								if(element.get("id").toString().replace("\"", "").equals(jobInstanceSlotID))
+								{
+									// Found slot
+									logger.info("Found Slot for: "+propertyName);
+									System.out.println("Found Slot for: "+propertyName);
+									instanceSlotElement=(ObjectNode) element;
+									
+								}
+							}
+							if(instanceSlotElement!=null)
+							{
+								// Modify slot 
+								ObjectNode valueNode = (ObjectNode) instanceSlotElement.get("value").get(0);
+								System.out.println("Old Value: "+valueNode.get("value"));
+								valueNode.put("value", newSlotValue);
+								System.out.println("New Value: "+valueNode.get("value"));
+								
+								ArrayNode valueArray = mapper.createArrayNode();
+								valueArray.add(valueNode);
+								instanceSlotElement.set("value", valueArray);
+								
+								arrayElements.add(instanceSlotElement);
+								jobInstanceInformationMap.put(propertyName, newSlotValue);
+							}
+							else
+							{
+								return "Error during Job Instance Modification. Slot element not found on MMS";
+							}
+						} catch (JsonProcessingException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+							return(e.toString());
+						}catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+							return(e.toString());
+						}
+							
+					}
+					else
+					{
+						return "Error during Job Instance Modification. No slot with this property name: "+propertyName;
+					}
+					it.remove(); // avoids a ConcurrentModificationException
+			    }
+			    
+			    // puts the new json object in an elements array that will be sent to mms
+				ObjectNode payload = mapper.createObjectNode();
+				
+				payload.put("elements",arrayElements);
+				payload.put("source","pma");
+				
+				// send element to MMS
+//				System.out.println("Payload: "+payload);
+				
+				String response = post(server, projectId, refId, payload); // sending element to MMS
+//				System.out.println("MMS Update Element Response: "+response);
+				/*
+				 * Sending jms messsage with job instance object
+				 */
+	    		if (response.equals("HTTP/1.1 200 OK"))
+	    		{
+			    	return sendJobInstanceJMS(jobInstanceInformationMap,"Bulk", "Update", server, refId, projectId);
+	    		}
+	    		else
+	    		{
+	    			return response;
+	    		}
+				
+			}
+			else // Instance isn't found, a new one will be created. Happens when a job is ran without being triggered by PMA. EX. (Manual run on Jenkins or a scheduled run.)
+			{
+				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, "pending");
+//				System.out.println("CREATE JOB INSTANCE RESPONSE: "+createJobInstanceElementResponse);
+				return createJobInstanceElementResponse;
+				
+			}
+		}
+		
+		return mmsReturnString;
+	}
+	
+	/**
+	 * Sending jms update message when updating job instances
+	 * @param jobInstanceInformationMap contains a mapping of the job instances' ids with their properties
+	 * @param propertyName name of slot being modified
+	 * @param newSlotValue new value for the slot being modified
+	 * @param server
+	 * @param refId
+	 * @param projectId
+	 * @return
+	 */
+	public String sendJobInstanceJMS(Map<String,String> jobInstanceInformationMap,String propertyName,String newSlotValue, String server, String refId,String projectId)
+	{
+		try
+    	{
+    		
+    		jobInstanceInformationMap.put(propertyName, newSlotValue);
+    		String jobJson = PMAUtil.createJobInstanceJSON(jobInstanceInformationMap).toString();
+    		
+		 	// build job instance element json to be sent
+		 	JSONObject jobInstanceJSON = new JSONObject(jobJson);	
+		 	
+	    	// Sending job instance element to jms.
+	    	JmsConnection jmc = new JmsConnection();
+	    	String jmsSettings = MMSUtil.getJMSSettings(server);
+	    	JSONObject connectionJson = new JSONObject(jmsSettings);
+	    	jmc.ingestJson(connectionJson);
+	    	
+	    	JSONObject jmsJSON = new JSONObject();	
+	    	jmsJSON.put("updatedJobs", jobInstanceJSON);
+	    	jmc.publish(jmsJSON, jmc.TYPE_DELTA, refId, projectId);
+	    	logger.info("Sent JMS json: "+jmsJSON.toString());
+	    	System.out.println("Sent JMS json: "+jmsJSON.toString());
+	    	return "Instance Specification Updated. Property: "+propertyName+", Value: "+newSlotValue;
+    	}
+    	catch(JSONException e)
+    	{
+    		e.printStackTrace();
+    		logger.info(e.toString());
+    		return e.toString();
+    	}
+	}
+	
+	/**
+	 * Creates a new job instance element and sends a jms update message.
+	 * @param propertyName
+	 * @param jobId
+	 * @param projectId
+	 * @param refId
+	 * @param server
+	 * @param buildNumber jenkins build number
+	 * @param jobStatus
+	 * @return
+	 */
+	public String createJobInstanceElement(String jobId,String projectId,String refId, String server,String buildNumber, String jobStatus)
+	{
+		// Creating job instance for the job run because it doesn't currently exist.
+
+		System.out.println("inside job status");
+		String jobInstanceElementID = createId();
+		ObjectNode on = buildDocGenJobInstanceJSON(jobInstanceElementID, "jobs_bin_" + jobId, jobId + "_instance", buildNumber, jobStatus, server, projectId, refId, jobId); // jobs bin will be the owner of the instance element 
+			
+		if (on == null) {
+			logger.info("buildDocGenJobInstanceJSON output was null");
+			return "Error during Job Instance Modification. Job Element doesn't exist on MMS";
+		}
+
+		String elementCreationResponse = this.post(server, projectId, refId, on);
+
+		System.out.println("ELEMENT CREATION RESPONSE: " + elementCreationResponse);
+		System.out.println(elementCreationResponse.contains("HTTP/1.1 200 OK"));
+		System.out.println(elementCreationResponse.equals("HTTP/1.1 200 OK"));
+		/*
+		 * Sending jms messsage with job instance object
+		 */
+		if (elementCreationResponse.contains("HTTP/1.1 200 OK")) {
+			System.out.println("inside if");
+			try {
+				/*
+				 * When the job instance is first created, it will have these
+				 * values by default. Couldn't retrieve the job instance part
+				 * property values from MMS, since the job instance was just
+				 * created a couple lines above.
+				 *
+				 */
+				JmsConnection jmc = new JmsConnection();
+				String jmsSettings = MMSUtil.getJMSSettings(server);
+				JSONObject connectionJson = new JSONObject(jmsSettings);
+				jmc.ingestJson(connectionJson);
+
+				JSONObject jobInstanceJSON = new JSONObject();
+				jobInstanceJSON.put("id", jobInstanceElementID);
+				jobInstanceJSON.put("jobId", jobId);
+				jobInstanceJSON.put("buildNumber", buildNumber);
+				jobInstanceJSON.put("jobStatus", jobStatus);
+				jobInstanceJSON.put("jenkinsLog", "");
+				jobInstanceJSON.put("created", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date())); // ex. 2017-06-08T13:37:19.483-0700);
+				jobInstanceJSON.put("completed", "");
+
+				JSONObject jmsJSON = new JSONObject();
+				jmsJSON.put("updatedJobs", jobInstanceJSON);
+
+				jmc.publish(jobInstanceJSON, jmc.TYPE_DELTA, refId, projectId);
+				logger.info("Sent JMS json: " + jobInstanceJSON.toString());
+				System.out.println("Sent JMS json: " + jobInstanceJSON.toString());
+			} catch (JSONException e) {
+				e.printStackTrace();
+				logger.info(e.toString());
+				return e.toString();
+			}
+			
+		}
+		return elementCreationResponse;
+	
 	}
 	
 		
@@ -1296,6 +1475,7 @@ public class MMSUtil {
 				for(JsonNode instance:jobInstances)
 				{
 					String instanceId = instance.get("id").toString().replace("\"", "");
+					System.out.println("Instance Id: "+instanceId);
 					if(instanceId.equals(jobInstanceElementID))
 					{
 						jobInstanceArray.add(instance);
@@ -1308,9 +1488,11 @@ public class MMSUtil {
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return e.toString();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return e.toString();
 		}
 
 		return "";
@@ -1393,6 +1575,56 @@ public class MMSUtil {
 		}
 		
 	}
+	
+	/**
+	 * Retrieves the instance specifications ID for a job element
+	 * @param server MMS server
+	 * @param projectId MagicDraw project ID
+	 * @param refId 
+	 * @param jobElementId ID of job element. Used to look up the job instances.
+	 * @return
+	 */
+	public String getJobInstanceID(String server, String projectId, String refId, String jobElementId)
+	{
+
+		String bulkElementGetResponse = getJobInstancesJson(server, projectId, refId, jobElementId);
+		
+		JsonNode bulkElementGetResponseNode = PMAUtil.JSONStringToObject(bulkElementGetResponse);
+		System.out.println("before null check");
+		if(bulkElementGetResponseNode!=null)
+		{
+			System.out.println("before second null check");
+			JsonNode bulkElements = bulkElementGetResponseNode.get("elements");
+			if(bulkElements!=null)
+			{
+				System.out.println("Job Instances found successfully");
+				logger.info("Job Instances found successfully");
+				for(JsonNode element:bulkElements)
+				{
+					if((element.get("type").toString().equals("\"InstanceSpecification\""))&&(element.get("classifierIds").get(0).toString().replace("\"", "").equals(jobElementId)))
+					{
+						return element.get("id").toString().replace("\"","");
+					}
+				}
+				return null; // job instance wasn't found
+				
+			}
+			else
+			{
+				System.out.println("before null check");
+				logger.info(" mms error during bulk element get: "+bulkElementGetResponse);
+				return bulkElementGetResponse; // mms error during bulk element get
+			}
+		}
+		else
+		{
+			// bulkElementGetResponse was not a JSON String
+			logger.info("bulkElementGetResponse was not a JSON String: "+bulkElementGetResponse);
+			return bulkElementGetResponse; // Returning the error
+		}
+		
+	}
+	
 	
 	/**
 	 * Retrieves all the instance specifications for a job element
