@@ -1071,6 +1071,7 @@ public class MMSUtil {
 		return mmsReturnString;
 	}
 	
+
 	/**
 	 * Should get the current value of the slot, change it and send it back to mms
 	 * Looking for instance specifications using the latest created one in the ref.
@@ -1079,9 +1080,7 @@ public class MMSUtil {
 	 * @param refId
 	 * @param jobId ID of job element
 	 * @param buildNumber Build number of the jenkins job. Starts from 1. 
-	 * @param propertyName Name of the part property. Ex: buildNumber,jobStatus,logUrl,etc
-	 * @param newSlotValue New value of the slot
-	 * @param token Alfresco token.
+	 * @param newJobInstanceValues Map with the key being the property name and the value being the new value. ex ("jobStatus", "pending")
 	 * @return Status code returned from mms.
 	 */
 	public String modifyBulkInstanceSpecificationValue(String server,String projectId,String refId,String jobId,String buildNumber,Map<String,String> newJobInstanceValues)
