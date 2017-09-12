@@ -385,7 +385,14 @@ public class MMSUtil {
 			defaultValue.set("typeId", nullNode);
 			if(type.equals("LiteralBoolean"))
 			{
-				defaultValue.put("value", false);
+				if(value.equals("true"))
+				{
+					defaultValue.put("value", true);
+				}
+				else
+				{
+					defaultValue.put("value", false);
+				}
 			}
 			else
 			{
@@ -2000,6 +2007,142 @@ public class MMSUtil {
 			}
 	 		
 	 	}
+	 	
+	 	public String modifyJobPartProperty(String mmsServer, String projectId, String refId, String jobId,String propertyName, String newValue)
+	 	{
+			ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+			ObjectNode nullNode = null;
+			
+			String jobElementGetResponse = get(mmsServer, projectId, refId, jobId, true);
+			try {
+				JsonNode jobElementTree = mapper.readTree(jobElementGetResponse);
+				JsonNode elements = jobElementTree.get("elements");
+				if(elements!=null)
+				{
+					for(JsonNode element:elements)
+					{
+						if(element.get("type").toString().equals("\"Property\""))
+						{
+							if(element.get("name")!=null)
+							{
+								String elementPropertyName = element.get("name").toString().replace("\"", "");				
+								if(propertyName.equals(elementPropertyName))
+								{
+									System.out.println("Found: "+elementPropertyName);
+									// Found property. Modifying value
+									ObjectNode newPropertyObject = (ObjectNode) element;
+									
+									JsonNode origJsonNode = element.get("defaultValue");
+									System.out.println(origJsonNode!=null);
+									System.out.println(origJsonNode);
+									if(!(origJsonNode.toString().equals("null")))
+									{
+										ObjectNode defaultValue = (ObjectNode) origJsonNode;
+										String value = defaultValue.get("value").toString();
+										
+										System.out.println("Old Value: "+value);								
+										System.out.println("New Value: "+newValue);
+										
+										if(elementPropertyName.equals("disabled")) // disabled property has booleans for values
+										{
+											if(newValue.equals("true"))
+											{
+												defaultValue.put("value", true);
+											}
+											else
+											{
+												defaultValue.put("value", false);
+											}
+										}
+										else
+										{
+											defaultValue.put("value", newValue); // by default values are strings
+										}
+										
+										newPropertyObject.set("defaultValue", defaultValue);
+										// post newPropertyObject inside elements array
+										
+										ObjectNode payload = mapper.createObjectNode();
+										ArrayNode elementArray = mapper.createArrayNode();
+										elementArray.add(newPropertyObject);
+										payload.set("elements", elementArray);
+										System.out.println(payload);
+										String postResponse = post(mmsServer, projectId, refId, payload);
+										return postResponse;
+										
+									}
+									else
+									{
+										// default value is null. will need to create an instance spec and fill in default value
+										ObjectNode newDefaultValue = mapper.createObjectNode(); // value element
+										String type = "LiteralString";
+										String defaultValueId = createId();
+										if(elementPropertyName.equals("disabled")) // disabled property has booleans for values
+										{
+											type = "LiteralBoolean";
+										}
+										newDefaultValue.set("_appliedStereotypeIds", mapper.createArrayNode());
+										newDefaultValue.put("documentation", "");
+										newDefaultValue.put("type", type);
+										newDefaultValue.put("id", defaultValueId);
+										newDefaultValue.set("mdExtensionsIds", mapper.createArrayNode());
+										newDefaultValue.put("ownerId", element.get("id").toString().replace("\"", ""));
+										newDefaultValue.set("syncElementId", nullNode);
+										newDefaultValue.set("appliedStereotypeInstanceId", nullNode);
+										newDefaultValue.set("clientDependencyIds", mapper.createArrayNode());
+										newDefaultValue.set("supplierDependencyIds", mapper.createArrayNode());
+										newDefaultValue.put("name", "");
+										newDefaultValue.set("nameExpression", nullNode);
+										newDefaultValue.put("visibility", "public");
+										newDefaultValue.set("templateParameterId", nullNode);
+										newDefaultValue.set("typeId", nullNode);
+										if(type.equals("LiteralBoolean"))
+										{
+											if(newValue.equals("true"))
+											{
+												newDefaultValue.put("value", true);
+											}
+											else
+											{
+												newDefaultValue.put("value", false);
+											}	
+										}
+										else
+										{
+											newDefaultValue.put("value", newValue);
+										}
+
+										newPropertyObject.set("defaultValue", newDefaultValue);
+										ObjectNode newPropertyInstanceSpecification = buildInstanceSpecificationNode(newPropertyObject.get("id").toString().replace("\"", ""), MMSUtil.valuePropertyStereotypeID,"",true);
+										
+										// post newPropertyObject and newPropertyInstanceSpecification inside elements array with a new instance specification
+										ObjectNode payload = mapper.createObjectNode();
+										ArrayNode elementArray = mapper.createArrayNode();
+										elementArray.add(newPropertyObject);
+										elementArray.add(newPropertyInstanceSpecification);
+										payload.set("elements", elementArray);
+										String postResponse = post(mmsServer, projectId, refId, payload);
+										return postResponse;
+									}
+								}
+
+								
+							}
+						}
+					}
+				}
+				else
+				{
+					return jobElementGetResponse; // Something went wrong when getting the job element
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "Not Found";
+		}
+			
+	 	
 	 	
 		public static void main(String[] args) 
 		{
