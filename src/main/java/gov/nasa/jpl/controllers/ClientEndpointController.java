@@ -298,8 +298,6 @@ public class ClientEndpointController {
 	 * @param mmsServer
 	 * @return
 	 */
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE, produces = "application/json")
-	@ResponseBody
 	public ResponseEntity<String> deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
 		
@@ -367,7 +365,86 @@ public class ClientEndpointController {
 		ObjectNode responseJSON = mapper.createObjectNode();
 		responseJSON.put("message", "Delete Succesfull"); 
         return new ResponseEntity<String>(responseJSON.toString(),status);
-//		return "HTTP/1.1 200 OK";
+	}
+	
+	/**
+	 * Disables job on Jenkins and sets the disabled job element property to true on mms
+	 * 
+	 * @param projectId
+	 * @param refId
+	 * @param jobSysmlID
+	 * @param alf_ticket
+	 * @param mmsServer
+	 * @return
+	 */
+	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE, produces = "application/json")
+	@ResponseBody
+	public ResponseEntity<String> disableJob(@PathVariable String projectId, @PathVariable String refId, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
+		System.out.println("job" + "\n" + projectId + "\n" + refId + "\n");
+		
+		logger.info("Delete Job was called");
+		logger.info( "projectID: "+ projectId + "\n" +"refID: "+ refId+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
+		
+		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
+		
+		// Set Job element disabled flag to true
+		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+		String disableJobElementResponse = 	mmsUtil.modifyJobPartProperty(mmsServer, projectId, refId, jobSysmlID, "disabled", "true");  // set the part property value from false to true.
+		
+		System.out.println("Job disable response: "+disableJobElementResponse);
+		logger.info( "Job disable response: "+disableJobElementResponse);
+		
+		if(!disableJobElementResponse.equals("HTTP/1.1 200 OK"))
+		{
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", disableJobElementResponse + " MMS"); // mms issue when creating job instance
+	        return new ResponseEntity<String>(responseJSON.toString(),status);
+		}
+
+		String org = mmsUtil.getProjectOrg(mmsServer, projectId);
+		
+		if(PMAUtil.isJSON(org)||(org==null)) // Checking if mms response came back with an error.
+	    {
+			
+	        logger.info("Get org response: "+org); 
+	        System.out.println("Get org response: "+org);
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		if(org==null)
+			{
+				status = HttpStatus.NOT_FOUND;
+				responseJSON.put("message", "Project not found on MMS");
+			}
+    		else
+    		{
+    			responseJSON.put("message", org+" MMS");
+    		}
+    		
+	        return new ResponseEntity<String>(responseJSON.toString(),status);
+	    }
+		
+		// disable job on jenkins
+    	JenkinsEngine je = login(org);
+    	String jenkinsDisableResponse = je.disableNestedJob(jobSysmlID, projectId, refId);
+    	System.out.println("Jenkins job disable response: "+jenkinsDisableResponse);
+    	logger.info( "Jenkins job disable response: "+jenkinsDisableResponse);
+    	if(!jenkinsDisableResponse.equals("HTTP/1.1 302 Found"))
+		{
+			if (!jenkinsDisableResponse.equals("HTTP/1.1 404 Not Found")) // Not founds are ok.
+			{
+		 		ObjectNode responseJSON = mapper.createObjectNode();
+	    		responseJSON.put("message", jenkinsDisableResponse); 
+	    		return new ResponseEntity<String>(responseJSON.toString(),status); // returning error during Jenkins job disabled 
+			}
+		}
+    	
+    	status = HttpStatus.OK; 
+    	
+    	logger.info("Disable Succesfull");
+		ObjectNode responseJSON = mapper.createObjectNode();
+		responseJSON.put("message", "Disable Succesfull"); 
+        return new ResponseEntity<String>(responseJSON.toString(),status);
+		        
 	}
 	
     public JenkinsEngine login(String org)
