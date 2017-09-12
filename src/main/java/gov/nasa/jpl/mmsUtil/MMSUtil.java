@@ -248,9 +248,10 @@ public class MMSUtil {
 	 * @param ownerID Owner of the slot element
 	 * @param value value of slot
 	 * @param definingFeatureId Defining feature ID is the ID of a property. 
+	 * @param type Type of slot ex. LiteralBoolean, LiteralString
 	 * @return
 	 */
-	public ObjectNode buildSlotNode(String ownerID,String value, String definingFeatureId)
+	public ObjectNode buildSlotNode(String ownerID,String value, String definingFeatureId, String type)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode nullNode = null;
@@ -272,8 +273,20 @@ public class MMSUtil {
 		ObjectNode nestedValue = mapper.createObjectNode();
 		nestedValue.set("_appliedStereotypeIds", mapper.createArrayNode());
 		nestedValue.put("documentation", "");
-		nestedValue.put("type", "LiteralString");
-		nestedValue.put("id",ownerID+"-slot-"+definingFeatureId+"-slotvalue-0-literalstring");
+		
+		if(type.equals("LiteralString"))
+		{
+			nestedValue.put("type", "LiteralString");
+			nestedValue.put("id",ownerID+"-slot-"+definingFeatureId+"-slotvalue-0-literalstring");
+			nestedValue.put("value", value);
+		}
+		if(type.equals("LiteralBoolean"))
+		{
+			nestedValue.put("type", "LiteralBoolean");
+			nestedValue.put("id",ownerID+"-slot-"+definingFeatureId+"-slotvalue-0-literalboolean");
+			nestedValue.put("value", false);
+		}
+		
 		nestedValue.set("mdExtensionsIds", mapper.createArrayNode());
 		nestedValue.put("ownerId",slotElementID);
 		nestedValue.set("syncElementId", nullNode);
@@ -285,7 +298,7 @@ public class MMSUtil {
 		nestedValue.set("visibility", nullNode);
 		nestedValue.set("templateParameterId", nullNode);
 		nestedValue.set("typeId", nullNode);
-		nestedValue.put("value", value);
+		
 		
 		valueNode.add(nestedValue);
 		
@@ -622,35 +635,39 @@ public class MMSUtil {
 		instanceSpecificationNode.put("id",id);
 		
 		String typeDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "type");
-		ObjectNode typeSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), type,typeDefiningFeatureId);
+		ObjectNode typeSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), type,typeDefiningFeatureId,"LiteralString");
 		
 		String scheduleDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "schedule");
-		ObjectNode scheduleSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), schedule,scheduleDefiningFeatureId);
+		ObjectNode scheduleSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), schedule,scheduleDefiningFeatureId,"LiteralString");
 		
 		String buildNumberDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "buildNumber");
-		ObjectNode buildNumberSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), buildNumber,buildNumberDefiningFeatureId);
+		ObjectNode buildNumberSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), buildNumber,buildNumberDefiningFeatureId,"LiteralString");
 		
 		String jobStatusDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "jobStatus");
-		ObjectNode jobStatusSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), jobStatus,jobStatusDefiningFeatureId);
+		ObjectNode jobStatusSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), jobStatus,jobStatusDefiningFeatureId,"LiteralString");
 		
 		String logUrlDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "logUrl");
-		ObjectNode logUrlSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",logUrlDefiningFeatureId);
+		ObjectNode logUrlSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",logUrlDefiningFeatureId,"LiteralString");
 		
 		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 		String startedDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "started");
-		ObjectNode startedSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), currentTimestamp,startedDefiningFeatureId);
+		ObjectNode startedSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), currentTimestamp,startedDefiningFeatureId,"LiteralString");
 		
 		String completedDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "completed");
-		ObjectNode completedSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",completedDefiningFeatureId);
+		ObjectNode completedSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",completedDefiningFeatureId,"LiteralString");
 		
 		String associatedElementDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "associatedElementId");
-		ObjectNode associatedElementIDSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), associatedElementID ,associatedElementDefiningFeatureId);
+		ObjectNode associatedElementIDSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), associatedElementID ,associatedElementDefiningFeatureId,"LiteralString");
 		
 		String projectIdDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "projectId");
-		ObjectNode projectIdSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), projectID,projectIdDefiningFeatureId);
+		ObjectNode projectIdSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), projectID,projectIdDefiningFeatureId,"LiteralString");
 		
 		String refIdDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "refId");
-		ObjectNode refIdSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), refID,refIdDefiningFeatureId);
+		ObjectNode refIdSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), refID,refIdDefiningFeatureId,"LiteralString");
+		
+		String disabledDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "disabled");
+		ObjectNode disabledSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",disabledDefiningFeatureId,"LiteralBoolean");
+		
 		
 		/*
 		 * Adding the property id's to the ownedAttributes key in the instance specification JSON
@@ -666,6 +683,7 @@ public class MMSUtil {
 		slotIds.add(associatedElementIDSlotNode.get("id"));
 		slotIds.add(projectIdSlotNode.get("id"));
 		slotIds.add(refIdSlotNode.get("id"));
+		slotIds.add(disabledSlotNode.get("id"));
 		
 		instanceSpecificationNode.set("slotIds",slotIds);
 		
@@ -681,7 +699,7 @@ public class MMSUtil {
 		elements.add(associatedElementIDSlotNode);
 		elements.add(projectIdSlotNode);
 		elements.add(refIdSlotNode);
-
+		elements.add(disabledSlotNode);
 		
 		payload.set("elements",elements);
 		payload.put("source","pma");
