@@ -2008,7 +2008,17 @@ public class MMSUtil {
 	 		
 	 	}
 	 	
-	 	public String modifyJobPartProperty(String mmsServer, String projectId, String refId, String jobId,String propertyName, String newValue)
+	 	/**
+	 	 * Modifies a value property of a class. If the value property has no value, a new instance spec will be created and the value will be filled in.
+	 	 * @param mmsServer
+	 	 * @param projectId
+	 	 * @param refId
+	 	 * @param jobId
+	 	 * @param propertyName
+	 	 * @param newValue
+	 	 * @return
+	 	 */
+	 	public String modifyJobValueProperty(String mmsServer, String projectId, String refId, String jobId,String propertyName, String newValue)
 	 	{
 			ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 			ObjectNode nullNode = null;
@@ -2141,76 +2151,10 @@ public class MMSUtil {
 			}
 			return "Not Found";
 		}
-			
 	 	
-	 	
-		public static void main(String[] args) 
-		{
-			String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
-			String ownerID = "_18_5_1_40a019f_1498057623506_316834_18928";
-			String token = "TICKET_7214d2fd8e9c2c09268da0a3ded72401ef98079a";
-			String server = "opencae-int.jpl.nasa.gov";
-			
-//			String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
-//			String ownerID = "jobs_bin_PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
-			String refID = "master";
-			String jobName = "testJob";
-			String associatedElementID = "ASCELEMENT_123";
-			String type = "docgen";
-			String schedule = "* * * *";
-			String targetID = "_18_5_1_40a019f_1499898145957_571809_17594";
-			String buildNumber = "23";
-			String jobStatus = "completed";
-			String logUrl = "http://log.com";
-			String started = "3:30pm";
-			String completed = "4:00pm";
-			
-			MMSUtil mmsUtil = new MMSUtil(token);
-
-			String sysmlID = mmsUtil.createId();
-			
-			String jobID = "_18_5_1_40a019f_1499898367904_56649_17676";
-//			ObjectMapper mapper = new ObjectMapper();
-//			try {
-//				String jobJSON = mmsUtil.getJobElement(server, projectID, refID, jobID).getBody();
-//				JsonNode fullJson = mapper.readTree(jobJSON).get("jobs").get(0);
-//				if(fullJson!=null)
-//				{
-//					System.out.println(fullJson.get("associatedElementID"));
-//					System.out.println(fullJson.get("command"));
-//					System.out.println(fullJson.get("schedule").toString());
-//				}
-//
-//			} catch (JsonProcessingException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-		
-//			System.out.println(mmsUtil.getJobInstanceElements(server, projectID, refID, "PMA_1500329733457_0b985264-a4c6-448d-ba69-1da41efa92e0").getBody());
-			System.out.println(mmsUtil.getJobInstanceElement(server, projectID, refID, "PMA_1500330591329_fe26ff4d-44a5-47aa-8ad6-5187e771a48a", "PMA_1500329733457_0b985264-a4c6-448d-ba69-1da41efa92e0"));
-			
-//			System.out.println(mmsUtil.get(server, projectID, refID, "PMA_1500329936596_f65fd93d-2b8a-4fa2-882f-759b5e0654a2", true));
-//			System.out.println(mmsUtil.getDefiningFeatureID(server, projectID, refID, "_18_5_1_40a019f_1499898367904_56649_17676", "projectId"));
-			
-//			ObjectNode on2 = mmsUtil.buildDocgenJobElementJSON(sysmlID, ownerID, jobName, associatedElementID, type, schedule, refID, projectID);
-//			System.out.println(on2.toString());
-//			mmsUtil.post(server, projectID,refID, on2);
-			
-//			ObjectNode on3 = mmsUtil.buildDocGenJobInstanceJSON(sysmlID, ownerID, "test job instance", buildNumber, jobStatus, server, projectID, refID,"");
-//			System.out.println("ON3: "+on3);
-//			mmsUtil.post(server, projectID,refID, on3);
-			
-//			String elementID = "PMA_1491324925592";
-//			String buildNumber = "55";
-//			String propertyName = "jobStatus";
-//			String newPropertyValue = "completed";
-//			
-//			System.out.println(mmsUtil.get(server, projectID, refID, elementID, true));
-////			System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
-			
-		}
+	 	public void isJobDisabled()
+	 	{
+	 		
+	 	}
 	 
 }

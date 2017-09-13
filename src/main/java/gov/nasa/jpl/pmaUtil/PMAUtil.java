@@ -39,6 +39,7 @@ public class PMAUtil
 		jobElement.put("command",jobMap.get("type"));
 		jobElement.put("associatedElementID",jobMap.get("associatedElementId"));
 		jobElement.put("schedule",jobMap.get("schedule"));
+		jobElement.put("disabled",jobMap.get("disabled"));
 		
 		return jobElement;
 		

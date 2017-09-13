@@ -396,11 +396,11 @@ public class ClientEndpointController {
 		String disableJobElementResponse = null;
 		if(enable)
 		{
-			disableJobElementResponse = mmsUtil.modifyJobPartProperty(mmsServer, projectId, refId, jobSysmlId, "disabled", "false");  // set the part property value from false to true.
+			disableJobElementResponse = mmsUtil.modifyJobValueProperty(mmsServer, projectId, refId, jobSysmlId, "disabled", "false");  // set the part property value from false to true.
 		}
 		else
 		{
-			disableJobElementResponse = mmsUtil.modifyJobPartProperty(mmsServer, projectId, refId, jobSysmlId, "disabled", "true");  // set the part property value from false to true.
+			disableJobElementResponse = mmsUtil.modifyJobValueProperty(mmsServer, projectId, refId, jobSysmlId, "disabled", "true");  // set the part property value from false to true.
 		}
 		
 		System.out.println("Job disable response: "+disableJobElementResponse);
