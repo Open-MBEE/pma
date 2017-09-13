@@ -385,7 +385,14 @@ public class MMSUtil {
 			defaultValue.set("typeId", nullNode);
 			if(type.equals("LiteralBoolean"))
 			{
-				defaultValue.put("value", false);
+				if(value.equals("true"))
+				{
+					defaultValue.put("value", true);
+				}
+				else
+				{
+					defaultValue.put("value", false);
+				}
 			}
 			else
 			{
@@ -2001,73 +2008,276 @@ public class MMSUtil {
 	 		
 	 	}
 	 	
-		public static void main(String[] args) 
-		{
-			String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
-			String ownerID = "_18_5_1_40a019f_1498057623506_316834_18928";
-			String token = "TICKET_7214d2fd8e9c2c09268da0a3ded72401ef98079a";
-			String server = "opencae-int.jpl.nasa.gov";
+	 	/**
+	 	 * Modifies a value property of a class. If the value property has no value, a new instance spec will be created and the value will be filled in.
+	 	 * @param mmsServer
+	 	 * @param projectId
+	 	 * @param refId
+	 	 * @param jobId
+	 	 * @param propertyName
+	 	 * @param newValue
+	 	 * @return
+	 	 */
+	 	public String modifyJobValueProperty(String mmsServer, String projectId, String refId, String jobId,String propertyName, String newValue)
+	 	{
+			ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+			ObjectNode nullNode = null;
 			
-//			String projectID = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
-//			String ownerID = "jobs_bin_PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
-			String refID = "master";
-			String jobName = "testJob";
-			String associatedElementID = "ASCELEMENT_123";
-			String type = "docgen";
-			String schedule = "* * * *";
-			String targetID = "_18_5_1_40a019f_1499898145957_571809_17594";
-			String buildNumber = "23";
-			String jobStatus = "completed";
-			String logUrl = "http://log.com";
-			String started = "3:30pm";
-			String completed = "4:00pm";
-			
-			MMSUtil mmsUtil = new MMSUtil(token);
+			String jobElementGetResponse = get(mmsServer, projectId, refId, jobId, true);
+			try {
+				JsonNode jobElementTree = mapper.readTree(jobElementGetResponse);
+				JsonNode elements = jobElementTree.get("elements");
+				if(elements!=null)
+				{
+					for(JsonNode element:elements)
+					{
+						if(element.get("type").toString().equals("\"Property\""))
+						{
+							if(element.get("name")!=null)
+							{
+								String elementPropertyName = element.get("name").toString().replace("\"", "");				
+								if(propertyName.equals(elementPropertyName))
+								{
+									System.out.println("Found: "+elementPropertyName);
+									// Found property. Modifying value
+									ObjectNode newPropertyObject = (ObjectNode) element;
+									
+									JsonNode origJsonNode = element.get("defaultValue");
+									System.out.println(origJsonNode!=null);
+									System.out.println(origJsonNode);
+									if(!(origJsonNode.toString().equals("null")))
+									{
+										ObjectNode defaultValue = (ObjectNode) origJsonNode;
+										String value = defaultValue.get("value").toString();
+										
+										System.out.println("Old Value: "+value);								
+										System.out.println("New Value: "+newValue);
+										
+										if(elementPropertyName.equals("disabled")) // disabled property has booleans for values
+										{
+											if(newValue.equals("true"))
+											{
+												defaultValue.put("value", true);
+											}
+											else
+											{
+												defaultValue.put("value", false);
+											}
+										}
+										else
+										{
+											defaultValue.put("value", newValue); // by default values are strings
+										}
+										
+										newPropertyObject.set("defaultValue", defaultValue);
+										// post newPropertyObject inside elements array
+										
+										ObjectNode payload = mapper.createObjectNode();
+										ArrayNode elementArray = mapper.createArrayNode();
+										elementArray.add(newPropertyObject);
+										payload.set("elements", elementArray);
+										System.out.println(payload);
+										String postResponse = post(mmsServer, projectId, refId, payload);
+										return postResponse;
+										
+									}
+									else
+									{
+										// default value is null. will need to create an instance spec and fill in default value
+										ObjectNode newDefaultValue = mapper.createObjectNode(); // value element
+										String type = "LiteralString";
+										String defaultValueId = createId();
+										if(elementPropertyName.equals("disabled")) // disabled property has booleans for values
+										{
+											type = "LiteralBoolean";
+										}
+										newDefaultValue.set("_appliedStereotypeIds", mapper.createArrayNode());
+										newDefaultValue.put("documentation", "");
+										newDefaultValue.put("type", type);
+										newDefaultValue.put("id", defaultValueId);
+										newDefaultValue.set("mdExtensionsIds", mapper.createArrayNode());
+										newDefaultValue.put("ownerId", element.get("id").toString().replace("\"", ""));
+										newDefaultValue.set("syncElementId", nullNode);
+										newDefaultValue.set("appliedStereotypeInstanceId", nullNode);
+										newDefaultValue.set("clientDependencyIds", mapper.createArrayNode());
+										newDefaultValue.set("supplierDependencyIds", mapper.createArrayNode());
+										newDefaultValue.put("name", "");
+										newDefaultValue.set("nameExpression", nullNode);
+										newDefaultValue.put("visibility", "public");
+										newDefaultValue.set("templateParameterId", nullNode);
+										newDefaultValue.set("typeId", nullNode);
+										if(type.equals("LiteralBoolean"))
+										{
+											if(newValue.equals("true"))
+											{
+												newDefaultValue.put("value", true);
+											}
+											else
+											{
+												newDefaultValue.put("value", false);
+											}	
+										}
+										else
+										{
+											newDefaultValue.put("value", newValue);
+										}
 
-			String sysmlID = mmsUtil.createId();
-			
-			String jobID = "_18_5_1_40a019f_1499898367904_56649_17676";
-//			ObjectMapper mapper = new ObjectMapper();
-//			try {
-//				String jobJSON = mmsUtil.getJobElement(server, projectID, refID, jobID).getBody();
-//				JsonNode fullJson = mapper.readTree(jobJSON).get("jobs").get(0);
-//				if(fullJson!=null)
-//				{
-//					System.out.println(fullJson.get("associatedElementID"));
-//					System.out.println(fullJson.get("command"));
-//					System.out.println(fullJson.get("schedule").toString());
-//				}
-//
-//			} catch (JsonProcessingException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-		
-//			System.out.println(mmsUtil.getJobInstanceElements(server, projectID, refID, "PMA_1500329733457_0b985264-a4c6-448d-ba69-1da41efa92e0").getBody());
-			System.out.println(mmsUtil.getJobInstanceElement(server, projectID, refID, "PMA_1500330591329_fe26ff4d-44a5-47aa-8ad6-5187e771a48a", "PMA_1500329733457_0b985264-a4c6-448d-ba69-1da41efa92e0"));
-			
-//			System.out.println(mmsUtil.get(server, projectID, refID, "PMA_1500329936596_f65fd93d-2b8a-4fa2-882f-759b5e0654a2", true));
-//			System.out.println(mmsUtil.getDefiningFeatureID(server, projectID, refID, "_18_5_1_40a019f_1499898367904_56649_17676", "projectId"));
-			
-//			ObjectNode on2 = mmsUtil.buildDocgenJobElementJSON(sysmlID, ownerID, jobName, associatedElementID, type, schedule, refID, projectID);
-//			System.out.println(on2.toString());
-//			mmsUtil.post(server, projectID,refID, on2);
-			
-//			ObjectNode on3 = mmsUtil.buildDocGenJobInstanceJSON(sysmlID, ownerID, "test job instance", buildNumber, jobStatus, server, projectID, refID,"");
-//			System.out.println("ON3: "+on3);
-//			mmsUtil.post(server, projectID,refID, on3);
-			
-//			String elementID = "PMA_1491324925592";
-//			String buildNumber = "55";
-//			String propertyName = "jobStatus";
-//			String newPropertyValue = "completed";
-//			
-//			System.out.println(mmsUtil.get(server, projectID, refID, elementID, true));
-////			System.out.println(mmsUtil.modifyPartPropertyValue(server, projectID, refID, elementID, buildNumber, propertyName, newPropertyValue, token));
-			
+										newPropertyObject.set("defaultValue", newDefaultValue);
+										ObjectNode newPropertyInstanceSpecification = buildInstanceSpecificationNode(newPropertyObject.get("id").toString().replace("\"", ""), MMSUtil.valuePropertyStereotypeID,"",true);
+										
+										// post newPropertyObject and newPropertyInstanceSpecification inside elements array with a new instance specification
+										ObjectNode payload = mapper.createObjectNode();
+										ArrayNode elementArray = mapper.createArrayNode();
+										elementArray.add(newPropertyObject);
+										elementArray.add(newPropertyInstanceSpecification);
+										payload.set("elements", elementArray);
+										String postResponse = post(mmsServer, projectId, refId, payload);
+										return postResponse;
+									}
+								}
+
+								
+							}
+						}
+					}
+				}
+				else
+				{
+					return jobElementGetResponse; // Something went wrong when getting the job element
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "Not Found";
 		}
+	 	
+	 	public String appendValueProperty(String server,String projectId, String refId, String classId,String propertyName,String value,String type)
+	 	{
+	 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+	 		// create new property
+	 		ObjectNode propertyNode = buildPropertyNode(classId,propertyName,value,projectIdPropertyID,type);
+			
+	 		// create new instance
+	 		ObjectNode propertyInstanceSpecification = buildInstanceSpecificationNode(propertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+	 		
+	 		ArrayNode elementsArray = mapper.createArrayNode();
+	 		elementsArray.add(propertyNode);
+	 		elementsArray.add(propertyInstanceSpecification);
+	 		
+	 		ObjectNode payload = mapper.createObjectNode();
+	 		payload.set("elements", elementsArray);
+	 		
+	 		String elementPostResponse = post(server, projectId, refId, payload);
+	 		System.out.println("Element Post Response: "+elementPostResponse);
+	 		if(elementPostResponse.equals("HTTP/1.1 200 OK"))
+	 		{
+	 			String appendResponse = appendOwnedAttribute(server,projectId,refId,classId,propertyNode.get("id").toString().replace("\"", ""));
+		 		System.out.println("Append Response: "+appendResponse);
+		 		return appendResponse;
+	 		}
+	 		else
+	 		{
+	 			return elementPostResponse;
+	 		}
+	 		
+	 	}
+	 	
+	 	public String appendOwnedAttribute(String server,String projectId,String refId,String classId,String idToBeAdded)
+	 	{
+	 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+	 		// get job class
+	 		String jobElementGetResponse = get(server, projectId, refId, classId, true);
+	 		// find job class element 
+	 		try 
+	 		{
+		 		JsonNode jobElementTree = mapper.readTree(jobElementGetResponse);
+				JsonNode elements = jobElementTree.get("elements");
+				if(elements!=null)
+				{
+					for(JsonNode element:elements)
+					{
+						if(element.get("type").toString().equals("\"Class\""))
+						{
+							ObjectNode jobClass = (ObjectNode)element;
+							System.out.println("ELEMENT NAME: "+jobClass.get("name"));
+							ArrayNode ownedAttributeIds = (ArrayNode) jobClass.get("ownedAttributeIds");
+							
+							ownedAttributeIds.add(idToBeAdded);
+							jobClass.set("ownedAttributeIds", ownedAttributeIds);
+							System.out.println("idToBeAdded: "+idToBeAdded);
+							
+							
+							ObjectNode jobs = mapper.createObjectNode();
+							ArrayNode jobArray = mapper.createArrayNode();
+							jobArray.add(jobClass);
+							jobs.set("elements", jobArray);
+							
+							System.out.println(jobs.toString());
+							
+							String jobClassPostResponse = post(server, projectId, refId, jobs);
+							System.out.println(jobClassPostResponse);
+							return jobClassPostResponse;
+						}
+					}
+				}
+				else
+				{
+					System.out.println("Job Element Get Response: "+jobElementGetResponse);
+				}
+				// add new property id to ownedAttributes
+	 		} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	 		return jobElementGetResponse;
+	 	}
+	 	
+	 	public String isJobDisabled(String mmsServer,String projectId,String refId,String jobId)
+	 	{
+	 		String jsonString = get(mmsServer,projectId,refId,jobId,true); //should contain job element information from mms
+
+			ObjectNode jobsArray = PMAUtil.generateJobArrayJsonObject(jsonString);
+			
+			ArrayNode jobs = (ArrayNode) jobsArray.get("jobs");
+			if(jobs!=null)
+			{
+				ObjectNode job = (ObjectNode) jobs.get(0);
+				String disabledPropertyValue = job.get("disabled").toString();
+				if(!disabledPropertyValue.equals("null"))
+				{
+					disabledPropertyValue=disabledPropertyValue.replace("\"", "");
+					System.out.println(disabledPropertyValue);
+					if(disabledPropertyValue.equals("false")||disabledPropertyValue.equals("true"))
+					{
+						System.out.println("RETURNING VALUE: "+disabledPropertyValue);
+						return disabledPropertyValue;
+						// return disabledPropertyValue;
+					}
+					else
+					{
+						// Unexpected value in disabled property
+						System.out.println("UNEXPECTED VALUE: "+disabledPropertyValue);
+						
+						// return error
+						return "UNEXPECTED VALUE: "+disabledPropertyValue;
+					}
+				}
+				else
+				{
+					// Disabled property doesn't exist. Creating a new one.
+					appendValueProperty(mmsServer, projectId, refId, jobId, "disabled","", "LiteralBoolean");
+					System.out.println("RETURNING FALSE");
+					return "false";
+				}
+			}
+			else
+			{
+				// Error occurred or job not found.
+				System.out.println("Job not Found");
+				System.out.println(jobsArray);
+				return jobsArray.toString();
+			}
+	 	}
 	 
 }
