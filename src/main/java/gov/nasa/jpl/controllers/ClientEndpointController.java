@@ -372,25 +372,36 @@ public class ClientEndpointController {
 	 * 
 	 * @param projectId
 	 * @param refId
-	 * @param jobSysmlID
+	 * @param jobSysmlId
 	 * @param alf_ticket
 	 * @param mmsServer
 	 * @return
 	 */
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE, produces = "application/json")
+	@RequestMapping(value = "/projects/{projectId}/refs/{refId}/jobs/{jobSysmlId}", method = RequestMethod.DELETE, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<String> disableJob(@PathVariable String projectId, @PathVariable String refId, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
+	public ResponseEntity<String> disableJob(@PathVariable String projectId, @PathVariable String refId, @PathVariable String jobSysmlId,@RequestParam String alf_ticket,@RequestParam String mmsServer,@RequestParam(value="enable", required = false, defaultValue = "false") boolean enable) {
 		System.out.println("job" + "\n" + projectId + "\n" + refId + "\n");
 		
-		logger.info("Delete Job was called");
-		logger.info( "projectID: "+ projectId + "\n" +"refID: "+ refId+ "\n"+"Job SysmlID: "+jobSysmlID+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
+		logger.info("Disabled Job was called");
+		logger.info( "projectID: "+ projectId + "\n" +"refID: "+ refId+ "\n"+"Job SysmlID: "+jobSysmlId+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
+		System.out.println("Enable: "+enable);
 		
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
-		// Set Job element disabled flag to true
+		
 		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
-		String disableJobElementResponse = 	mmsUtil.modifyJobPartProperty(mmsServer, projectId, refId, jobSysmlID, "disabled", "true");  // set the part property value from false to true.
+		
+		// Set Job element disabled flag to true
+		String disableJobElementResponse = null;
+		if(enable)
+		{
+			disableJobElementResponse = mmsUtil.modifyJobPartProperty(mmsServer, projectId, refId, jobSysmlId, "disabled", "false");  // set the part property value from false to true.
+		}
+		else
+		{
+			disableJobElementResponse = mmsUtil.modifyJobPartProperty(mmsServer, projectId, refId, jobSysmlId, "disabled", "true");  // set the part property value from false to true.
+		}
 		
 		System.out.println("Job disable response: "+disableJobElementResponse);
 		logger.info( "Job disable response: "+disableJobElementResponse);
@@ -398,7 +409,7 @@ public class ClientEndpointController {
 		if(!disableJobElementResponse.equals("HTTP/1.1 200 OK"))
 		{
     		ObjectNode responseJSON = mapper.createObjectNode();
-    		responseJSON.put("message", disableJobElementResponse + " MMS"); // mms issue when creating job instance
+    		responseJSON.put("message", disableJobElementResponse + " MMS"); // mms issue when modifying disabled value property
 	        return new ResponseEntity<String>(responseJSON.toString(),status);
 		}
 
@@ -425,12 +436,22 @@ public class ClientEndpointController {
 		
 		// disable job on jenkins
     	JenkinsEngine je = login(org);
-    	String jenkinsDisableResponse = je.disableNestedJob(jobSysmlID, projectId, refId);
+    	String jenkinsDisableResponse = null;
+    			
+    	if(enable)
+    	{
+    		jenkinsDisableResponse = je.enableNestedJob(jobSysmlId, projectId, refId);
+    	}
+    	else
+    	{
+    		jenkinsDisableResponse = je.disableNestedJob(jobSysmlId, projectId, refId);
+    	}
+    	
     	System.out.println("Jenkins job disable response: "+jenkinsDisableResponse);
     	logger.info( "Jenkins job disable response: "+jenkinsDisableResponse);
     	if(!jenkinsDisableResponse.equals("HTTP/1.1 302 Found"))
 		{
-			if (!jenkinsDisableResponse.equals("HTTP/1.1 404 Not Found")) // Not founds are ok.
+			if (!jenkinsDisableResponse.equals("HTTP/1.1 404 Not Found")) // Not founds are ok. The job might not always exist on Jenkins because the job might have been created on a different branch.
 			{
 		 		ObjectNode responseJSON = mapper.createObjectNode();
 	    		responseJSON.put("message", jenkinsDisableResponse); 
@@ -440,10 +461,21 @@ public class ClientEndpointController {
     	
     	status = HttpStatus.OK; 
     	
-    	logger.info("Disable Succesfull");
-		ObjectNode responseJSON = mapper.createObjectNode();
-		responseJSON.put("message", "Disable Succesfull"); 
-        return new ResponseEntity<String>(responseJSON.toString(),status);
+      	if(enable)
+    	{
+      		logger.info("Enable Succesfull");
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", "Enable Succesfull"); 
+            return new ResponseEntity<String>(responseJSON.toString(),status);
+    	}
+    	else
+    	{
+    		logger.info("Disable Succesfull");
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", "Disable Succesfull"); 
+            return new ResponseEntity<String>(responseJSON.toString(),status);
+    	}
+    
 		        
 	}
 	
