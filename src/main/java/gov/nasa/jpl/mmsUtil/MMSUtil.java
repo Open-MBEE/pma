@@ -2152,9 +2152,121 @@ public class MMSUtil {
 			return "Not Found";
 		}
 	 	
-	 	public void isJobDisabled()
+	 	public void appendValueProperty(String server,String projectId, String refId, String classId,String propertyName,String value,String type)
 	 	{
+	 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+	 		// create new property
+	 		ObjectNode propertyNode = buildPropertyNode(classId,propertyName,value,projectIdPropertyID,type);
+			
+	 		// create new instance
+	 		ObjectNode propertyInstanceSpecification = buildInstanceSpecificationNode(propertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
 	 		
+	 		ArrayNode elementsArray = mapper.createArrayNode();
+	 		elementsArray.add(propertyNode);
+	 		elementsArray.add(propertyInstanceSpecification);
+	 		
+	 		ObjectNode payload = mapper.createObjectNode();
+	 		payload.set("elements", elementsArray);
+	 		
+	 		String elementPostResponse = post(server, projectId, refId, payload);
+	 		System.out.println("Element Post Response: "+elementPostResponse);
+	 		appendOwnedAttribute(server,projectId,refId,classId,propertyNode.get("id").toString().replace("\"", ""));
+	 		
+	 	}
+	 	
+	 	public void appendOwnedAttribute(String server,String projectId,String refId,String classId,String idToBeAdded)
+	 	{
+	 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+	 		// get job class
+	 		String jobElementGetResponse = get(server, projectId, refId, classId, true);
+	 		// find job class element 
+	 		try 
+	 		{
+		 		JsonNode jobElementTree = mapper.readTree(jobElementGetResponse);
+				JsonNode elements = jobElementTree.get("elements");
+				if(elements!=null)
+				{
+					for(JsonNode element:elements)
+					{
+						if(element.get("type").toString().equals("\"Class\""))
+						{
+							ObjectNode jobClass = (ObjectNode)element;
+							System.out.println("ELEMENT NAME: "+jobClass.get("name"));
+							ArrayNode ownedAttributeIds = (ArrayNode) jobClass.get("ownedAttributeIds");
+							
+							ownedAttributeIds.add(idToBeAdded);
+							jobClass.set("ownedAttributeIds", ownedAttributeIds);
+							System.out.println("idToBeAdded: "+idToBeAdded);
+							
+							
+							ObjectNode jobs = mapper.createObjectNode();
+							ArrayNode jobArray = mapper.createArrayNode();
+							jobArray.add(jobClass);
+							jobs.set("elements", jobArray);
+							
+							System.out.println(jobs.toString());
+							
+							String jobClassPostResponse = post(server, projectId, refId, jobs);
+							System.out.println(jobClassPostResponse);
+						}
+					}
+				}
+				else
+				{
+					System.out.println("Job Element Get Response: "+jobElementGetResponse);
+				}
+				// add new property id to ownedAttributes
+	 		} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	 	}
+	 	
+	 	public String isJobDisabled(String mmsServer,String projectId,String refId,String jobId)
+	 	{
+	 		String jsonString = get(mmsServer,projectId,refId,jobId,true); //should contain job element information from mms
+
+			ObjectNode jobsArray = PMAUtil.generateJobArrayJsonObject(jsonString);
+			
+			ArrayNode jobs = (ArrayNode) jobsArray.get("jobs");
+			if(jobs!=null)
+			{
+				ObjectNode job = (ObjectNode) jobs.get(0);
+				String disabledPropertyValue = job.get("disabled").toString();
+				if(!disabledPropertyValue.equals("null"))
+				{
+					disabledPropertyValue=disabledPropertyValue.replace("\"", "");
+					System.out.println(disabledPropertyValue);
+					if(disabledPropertyValue.equals("false")||disabledPropertyValue.equals("true"))
+					{
+						System.out.println("RETURNING VALUE: "+disabledPropertyValue);
+						return disabledPropertyValue;
+						// return disabledPropertyValue;
+					}
+					else
+					{
+						// Unexpected value in disabled property
+						System.out.println("UNEXPECTED VALUE: "+disabledPropertyValue);
+						
+						// return error
+						return "UNEXPECTED VALUE: "+disabledPropertyValue;
+					}
+				}
+				else
+				{
+					// Disabled property doesn't exist. Creating a new one.
+					appendValueProperty(mmsServer, projectId, refId, jobId, "disabled","", "LiteralBoolean");
+					System.out.println("RETURNING FALSE");
+					return "false";
+				}
+			}
+			else
+			{
+				// Error occurred or job not found.
+				System.out.println("Job not Found");
+				System.out.println(jobsArray);
+				return jobsArray.toString();
+			}
 	 	}
 	 
 }

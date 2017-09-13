@@ -71,9 +71,19 @@ public class PMAUtil
 	/**
 	 * Generates a json array with job objects. 
 	 * @param mmsJSONString Element data from MMS.
-	 * @return
+	 * @return The json array as a string.
 	 */
 	public static String generateJobArrayJSON(String mmsJSONString)
+	{
+		return generateJobArrayJsonObject(mmsJSONString).toString();
+	}
+	
+	/**
+	 * Generates a json array with job objects. 
+	 * @param mmsJSONString Element data from MMS.
+	 * @return
+	 */
+	public static ObjectNode generateJobArrayJsonObject(String mmsJSONString)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode jobJSON = mapper.createObjectNode();
@@ -114,8 +124,8 @@ public class PMAUtil
 						{
 							String propertyName = element.get("name").toString().replace("\"", "");
 							String propertyValue = element.get("defaultValue").get("value").toString().replace("\"", "");
-							System.out.println(propertyName);
-							System.out.println(propertyValue);
+							System.out.println("PropertyName: "+propertyName);
+							System.out.println("PropertyValue: "+propertyValue);
 							jobMap.put(propertyName, propertyValue);
 						}					
 					}				
@@ -127,11 +137,11 @@ public class PMAUtil
 				System.out.println("Error or empty mms JSON String: "+mmsJSONString);
 				if(mmsJSONString.equals("{}"))
 				{
-					jobJSON.put("jobs",jobElements);
+					jobJSON.set("jobs",jobElements);
 					
-					return jobJSON.toString();
+					return jobJSON;
 				}
-				return mmsJSONString; // Returns status from mms. Should be an error or empty if the elements were null.
+				return (ObjectNode) fullJson; // Returns status from mms. Should be an error or empty if the elements were null.
 			}
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
@@ -140,9 +150,9 @@ public class PMAUtil
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		jobJSON.put("jobs",jobElements);
+		jobJSON.set("jobs",jobElements);
 		
-		return jobJSON.toString();
+		return jobJSON;
 	}
 	
 	/**
