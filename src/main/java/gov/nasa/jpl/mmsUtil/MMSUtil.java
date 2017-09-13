@@ -2152,7 +2152,7 @@ public class MMSUtil {
 			return "Not Found";
 		}
 	 	
-	 	public void appendValueProperty(String server,String projectId, String refId, String classId,String propertyName,String value,String type)
+	 	public String appendValueProperty(String server,String projectId, String refId, String classId,String propertyName,String value,String type)
 	 	{
 	 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 	 		// create new property
@@ -2170,11 +2170,20 @@ public class MMSUtil {
 	 		
 	 		String elementPostResponse = post(server, projectId, refId, payload);
 	 		System.out.println("Element Post Response: "+elementPostResponse);
-	 		appendOwnedAttribute(server,projectId,refId,classId,propertyNode.get("id").toString().replace("\"", ""));
+	 		if(elementPostResponse.equals("HTTP/1.1 200 OK"))
+	 		{
+	 			String appendResponse = appendOwnedAttribute(server,projectId,refId,classId,propertyNode.get("id").toString().replace("\"", ""));
+		 		System.out.println("Append Response: "+appendResponse);
+		 		return appendResponse;
+	 		}
+	 		else
+	 		{
+	 			return elementPostResponse;
+	 		}
 	 		
 	 	}
 	 	
-	 	public void appendOwnedAttribute(String server,String projectId,String refId,String classId,String idToBeAdded)
+	 	public String appendOwnedAttribute(String server,String projectId,String refId,String classId,String idToBeAdded)
 	 	{
 	 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 	 		// get job class
@@ -2208,6 +2217,7 @@ public class MMSUtil {
 							
 							String jobClassPostResponse = post(server, projectId, refId, jobs);
 							System.out.println(jobClassPostResponse);
+							return jobClassPostResponse;
 						}
 					}
 				}
@@ -2220,6 +2230,7 @@ public class MMSUtil {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+	 		return jobElementGetResponse;
 	 	}
 	 	
 	 	public String isJobDisabled(String mmsServer,String projectId,String refId,String jobId)
