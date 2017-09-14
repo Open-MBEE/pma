@@ -1761,6 +1761,65 @@ public class MMSUtil {
 	}
 	
 	/**
+	 *  Checks if job package is located outside of the model and will move it in if it is.
+	 *  Job Bin should have the id jobs_bin_PACKAGEID
+	 * @param server mmsServer
+	 * @param projectId md project ID
+	 * @param refId workspaceID
+	 * @return
+	 */
+	public String isJobPackgeInsideModel(String server,String projectId,String refId)
+	{
+		// finds a package with id projectID_job
+		String packageID = "jobs_bin_"+projectId;
+		String jsonReturnString = this.get(server,projectId,refId,packageID,true);
+		ObjectMapper mapper = new ObjectMapper();
+		
+		try {	
+			JsonNode fullJson = mapper.readTree(jsonReturnString);
+			JsonNode elements = fullJson.get("elements");
+			if (elements != null)  // elements will be null if the json returned with error
+			{
+				ObjectNode packageElement = (ObjectNode) elements.get(0);
+				
+				// check if jobs bin owner is projectId
+				String ownerId = packageElement.get("ownerId").toString().replace("\"", "");
+				if(ownerId.equals(projectId))
+				{
+					// replacing ownerId with projectId+"_pm" to bring the package into the model
+					packageElement.put("ownerId",projectId+"_pm");
+					ObjectNode payLoad = mapper.createObjectNode();
+					ArrayNode elementsArray = mapper.createArrayNode();
+					elementsArray.add(packageElement);
+					payLoad.set("elements", elementsArray);
+					String postResponse = post(server, projectId, refId, payLoad);
+					return postResponse;
+				}
+				else
+				{
+					return "Already inside model";
+				}
+				
+			}
+			else
+			{
+				// return server error
+				return jsonReturnString;
+
+			}
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+//			e.printStackTrace();
+			return e.toString();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+//			e.printStackTrace();
+			return e.toString();
+		}
+		
+	}
+	
+	/**
 	 * Checks if a string is an element JSON
 	 * @param jsonString
 	 * @return
