@@ -46,11 +46,18 @@ public class PMAPostUtil
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
+		
 		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectId, refId); // next build number from Jenkins
 		
 		//	Modifies the job instance with current run information or creates a new one if it doesn't exist
 
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
+		
+		// Checking if the Jobs Bin is inside the model
+		String packageInsideModelCheckResponse = mmsUtil.isJobPackgeInsideModel(mmsServer, projectId, refId);
+		System.out.println("packageInsideModelCheckResponse: "+packageInsideModelCheckResponse);
+		logger.info("packageInsideModelCheckResponse: "+packageInsideModelCheckResponse);
+		
 		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
 		
 		Map<String,String> newJobInstanceValues = new HashMap<String,String>();
@@ -147,13 +154,18 @@ public class PMAPostUtil
 		{
 			logger.info("Jobs Bin Does not exist");
 			System.out.println("Jobs Bin Does not exist");
-//			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm","Jobs Bin"); // creating the package inside the project
-			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID,"Jobs Bin"); // creating the package one level above the package, wont get synced back to the model.
+			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm","Jobs Bin"); // creating the package inside the project. Will 
+//			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID,"Jobs Bin"); // creating the package one level above the package, wont get synced back to the model.
 //			System.out.println(packageNode.toString());
 			String binCreateResponse = mmsUtil.post(mmsServer, projectID, refID, packageNode);
 			System.out.println("Bin Create Response: "+binCreateResponse);
 			logger.info("Bin Create Response: "+binCreateResponse);
 		}
+		
+		// Checking if the Jobs Bin is inside the model
+		String packageInsideModelCheckResponse = mmsUtil.isJobPackgeInsideModel(mmsServer, projectID, refID);
+		System.out.println("packageInsideModelCheckResponse: "+packageInsideModelCheckResponse);
+		logger.info("packageInsideModelCheckResponse: "+packageInsideModelCheckResponse);
 		
 		
 		String jobElementID = mmsUtil.createId();
