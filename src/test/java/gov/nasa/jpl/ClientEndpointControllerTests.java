@@ -285,7 +285,7 @@ public class ClientEndpointControllerTests {
 
         deleteJob(testProject, "master", id);
         
-     // check jobs bin id
+     // checks if the jobs bin owner Id is projectId_pm
         
         String jobPackageLocationCheckResponse = mmsUtil.isJobPackgeInsideModel(testServer, testProject, "master");
         System.out.println("JOB PACKAGE INSIDE MODEL: "+jobPackageLocationCheckResponse);
@@ -293,6 +293,42 @@ public class ClientEndpointControllerTests {
         assert(jobPackageLocationCheckResponse.equals("Already inside model"));
     }
 
+	/**
+	 * Checks if the disabled value property is created with the job class
+	 */
+    @Test
+    public void testCheckDisabledPropertyCreation() {
+    	
+    	System.out.println("\n----------------------- [ ClientEndpointController testCheckDisabledPropertyCreation ] -----------------------\n");
+    	
+        configVeEndpointController();
+
+        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
+        jobInstanceFromClient.setMmsServer(testServer);
+        jobInstanceFromClient.setArguments(null);
+        jobInstanceFromClient.setAlfrescoToken(alfTicket);
+
+        String id = createJobGetId(testProject, "master");
+        clientEndpointController.runJob(testProject, "master", id, jobInstanceFromClient);
+
+        assert (id != null);
+
+        
+        
+     // checks if the jobs bin owner Id is projectId_pm
+        
+        Boolean jobPackageLocationCheckResponse = mmsUtil.disabledPropertyExists(testServer, testProject, "master",id);
+        
+        System.out.println("Disabled Value Property Exists: "+jobPackageLocationCheckResponse);
+        
+        assert(jobPackageLocationCheckResponse);
+        
+        deleteJob(testProject, "master", id);
+        
+        System.out.println("\n----------------------------------------------------------------------------------------\n");
+      
+    }
+    
 //    @Test
 //    public void testIncorrectMMSAuthentication() {
 //        System.out.println("\n----------------------- [ Incorrect MMS Authentication ] -----------------------\n");

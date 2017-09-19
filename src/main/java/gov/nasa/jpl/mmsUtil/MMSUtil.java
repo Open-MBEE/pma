@@ -2338,5 +2338,46 @@ public class MMSUtil {
 				return jobsArray.toString();
 			}
 	 	}
-	 
+	 	
+	 	public Boolean disabledPropertyExists(String mmsServer,String projectId,String refId,String jobId)
+	 	{
+	 		String jsonString = get(mmsServer,projectId,refId,jobId,true); //should contain job element information from mms
+
+			ObjectNode jobsArray = PMAUtil.generateJobArrayJsonObject(jsonString);
+			
+			ArrayNode jobs = (ArrayNode) jobsArray.get("jobs");
+			if(jobs!=null)
+			{
+				ObjectNode job = (ObjectNode) jobs.get(0);
+				String disabledPropertyValue = job.get("disabled").toString();
+				if(!disabledPropertyValue.equals("null"))
+				{
+					disabledPropertyValue=disabledPropertyValue.replace("\"", "");
+					System.out.println(disabledPropertyValue);
+					if(disabledPropertyValue.equals("false")||disabledPropertyValue.equals("true"))
+					{
+						System.out.println("RETURNING VALUE: "+disabledPropertyValue);
+						return true;
+					}
+					else
+					{
+						// Unexpected value in disabled property
+						System.out.println("UNEXPECTED VALUE: "+disabledPropertyValue);
+						return null;
+					}
+				}
+				else
+				{
+					// property not found
+					return false;
+				}
+			}
+			else
+			{
+				// Error occurred or job not found.
+				System.out.println("Job not Found");
+				System.out.println(jobsArray);
+				return null;
+			}
+	 	}
 }
