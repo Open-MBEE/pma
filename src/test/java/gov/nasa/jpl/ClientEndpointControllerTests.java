@@ -82,7 +82,8 @@ public class ClientEndpointControllerTests {
         System.out.println("GETTING ALF TICKET");
         this.alfTicket = MMSUtil.getAlfrescoToken(testServer, mmsUser, mmsPass);
         System.out.println("ALF TICKET: " + alfTicket);
-
+        mmsUtil = new MMSUtil(alfTicket);
+        
         je.login();
         job = new JobFromClient();
         job.setMmsServer(testServer);
@@ -262,7 +263,72 @@ public class ClientEndpointControllerTests {
         System.out.println("\n----------------------------------------------------------------------------------------\n");
     }
 
+	/**
+	 * Jobs Bin's owner should be projectID_pm because it is inside the md project
+	 */
+    @Test
+    public void testCheckJobsBinLocation() {
+    	
+    	System.out.println("\n----------------------- [ ClientEndpointController testCheckJobsBinLocation ] -----------------------\n");
+    	
+        configVeEndpointController();
 
+        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
+        jobInstanceFromClient.setMmsServer(testServer);
+        jobInstanceFromClient.setArguments(null);
+        jobInstanceFromClient.setAlfrescoToken(alfTicket);
+
+        String id = createJobGetId(testProject, "master");
+        clientEndpointController.runJob(testProject, "master", id, jobInstanceFromClient);
+
+        assert (id != null);
+
+        deleteJob(testProject, "master", id);
+        
+     // checks if the jobs bin owner Id is projectId_pm
+        
+        String jobPackageLocationCheckResponse = mmsUtil.isJobPackgeInsideModel(testServer, testProject, "master");
+        System.out.println("JOB PACKAGE INSIDE MODEL: "+jobPackageLocationCheckResponse);
+        System.out.println("\n----------------------------------------------------------------------------------------\n");
+        assert(jobPackageLocationCheckResponse.equals("Already inside model"));
+    }
+
+	/**
+	 * Checks if the disabled value property is created with the job class
+	 */
+    @Test
+    public void testCheckDisabledPropertyCreation() {
+    	
+    	System.out.println("\n----------------------- [ ClientEndpointController testCheckDisabledPropertyCreation ] -----------------------\n");
+    	
+        configVeEndpointController();
+
+        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
+        jobInstanceFromClient.setMmsServer(testServer);
+        jobInstanceFromClient.setArguments(null);
+        jobInstanceFromClient.setAlfrescoToken(alfTicket);
+
+        String id = createJobGetId(testProject, "master");
+        clientEndpointController.runJob(testProject, "master", id, jobInstanceFromClient);
+
+        assert (id != null);
+
+        
+        
+     // checks if the jobs bin owner Id is projectId_pm
+        
+        Boolean jobPackageLocationCheckResponse = mmsUtil.disabledPropertyExists(testServer, testProject, "master",id);
+        
+        System.out.println("Disabled Value Property Exists: "+jobPackageLocationCheckResponse);
+        
+        assert(jobPackageLocationCheckResponse);
+        
+        deleteJob(testProject, "master", id);
+        
+        System.out.println("\n----------------------------------------------------------------------------------------\n");
+      
+    }
+    
 //    @Test
 //    public void testIncorrectMMSAuthentication() {
 //        System.out.println("\n----------------------- [ Incorrect MMS Authentication ] -----------------------\n");
