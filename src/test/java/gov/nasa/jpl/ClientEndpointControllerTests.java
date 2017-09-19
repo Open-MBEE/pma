@@ -82,7 +82,8 @@ public class ClientEndpointControllerTests {
         System.out.println("GETTING ALF TICKET");
         this.alfTicket = MMSUtil.getAlfrescoToken(testServer, mmsUser, mmsPass);
         System.out.println("ALF TICKET: " + alfTicket);
-
+        mmsUtil = new MMSUtil(alfTicket);
+        
         je.login();
         job = new JobFromClient();
         job.setMmsServer(testServer);
@@ -286,9 +287,10 @@ public class ClientEndpointControllerTests {
         
      // check jobs bin id
         
-        System.out.println(mmsUtil.isJobPackgeInsideModel(testServer, testProject, "master"));
-
+        String jobPackageLocationCheckResponse = mmsUtil.isJobPackgeInsideModel(testServer, testProject, "master");
+        System.out.println("JOB PACKAGE INSIDE MODEL: "+jobPackageLocationCheckResponse);
         System.out.println("\n----------------------------------------------------------------------------------------\n");
+        assert(jobPackageLocationCheckResponse.equals("Already inside model"));
     }
 
 //    @Test
