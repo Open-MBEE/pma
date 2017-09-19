@@ -262,6 +262,34 @@ public class ClientEndpointControllerTests {
         System.out.println("\n----------------------------------------------------------------------------------------\n");
     }
 
+	/**
+	 * Jobs Bin's owner should be projectID_pm because it is inside the md project
+	 */
+    @Test
+    public void testCheckJobsBinLocation() {
+    	
+    	System.out.println("\n----------------------- [ ClientEndpointController testCheckJobsBinLocation ] -----------------------\n");
+    	
+        configVeEndpointController();
+
+        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
+        jobInstanceFromClient.setMmsServer(testServer);
+        jobInstanceFromClient.setArguments(null);
+        jobInstanceFromClient.setAlfrescoToken(alfTicket);
+
+        String id = createJobGetId(testProject, "master");
+        clientEndpointController.runJob(testProject, "master", id, jobInstanceFromClient);
+
+        assert (id != null);
+
+        deleteJob(testProject, "master", id);
+        
+     // check jobs bin id
+        
+        System.out.println(mmsUtil.isJobPackgeInsideModel(testServer, testProject, "master"));
+
+        System.out.println("\n----------------------------------------------------------------------------------------\n");
+    }
 
 //    @Test
 //    public void testIncorrectMMSAuthentication() {
