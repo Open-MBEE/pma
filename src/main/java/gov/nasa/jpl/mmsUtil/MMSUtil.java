@@ -1772,7 +1772,7 @@ public class MMSUtil {
 	{
 		// finds a package with id projectID_job
 		String packageID = "jobs_bin_"+projectId;
-		String jsonReturnString = this.get(server,projectId,refId,packageID,true);
+		String jsonReturnString = this.get(server,projectId,refId,packageID,false);
 		ObjectMapper mapper = new ObjectMapper();
 		
 		try {	
