@@ -1006,14 +1006,13 @@ public class JenkinsEngine {
 	}
 
 	/**
-	 * Retrieves config.xml file of the job. Modifies the job id variable.
+	 * Retrieves config.xml file of the job.
 	 * 
-	 * @param jobName
-	 *            name of the job
+	 * @param jobId name of the job on jenkins
 	 * @return returns xml object of job
 	 */
-	public Document getConfigXML(String jobName) throws SAXException, ParserConfigurationException {
-		String getUrl = this.url + "/job/" + jobName + "/config.xml";
+	public Document getConfigXML(String projectId, String refId,String jobId) {
+		String getUrl = this.url + "/job/PMA/job/"+projectId+"/job/"+refId+"/job/" + jobId + "/config.xml";
 
 		HttpGet get = new HttpGet(getUrl);
 
@@ -1031,6 +1030,9 @@ public class JenkinsEngine {
 			e.printStackTrace();
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		return null;
@@ -1039,11 +1041,12 @@ public class JenkinsEngine {
 	/**
 	 * Replaces jobID variable in the config xml
 	 * 
-	 * @param doc
-	 *            contains job configuration
+	 * @param doc contains job configuration in xml format
+	 * @param propertyName environment variable in Jenkins config. ex: TARGET_VIEW_ID,PROJECT_ID
+	 * @param newPropertyValue new value of the selected property.
 	 * @return
 	 */
-	public String replaceJobIDInConfigXML(Document doc, String newJobID) {
+	public Document replaceJobIDInConfigXML(Document doc,String propertyName, String newPropertyValue) {
 		NodeList nodeList = doc.getElementsByTagName("*");
 
 		// iterates through all the nodes to find the one which contains the
@@ -1058,10 +1061,10 @@ public class JenkinsEngine {
 					// System.out.println(Arrays.toString(environmentVariables));
 					for (int j = 0; j < environmentVariables.length; j++) {
 						String environmentVariable = environmentVariables[j];
-						if (environmentVariable.contains("JOB_ID")) {
-							// System.out.println("Changed ID");
-							// environmentVariables[j]="JOB_ID="+newJobID;
-							// //Changes job id to new id
+						if (environmentVariable.contains(propertyName)) {
+							// System.out.println("Changed property");
+							 environmentVariables[j]=propertyName+"="+newPropertyValue;
+							// Changes property to new value
 						}
 					}
 					// System.out.println(Arrays.toString(environmentVariables));
@@ -1076,7 +1079,12 @@ public class JenkinsEngine {
 				}
 			}
 		}
+		return doc;
 
+	}
+	
+	public String xmlDocToString(Document doc)
+	{
 		try {
 			// turns document object to a string.
 			Transformer transformer = TransformerFactory.newInstance().newTransformer();
