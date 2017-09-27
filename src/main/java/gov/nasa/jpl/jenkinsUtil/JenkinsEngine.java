@@ -1194,7 +1194,7 @@ public class JenkinsEngine {
 				}
 			}
 		}
-		return null;
+		return null; // Jenkins config didn't have the correct keys.
 	}
 	
 	/**

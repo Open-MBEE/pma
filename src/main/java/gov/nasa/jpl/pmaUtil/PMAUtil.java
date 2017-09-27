@@ -9,12 +9,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
+import org.w3c.dom.Document;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 
 public class PMAUtil 
@@ -408,10 +412,120 @@ public class PMAUtil
 			
 	}
 	
-	public static void main(String args[])
+	public static void updateJob(MMSUtil mmsUtil,JenkinsEngine je,String projectId,String refId,String jobId,String mmsServer)
 	{
-		String jsonString = "{\"jobInstances\": [{\"id\": \"PMA_1493929692690_e9c15e52-1a21-4dd2-8c14-413ebd519c18\",\"buildNumber\": \"2\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null},{\"id\": \"PMA_1493929332779_c035124d-06af-40b7-ad7f-ce7781b08a3e\",\"buildNumber\": \"1\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null}]}";
-//		String jsonString = "{\"jobInstances\": []}";
-		System.out.println(getLatestJobInstance(jsonString));
+		Document doc = je.getConfigXML(projectId, refId, jobId);
+
+		ResponseEntity<String> re = mmsUtil.getJobElement(mmsServer, projectId, refId, jobId);
+		
+		System.out.println(re.getStatusCodeValue());
+		if(re.getStatusCodeValue()==200) // successful job element get
+		{
+			// get job elments
+			String jobsJsonString = re.getBody();
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode jobElement = null;
+			try {
+				JsonNode fullJson = mapper.readTree(jobsJsonString);
+				JsonNode jobsArray = fullJson.get("jobs");
+				if(jobsArray!=null)
+				{
+					jobElement = jobsArray.get(0);  // Assuming theres only 1 element in the jobsArray
+				}
+				else
+				{
+					// error
+					System.out.println("jobsArray is null");
+				}
+
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			// do a diff , could probably put into its own method, params(map,jsonNode) returns a map of diff
+			if(jobElement!=null)
+			{
+				Map<String,String> jenkinsEnvironmentVariables = je.getEnvironmentVariablesFromConfigXml(doc);
+				if(jenkinsEnvironmentVariables!=null)
+				{
+					Map<String,String> jenkinsDifferences = new HashMap();
+					
+					System.out.println("Values: "+jenkinsEnvironmentVariables.values());
+					String jenkinsSchedule = jenkinsEnvironmentVariables.get("schedule");
+					String jenkinsDisabled = jenkinsEnvironmentVariables.get("disabled");
+					String jenkinsTargetViewId = jenkinsEnvironmentVariables.get("TARGET_VIEW_ID");
+					
+					JsonNode scheduleNode = jobElement.get("schedule");
+					JsonNode disabledNode = jobElement.get("disabled");
+					JsonNode associatedElementIDNode = jobElement.get("associatedElementID");
+					
+					if(scheduleNode!=null)
+					{
+						String mmsJobSchedule = scheduleNode.toString().replace("\"", "");
+						if(jenkinsSchedule!=null&&(!jenkinsSchedule.equals(mmsJobSchedule)))
+						{
+							jenkinsDifferences.put("schedule", jenkinsSchedule);
+							System.out.println("Difference Found. MMS: "+mmsJobSchedule+" Jenkins: "+jenkinsSchedule);
+						}
+						if(jenkinsSchedule==null)
+						{
+							if(!mmsJobSchedule.equals(""))
+							{
+								jenkinsDifferences.put("schedule", jenkinsSchedule);
+								System.out.println("Difference Found. MMS: "+mmsJobSchedule+" Jenkins: "+jenkinsSchedule);
+							}
+						}
+					}
+					if(disabledNode!=null)
+					{
+						String mmsJobDisabled = disabledNode.toString().replace("\"", "");
+						if(jenkinsDisabled==null||(!jenkinsDisabled.equals(mmsJobDisabled)))
+						{
+							jenkinsDifferences.put("disabled", jenkinsDisabled);
+							System.out.println("Difference Found. MMS: "+mmsJobDisabled+" Jenkins: "+jenkinsDisabled);
+						}
+					}
+					if(associatedElementIDNode==null||(associatedElementIDNode!=null))
+					{
+						String mmsJobTargetViewId = associatedElementIDNode.toString().replace("\"", "");
+						if(!jenkinsTargetViewId.equals(mmsJobTargetViewId))
+						{
+							jenkinsDifferences.put("associatedElementID", jenkinsTargetViewId);
+							System.out.println("Difference Found. MMS: "+mmsJobTargetViewId+" Jenkins: "+jenkinsTargetViewId);
+						}
+					}
+
+					System.out.println("Diffs on Jenkins: "+jenkinsDifferences+" "+jenkinsDifferences.size());
+					if(jenkinsDifferences.size()>0)
+					{
+						// if diff update xml
+//						je.replacePropertyValueInConfigXML(doc, "PMA_PORT", "1337");
+						
+						// send back xml
+//						String xmlString = je.xmlDocToString(doc);
+//						String postResponse = je.postModifiedConfigXML(projectId, refId, jobId, xmlString);
+//						System.out.println("postResponse: "+postResponse);
+					}
+				}
+				else
+				{
+					// error jenkins xml didn't have the correct keys
+				}
+				
+			}
+			else
+			{
+				// Job element not found
+			}
+			
+		}
+		else
+		{
+			System.out.println("ERROR: "+re.toString());
+		}
 	}
 }
