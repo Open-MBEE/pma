@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -1077,7 +1078,7 @@ public class JenkinsEngine {
 	 * @param newPropertyValue new value of the selected property.
 	 * @return
 	 */
-	public Document replacePropertyValueInConfigXML(Document doc,String propertyName, String newPropertyValue) {
+	public Document replaceEnvironmentValueInConfigXML(Document doc,String propertyName, String newPropertyValue) {
 		NodeList nodeList = doc.getElementsByTagName("*");
 
 		// iterates through all the nodes to find the one which contains the
@@ -1127,6 +1128,73 @@ public class JenkinsEngine {
 		}
 		return doc;
 
+	}
+	
+	public Map<String,String> getEnvironmentVariablesFromConfigXml(Document doc) 
+	{
+		Map<String,String> jenkinsVariables = new HashMap();
+		
+		NodeList nodeList = doc.getElementsByTagName("*");
+		// iterates through all the nodes to find the one which contains the environment variables
+		for (int i = 0; i < nodeList.getLength(); i++) {
+			Node node = nodeList.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				
+				if(node.getNodeName().equals("disabled"))
+				{
+					jenkinsVariables.put("disabled", node.getTextContent()); // Disabled property
+				}
+				if(node.getNodeName().equals("triggers"))
+				{
+					NodeList triggerNodes = node.getChildNodes();
+					for(int j=0;j<triggerNodes.getLength();j++)
+					{
+						if(triggerNodes.item(j).getNodeName().equals("hudson.triggers.TimerTrigger"))
+						{
+							NodeList timerTriggerNodes = triggerNodes.item(j).getChildNodes();
+							for(int k=0;k<timerTriggerNodes.getLength();k++)
+							{
+								if(timerTriggerNodes.item(k).getNodeName().equals("spec"))
+								{
+									jenkinsVariables.put("schedule", timerTriggerNodes.item(k).getTextContent()); // Schedule property
+								}
+							}
+						}
+					}
+				}
+				
+				if (node.getNodeName().equals("EnvInjectBuildWrapper")) {
+
+					NodeList envInjectNodeChildren = node.getChildNodes();
+					for(int j =0;j<envInjectNodeChildren.getLength();j++)
+					{
+						Node nestedSearchNode = envInjectNodeChildren.item(j);
+						if(nestedSearchNode.getNodeName().equals("info"))
+						{
+							NodeList infoNodeChildren = nestedSearchNode.getChildNodes();
+							for(int k =0;k<infoNodeChildren.getLength();k++)
+							{
+								if(infoNodeChildren.item(k).getNodeName().equals("propertiesContent"))
+								{							
+									Node propertiesContent = infoNodeChildren.item(k);
+									String[] environmentVariables = propertiesContent.getTextContent().split("\n"); // retrieving the environment variables
+									for(String environmentVariable:environmentVariables)
+									{
+										String[] environmentVariableSplitArray = environmentVariable.split("=");
+										if(environmentVariableSplitArray.length==2)
+										{
+											jenkinsVariables.put(environmentVariableSplitArray[0], environmentVariableSplitArray[1]);
+										}
+									}
+									return jenkinsVariables;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
 	}
 	
 	/**
