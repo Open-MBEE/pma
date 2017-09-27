@@ -7,8 +7,10 @@ package gov.nasa.jpl.pmaUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.w3c.dom.Document;
 
@@ -18,11 +20,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ch.qos.logback.classic.Logger;
 import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 
 public class PMAUtil 
 {
+
 	public PMAUtil()
 	{
 		
@@ -412,16 +416,26 @@ public class PMAUtil
 			
 	}
 	
-	public static void updateJob(MMSUtil mmsUtil,JenkinsEngine je,String projectId,String refId,String jobId,String mmsServer)
+	/**
+	 * Checks if there are any differences between the job element on MMS and the job on Jenkins. 
+	 * Will push the differences on MMS to Jenkins.
+	 * Currently checks associatedElement(TARGET_VIEW_ID), schedule, and disabled
+	 * @param mmsUtil
+	 * @param je
+	 * @param projectId
+	 * @param refId
+	 * @param jobId
+	 * @param mmsServer
+	 */
+	public static void updateJenkinsJobFromMMS(MMSUtil mmsUtil,JenkinsEngine je,String projectId,String refId,String jobId,String mmsServer)
 	{
 		Document doc = je.getConfigXML(projectId, refId, jobId);
 
 		ResponseEntity<String> re = mmsUtil.getJobElement(mmsServer, projectId, refId, jobId);
 		
-		System.out.println(re.getStatusCodeValue());
 		if(re.getStatusCodeValue()==200) // successful job element get
 		{
-			// get job elments
+			// Get job elements
 			String jobsJsonString = re.getBody();
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode jobElement = null;
@@ -439,22 +453,26 @@ public class PMAUtil
 				}
 
 			} catch (JsonProcessingException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
 			// do a diff , could probably put into its own method, params(map,jsonNode) returns a map of diff
 			if(jobElement!=null)
 			{
+				Map<String,String> jobElementToJenkinsMapping = new HashMap();
+				jobElementToJenkinsMapping.put("schedule", "schedule");
+				jobElementToJenkinsMapping.put("TARGET_VIEW_ID", "associatedElementID");
+				jobElementToJenkinsMapping.put("disabled", "disabled");
+				
 				Map<String,String> jenkinsEnvironmentVariables = je.getEnvironmentVariablesFromConfigXml(doc);
+				
 				if(jenkinsEnvironmentVariables!=null)
 				{
 					Map<String,String> jenkinsDifferences = new HashMap();
 					
-					System.out.println("Values: "+jenkinsEnvironmentVariables.values());
+//					System.out.println("Values: "+jenkinsEnvironmentVariables.values());
 					String jenkinsSchedule = jenkinsEnvironmentVariables.get("schedule");
 					String jenkinsDisabled = jenkinsEnvironmentVariables.get("disabled");
 					String jenkinsTargetViewId = jenkinsEnvironmentVariables.get("TARGET_VIEW_ID");
@@ -468,14 +486,14 @@ public class PMAUtil
 						String mmsJobSchedule = scheduleNode.toString().replace("\"", "");
 						if(jenkinsSchedule!=null&&(!jenkinsSchedule.equals(mmsJobSchedule)))
 						{
-							jenkinsDifferences.put("schedule", jenkinsSchedule);
+							jenkinsDifferences.put("schedule", mmsJobSchedule);
 							System.out.println("Difference Found. MMS: "+mmsJobSchedule+" Jenkins: "+jenkinsSchedule);
 						}
 						if(jenkinsSchedule==null)
 						{
 							if(!mmsJobSchedule.equals(""))
 							{
-								jenkinsDifferences.put("schedule", jenkinsSchedule);
+								jenkinsDifferences.put("schedule", mmsJobSchedule);
 								System.out.println("Difference Found. MMS: "+mmsJobSchedule+" Jenkins: "+jenkinsSchedule);
 							}
 						}
@@ -485,30 +503,40 @@ public class PMAUtil
 						String mmsJobDisabled = disabledNode.toString().replace("\"", "");
 						if(jenkinsDisabled==null||(!jenkinsDisabled.equals(mmsJobDisabled)))
 						{
-							jenkinsDifferences.put("disabled", jenkinsDisabled);
+							jenkinsDifferences.put("disabled", mmsJobDisabled);
 							System.out.println("Difference Found. MMS: "+mmsJobDisabled+" Jenkins: "+jenkinsDisabled);
 						}
 					}
-					if(associatedElementIDNode==null||(associatedElementIDNode!=null))
+					if(associatedElementIDNode!=null)
 					{
 						String mmsJobTargetViewId = associatedElementIDNode.toString().replace("\"", "");
-						if(!jenkinsTargetViewId.equals(mmsJobTargetViewId))
+						if(jenkinsTargetViewId==null||(!jenkinsTargetViewId.equals(mmsJobTargetViewId)))
 						{
-							jenkinsDifferences.put("associatedElementID", jenkinsTargetViewId);
+							jenkinsDifferences.put("TARGET_VIEW_ID", mmsJobTargetViewId);
 							System.out.println("Difference Found. MMS: "+mmsJobTargetViewId+" Jenkins: "+jenkinsTargetViewId);
 						}
 					}
 
 					System.out.println("Diffs on Jenkins: "+jenkinsDifferences+" "+jenkinsDifferences.size());
+					
 					if(jenkinsDifferences.size()>0)
 					{
-						// if diff update xml
-//						je.replacePropertyValueInConfigXML(doc, "PMA_PORT", "1337");
 						
+						Iterator it = jenkinsDifferences.entrySet().iterator();
+					    while (it.hasNext()) {
+					        Map.Entry pair = (Map.Entry)it.next();
+					        System.out.println(pair.getKey() + " = " + pair.getValue());
+					        
+					        // if diff update xml
+							je.replaceEnvironmentValueInConfigXML(doc, pair.getKey().toString(),pair.getValue().toString());
+							
+					        it.remove(); // avoids a ConcurrentModificationException
+					    }
 						// send back xml
-//						String xmlString = je.xmlDocToString(doc);
-//						String postResponse = je.postModifiedConfigXML(projectId, refId, jobId, xmlString);
-//						System.out.println("postResponse: "+postResponse);
+						String xmlString = je.xmlDocToString(doc);
+						String postResponse = je.postModifiedConfigXML(projectId, refId, jobId, xmlString);
+						System.out.println("Job Update Post Response: "+postResponse);
+						// return post response
 					}
 				}
 				else
@@ -525,6 +553,7 @@ public class PMAUtil
 		}
 		else
 		{
+			// MMS Error
 			System.out.println("ERROR: "+re.toString());
 		}
 	}

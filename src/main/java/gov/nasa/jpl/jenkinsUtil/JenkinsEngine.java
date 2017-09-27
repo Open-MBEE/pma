@@ -1086,7 +1086,22 @@ public class JenkinsEngine {
 		for (int i = 0; i < nodeList.getLength(); i++) {
 			Node node = nodeList.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-
+				
+				if(node.getNodeName().equals("disabled")&&(propertyName.equals("disabled")))
+				{
+					node.setTextContent(newPropertyValue);
+					return doc;
+				}
+				if(node.getNodeName().equals("triggers")&&(propertyName.equals("schedule")))
+				{
+					Node timerTrigger = doc.createElement("hudson.triggers.TimerTrigger");
+					Node spec = doc.createElement("spec");
+					spec.setTextContent(newPropertyValue);
+					timerTrigger.appendChild(spec);
+					node.appendChild(timerTrigger);
+					return doc;
+				}
+				
 				// System.out.println(node.getNodeName());
 				if (node.getNodeName().equals("EnvInjectBuildWrapper")) {
 					

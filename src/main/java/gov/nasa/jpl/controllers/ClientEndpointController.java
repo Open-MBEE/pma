@@ -149,12 +149,17 @@ public class ClientEndpointController {
 		String alfrescoToken = jobInstance.getAlfrescoToken();
 		String mmsServer = jobInstance.getMmsServer();
 		
+    	
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
+		JenkinsEngine je = login(org);
 		
 		String isJobDisabled = mmsUtil.isJobDisabled(mmsServer, projectID, refID, jobSysmlID);
 		if(isJobDisabled.equals("true")||isJobDisabled.equals("false"))
 		{
+			
+			PMAUtil.updateJenkinsJobFromMMS(mmsUtil, je, projectID, refID, jobSysmlID, mmsServer);
+			
 			if(isJobDisabled.equals("true"))
 			{
 				ObjectNode responseJSON = mapper.createObjectNode();
@@ -183,7 +188,6 @@ public class ClientEndpointController {
 			    }
 				
 				// Check if job exists on jenkins first
-		    	JenkinsEngine je = login(org);
 		    	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
 		    	if((!jobResponse.equals("Job not found on Jenkins"))&&(!jobResponse.equals("HTTP/1.1 404 Not Found"))) // Job exists on Jenkins
 		    	{
