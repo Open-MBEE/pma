@@ -7,7 +7,12 @@ package gov.nasa.jpl.pmaUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.w3c.dom.Document;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,10 +20,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ch.qos.logback.classic.Logger;
+import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 
 public class PMAUtil 
 {
+
 	public PMAUtil()
 	{
 		
@@ -408,10 +416,5 @@ public class PMAUtil
 			
 	}
 	
-	public static void main(String args[])
-	{
-		String jsonString = "{\"jobInstances\": [{\"id\": \"PMA_1493929692690_e9c15e52-1a21-4dd2-8c14-413ebd519c18\",\"buildNumber\": \"2\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null},{\"id\": \"PMA_1493929332779_c035124d-06af-40b7-ad7f-ce7781b08a3e\",\"buildNumber\": \"1\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null}]}";
-//		String jsonString = "{\"jobInstances\": []}";
-		System.out.println(getLatestJobInstance(jsonString));
-	}
+
 }

@@ -35,10 +35,10 @@ public class ClientEndpointControllerTests {
     MMSUtil mmsUtil = new MMSUtil("");
 
     private String alfTicket = "tempTicket";
-    private String testServer = "opencae-uat.jpl.nasa.gov";
+    private String testServer = "opencae-int.jpl.nasa.gov";
     private String jobName = "PMA_1493825038894_5fcafd6e-6e5a-4d03-a6e2-f47ff29286de";
-    private String testProject = "PROJECT-cea59ec3-7f4a-4619-8577-17bbeb9f1b1c";
-    private String testDocument = "MMS_1504206271283_f31ab743-1d52-48b1-978d-66038d9c33f3";
+    private String testProject = "PROJECT-c0208d0f-3907-4dee-8a8a-9629d5e27cf4";
+    private String testDocument = "_18_5_2_40a019f_1506616041770_592405_165520";
     private JobFromClient job;
     private boolean isConfigured = false;
     private DBUtil dbUtil = new DBUtil();
