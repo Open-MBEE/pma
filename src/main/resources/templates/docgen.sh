@@ -45,7 +45,13 @@ param='"'$status'"'
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 
 pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/$REF_ID/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
-echo pmaResponse $pmaResponse
+echo pmaResponse $pmaResponse # Updating jobStatus
+
+param='"'$BUILD_NUMBER'"'
+pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
+
+pmaResponse=$(curl -X POST -H Content-Type:application/json --data $pmaUpdateJSON https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/$REF_ID/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/buildNumber?mmsServer=${MMS_HOST})
+echo pmaResponse $pmaResponse # Updating buildNumber
 
 DISPLAY=:9001
 vncserver -kill "$DISPLAY" 2> /dev/null || true
@@ -84,7 +90,7 @@ param='"'$status'"'
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 
 pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/$REF_ID/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/jobStatus?mmsServer=${MMS_HOST})
-echo pmaResponse $pmaResponse
+echo pmaResponse $pmaResponse # Updating jobStatus
 
 artifactLink=$BUILD_URL"artifact/MDNotificationWindowText.html"
 
@@ -92,6 +98,6 @@ param='"'$artifactLink'"'
 
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/$REF_ID/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/logUrl?mmsServer=${MMS_HOST})
-echo pmaResponse $pmaResponse
+echo pmaResponse $pmaResponse # Updating logUrl
 
 exit $mdExitCode

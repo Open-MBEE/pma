@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -343,6 +344,10 @@ public class JenkinsEngine {
 		return null;
 	}
 
+	/**
+	 * Sends a post call with the executeUrl
+	 * @return response from post
+	 */
 	public String build() {
 		// This sets the URL to an Object specifically for making GET calls
 		HttpPost post = new HttpPost(this.executeUrl);
@@ -723,7 +728,7 @@ public class JenkinsEngine {
 		try {
 			this.executeUrl = this.url + "/job/PMA/job/"+nestedLocation + jobName + "/doDelete"; // Jenkins2
 			System.out.println("Delete url: "+executeUrl);
-			String response = this.build();
+			String response = this.build(); // Sends a post call 
 			return response;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -731,6 +736,60 @@ public class JenkinsEngine {
 		return null;
 	}
 
+	/**
+	 * Disables a job on Jenkins
+	 * @param jobName name of Job
+	 * @param projectId MD Project Id
+	 * @param refId branch Id
+	 * @return
+	 */
+	public String disableNestedJob(String jobName,String projectId,String refId)
+	{
+		String nestedLocation = "";
+		
+		if((!projectId.equals(""))&&(!refId.equals("")))
+		{
+			nestedLocation = projectId+"/job/"+refId+"/job/";	
+		}
+		
+		try {
+			this.executeUrl = this.url + "/job/PMA/job/"+nestedLocation + jobName + "/disable"; // Jenkins2
+			System.out.println("Disable url: "+executeUrl);
+			String response = this.build();
+			return response;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	/**
+	 * Enables a job on Jenkins
+	 * @param jobName name of Job
+	 * @param projectId MD Project Id
+	 * @param refId branch Id
+	 * @return
+	 */
+	public String enableNestedJob(String jobName,String projectId,String refId)
+	{
+		String nestedLocation = "";
+		
+		if((!projectId.equals(""))&&(!refId.equals("")))
+		{
+			nestedLocation = projectId+"/job/"+refId+"/job/";	
+		}
+		
+		try {
+			this.executeUrl = this.url + "/job/PMA/job/"+nestedLocation + jobName + "/enable"; // Jenkins2
+			System.out.println("Disable url: "+executeUrl);
+			String response = this.build();
+			return response;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	public JSONObject isJobInQueue(JSONObject jenkinsJobJson) {
 		try {
 			this.executeUrl = this.url + "/queue/api/json";
@@ -952,14 +1011,13 @@ public class JenkinsEngine {
 	}
 
 	/**
-	 * Retrieves config.xml file of the job. Modifies the job id variable.
+	 * Retrieves config.xml file of the job.
 	 * 
-	 * @param jobName
-	 *            name of the job
+	 * @param jobId name of the job on jenkins (Usually the mms jobId)
 	 * @return returns xml object of job
 	 */
-	public Document getConfigXML(String jobName) throws SAXException, ParserConfigurationException {
-		String getUrl = this.url + "/job/" + jobName + "/config.xml";
+	public Document getConfigXML(String projectId, String refId,String jobId) {
+		String getUrl = this.url + "/job/PMA/job/"+projectId+"/job/"+refId+"/job/" + jobId + "/config.xml";
 
 		HttpGet get = new HttpGet(getUrl);
 
@@ -977,19 +1035,50 @@ public class JenkinsEngine {
 			e.printStackTrace();
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		return null;
 	}
-
+	
 	/**
-	 * Replaces jobID variable in the config xml
+	 * Posts config of job to Jenkins.
 	 * 
-	 * @param doc
-	 *            contains job configuration
+	 * @param jobId name of the job on jenkins (Usually the mms jobId)
+	 * @return returns post response
+	 */
+	public String postModifiedConfigXML(String projectId, String refId,String jobId, String xmlConfigString) {
+		String postUrl = this.url + "/job/PMA/job/"+projectId+"/job/"+refId+"/job/" + jobId + "/config.xml";
+
+		try {
+			HttpEntity xmlEntity = (HttpEntity) new StringEntity(xmlConfigString);
+
+			HttpPost post = new HttpPost(postUrl);
+			post.setHeader("Content-Type", "application/xml");
+			post.setEntity(xmlEntity);
+			HttpResponse response = this.jenkinsClient.execute(post, this.context);
+			System.out.println("Response: " + response);
+			EntityUtils.consume(response.getEntity());
+			return response.getStatusLine().toString();
+		} catch (Exception e) {
+//			e.printStackTrace();
+			logger.error(e.toString()); // job element not created on mms. 
+			System.out.println(e.toString());
+			return(e.toString());
+		}
+	}
+	
+	/**
+	 * Replaces propertyName variable value in the config xml.
+	 * 
+	 * @param doc contains job configuration in xml format
+	 * @param propertyName environment variable in Jenkins config. ex: TARGET_VIEW_ID,PROJECT_ID
+	 * @param newPropertyValue new value of the selected property.
 	 * @return
 	 */
-	public String replaceJobIDInConfigXML(Document doc, String newJobID) {
+	public Document replaceEnvironmentValueInConfigXML(Document doc,String propertyName, String newPropertyValue) {
 		NodeList nodeList = doc.getElementsByTagName("*");
 
 		// iterates through all the nodes to find the one which contains the
@@ -997,40 +1086,145 @@ public class JenkinsEngine {
 		for (int i = 0; i < nodeList.getLength(); i++) {
 			Node node = nodeList.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-
+				
+				if(node.getNodeName().equals("disabled")&&(propertyName.equals("disabled")))
+				{
+					node.setTextContent(newPropertyValue);
+					return doc;
+				}
+				if(node.getNodeName().equals("triggers")&&(propertyName.equals("schedule")))
+				{
+					Node timerTrigger = doc.createElement("hudson.triggers.TimerTrigger");
+					Node spec = doc.createElement("spec");
+					spec.setTextContent(newPropertyValue);
+					timerTrigger.appendChild(spec);
+					node.appendChild(timerTrigger);
+					return doc;
+				}
+				
 				// System.out.println(node.getNodeName());
 				if (node.getNodeName().equals("EnvInjectBuildWrapper")) {
-					String[] environmentVariables = node.getTextContent().split("\n");
-					// System.out.println(Arrays.toString(environmentVariables));
-					for (int j = 0; j < environmentVariables.length; j++) {
-						String environmentVariable = environmentVariables[j];
-						if (environmentVariable.contains("JOB_ID")) {
-							// System.out.println("Changed ID");
-							// environmentVariables[j]="JOB_ID="+newJobID;
-							// //Changes job id to new id
+					
+					NodeList envInjectNodeChildren = node.getChildNodes();
+					for(int k =0;k<envInjectNodeChildren.getLength();k++)
+					{
+						Node nestedSearchNode = envInjectNodeChildren.item(k);
+						if(nestedSearchNode.getNodeName().equals("info"))
+						{
+							NodeList infoNodeChildren = nestedSearchNode.getChildNodes();
+							for(int l =0;l<infoNodeChildren.getLength();l++)
+							{
+								if(infoNodeChildren.item(l).getNodeName().equals("propertiesContent"))
+								{
+									Node propertiesContent = infoNodeChildren.item(l);
+									
+									String[] environmentVariables = propertiesContent.getTextContent().split("\n"); // retrieving the environment variables
+									
+									for (int j = 0; j < environmentVariables.length; j++) {
+										String environmentVariable = environmentVariables[j];
+										if (environmentVariable.contains(propertyName)) {
+											// System.out.println("Changed property");
+											 environmentVariables[j]=propertyName+"="+newPropertyValue;
+											// Changes property to new value
+										}
+									}
+									// System.out.println(Arrays.toString(environmentVariables));
+									String variablesToString = "";
+									for (String environmentVariable : environmentVariables) {
+										variablesToString = variablesToString + environmentVariable + "\n";
+									}
+									propertiesContent.setTextContent(variablesToString);
+								}
+							}
 						}
 					}
-					// System.out.println(Arrays.toString(environmentVariables));
-					String variablesToString = "";
-					for (String environmentVariable : environmentVariables) {
-						variablesToString = variablesToString + environmentVariable + "\n";
-					}
-					// System.out.println(variablesToString);
-					// System.out.println(variablesToString.equals(node.getTextContent()));
-					node.setTextContent(variablesToString);
-					// System.out.println(node.getTextContent());
 				}
 			}
 		}
+		return doc;
 
+	}
+	
+	public Map<String,String> getEnvironmentVariablesFromConfigXml(Document doc) 
+	{
+		Map<String,String> jenkinsVariables = new HashMap();
+		
+		NodeList nodeList = doc.getElementsByTagName("*");
+		// iterates through all the nodes to find the one which contains the environment variables
+		for (int i = 0; i < nodeList.getLength(); i++) {
+			Node node = nodeList.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				
+				if(node.getNodeName().equals("disabled"))
+				{
+					jenkinsVariables.put("disabled", node.getTextContent()); // Disabled property
+				}
+				if(node.getNodeName().equals("triggers"))
+				{
+					NodeList triggerNodes = node.getChildNodes();
+					for(int j=0;j<triggerNodes.getLength();j++)
+					{
+						if(triggerNodes.item(j).getNodeName().equals("hudson.triggers.TimerTrigger"))
+						{
+							NodeList timerTriggerNodes = triggerNodes.item(j).getChildNodes();
+							for(int k=0;k<timerTriggerNodes.getLength();k++)
+							{
+								if(timerTriggerNodes.item(k).getNodeName().equals("spec"))
+								{
+									jenkinsVariables.put("schedule", timerTriggerNodes.item(k).getTextContent()); // Schedule property
+								}
+							}
+						}
+					}
+				}
+				
+				if (node.getNodeName().equals("EnvInjectBuildWrapper")) {
+
+					NodeList envInjectNodeChildren = node.getChildNodes();
+					for(int j =0;j<envInjectNodeChildren.getLength();j++)
+					{
+						Node nestedSearchNode = envInjectNodeChildren.item(j);
+						if(nestedSearchNode.getNodeName().equals("info"))
+						{
+							NodeList infoNodeChildren = nestedSearchNode.getChildNodes();
+							for(int k =0;k<infoNodeChildren.getLength();k++)
+							{
+								if(infoNodeChildren.item(k).getNodeName().equals("propertiesContent"))
+								{							
+									Node propertiesContent = infoNodeChildren.item(k);
+									String[] environmentVariables = propertiesContent.getTextContent().split("\n"); // retrieving the environment variables
+									for(String environmentVariable:environmentVariables)
+									{
+										String[] environmentVariableSplitArray = environmentVariable.split("=");
+										if(environmentVariableSplitArray.length==2)
+										{
+											jenkinsVariables.put(environmentVariableSplitArray[0], environmentVariableSplitArray[1]);
+										}
+									}
+									return jenkinsVariables;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return null; // Jenkins config didn't have the correct keys.
+	}
+	
+	/**
+	 * Turns an xml document into a string
+	 * @param doc
+	 * @return
+	 */
+	public String xmlDocToString(Document doc)
+	{
 		try {
 			// turns document object to a string.
 			Transformer transformer = TransformerFactory.newInstance().newTransformer();
 			StreamResult result = new StreamResult(new StringWriter());
 			DOMSource source = new DOMSource(doc);
 			transformer.transform(source, result);
-			System.out.println(result.getWriter().toString());
-
 			return result.getWriter().toString();
 		} catch (TransformerException ex) {
 			ex.printStackTrace();
@@ -1319,78 +1513,4 @@ public class JenkinsEngine {
 		}
 	}
 	
-	public static void main(String[] args) 
-	{
-		// Post to jenkins using jobElementID as the job name
-        String buildAgent = "CAE-Jenkins2-AgentL01-UAT";
-        String associatedElementID = "";
-        String mmsServer = "mms";
-        String projectID = "IDTEMP";
-        String jobElementID = "testJob";
-        String schedule = "";
-        
-        JenkinsBuildConfig jbc = new JenkinsBuildConfig();
-        jbc.setBuildAgent(buildAgent);
-        jbc.setTargetElementID(associatedElementID);
-        jbc.setMmsServer(mmsServer);
-        jbc.setTeamworkProject(projectID);
-        jbc.setJobID(jobElementID);
-        jbc.setSchedule(schedule); 
-        
-        JenkinsEngine je = new JenkinsEngine();
-        je.setCredentials(null);
-        je.login();
-        
-        String folderName = "merp";
-        String jobString = je.getJob(folderName);
-        
-        System.out.println("JOB STRING: "+jobString);
-        if(!PMAUtil.isJSON(jobString))
-        {
-        	if(jobString.equals("Job not found on Jenkins"))
-        	{
-        		System.out.println("create folder");
-        		je.createFolder(folderName);
-        	}
-        }
-        else
-        {
-        	System.out.println("Folder already exists");
-        }
-        
-        String nestedfolderName = "nestedMerp";
-        jobString = je.getNestedJob(nestedfolderName, folderName);
-        
-        System.out.println("JOB STRING: "+jobString);
-        if(!PMAUtil.isJSON(jobString))
-        {
-        	if(jobString.equals("Job not found on Jenkins"))
-        	{
-        		System.out.println("create folder");
-        		je.createFolderWithParent(nestedfolderName, folderName);
-        	}
-        }
-        else
-        {
-        	System.out.println("Folder already exists");
-        }
-        
-        
-        
-//        System.out.println("Job existence: "+je.getJob("master"));
-        
-//        System.out.println(je.createFolder("merp"));
-        
-//        String jobCreationResponse = je.postConfigXml(jbc, jobElementID, true);
-//        je.postConfigXml(jbc, jobElementID, true);
-//        try {
-//			Thread.sleep(20000);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//        je.deleteJob(jobElementID);
-
-        
-}
 }

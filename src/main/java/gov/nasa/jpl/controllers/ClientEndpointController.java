@@ -149,143 +149,166 @@ public class ClientEndpointController {
 		String alfrescoToken = jobInstance.getAlfrescoToken();
 		String mmsServer = jobInstance.getMmsServer();
 		
+    	
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
+		JenkinsEngine je = login(org);
 		
-		if(PMAUtil.isJSON(org)||(org==null)) // Checking if mms response came back with an error.
-	    {
+		PMAPostUtil.updateJenkinsJobFromMMS(logger,mmsUtil, je, projectID, refID, jobSysmlID, mmsServer);
+		
+		String isJobDisabled = mmsUtil.isJobDisabled(mmsServer, projectID, refID, jobSysmlID);
+		if(isJobDisabled.equals("true")||isJobDisabled.equals("false"))
+		{
 			
-	        logger.info("Get org response: "+org); 
-	        System.out.println("Get org response: "+org);
-    		ObjectNode responseJSON = mapper.createObjectNode();
-    		if(org==null)
+			
+			
+			if(isJobDisabled.equals("true"))
 			{
-				status = HttpStatus.NOT_FOUND;
-				responseJSON.put("message", "Project not found on MMS");
+				ObjectNode responseJSON = mapper.createObjectNode();
+				responseJSON.put("message", "Job is disabled");
+				return new ResponseEntity<String>(responseJSON.toString(),HttpStatus.METHOD_NOT_ALLOWED);
 			}
-    		else
-    		{
-    			responseJSON.put("message", org+" MMS");
-    		}
-    		
-	        return new ResponseEntity<String>(responseJSON.toString(),status);
-	    }
-		
-		// Check if job exists on jenkins first
-    	JenkinsEngine je = login(org);
-    	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
-    	System.out.println("Job Response: "+jobResponse);
-    	if((!jobResponse.equals("Job not found on Jenkins"))&&(!jobResponse.equals("HTTP/1.1 404 Not Found"))) // Job exists on Jenkins
-    	{
-    		
-    	   	System.out.println("Running Job: "+jobSysmlID);
-        	logger.info("Running Job: "+jobSysmlID);
-    		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
-	        
-    	}
-    	else 
-    	{	
-    		System.out.println("JOB NOT FOUND ELSE");
-        	logger.info("First Run Job Response: "+jobResponse); // Jenkins issue when checking if job exists.
-        	if ((jobResponse.contains("HTTP/1.1 404 Not Found")||(jobResponse.equals("Job not found on Jenkins"))))  // Job doesn't exist on Jenkins
+			else
 			{
-        		
-        		// Creating job on Jenkins if the job exists on MMS.
-        		String schedule = null;
-        		String type = null;
-        		String associatedElementID = null;
-        		try {
-        			// Checking if job element exists on MMS and retrieves the job information if it does.
-					String jobJsonString = mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID).getBody();
-					System.out.println("Job JSON String: "+jobJsonString);
-					JsonNode fullJson = mapper.readTree(jobJsonString);
-					if(fullJson!=null)
+				if(PMAUtil.isJSON(org)||(org==null)) // Checking if mms response came back with an error.
+			    {
+					
+			        logger.info("Get org response: "+org); 
+			        System.out.println("Get org response: "+org);
+		    		ObjectNode responseJSON = mapper.createObjectNode();
+		    		if(org==null)
 					{
-						JsonNode jobJson = fullJson.get("jobs");
-						if(jobJson!=null)
-						{
-							JsonNode job = jobJson.get(0);
-							if(job!=null)
+						status = HttpStatus.NOT_FOUND;
+						responseJSON.put("message", "Project not found on MMS");
+					}
+		    		else
+		    		{
+		    			responseJSON.put("message", org+" MMS");
+		    		}
+		    		
+			        return new ResponseEntity<String>(responseJSON.toString(),status);
+			    }
+				
+				// Check if job exists on jenkins first
+		    	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
+		    	if((!jobResponse.equals("Job not found on Jenkins"))&&(!jobResponse.equals("HTTP/1.1 404 Not Found"))) // Job exists on Jenkins
+		    	{
+		    		
+		    	   	System.out.println("Running Job: "+jobSysmlID);
+		        	logger.info("Running Job: "+jobSysmlID);
+		    		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
+			        
+		    	}
+		    	else 
+		    	{	
+		    		System.out.println("JOB NOT FOUND ELSE");
+		        	logger.info("First Run Job Response: "+jobResponse); // Jenkins issue when checking if job exists.
+		        	if ((jobResponse.contains("HTTP/1.1 404 Not Found")||(jobResponse.equals("Job not found on Jenkins"))))  // Job doesn't exist on Jenkins
+					{
+		        		
+		        		// Creating job on Jenkins if the job exists on MMS.
+		        		String schedule = null;
+		        		String type = null;
+		        		String associatedElementID = null;
+		        		try {
+		        			// Checking if job element exists on MMS and retrieves the job information if it does.
+							String jobJsonString = mmsUtil.getJobElement(mmsServer, projectID, refID, jobSysmlID).getBody();
+							System.out.println("Job JSON String: "+jobJsonString);
+							JsonNode fullJson = mapper.readTree(jobJsonString);
+							if(fullJson!=null)
 							{
-								String scheduleValue = job.get("schedule").toString();
-								String typeValue = job.get("command").toString();
-								String associatedElementIDValue = job.get("associatedElementID").toString();
-								String jobValue = job.get("name").toString();
+								JsonNode jobJson = fullJson.get("jobs");
+								if(jobJson!=null)
+								{
+									JsonNode job = jobJson.get(0);
+									if(job!=null)
+									{
+										String scheduleValue = job.get("schedule").toString();
+										String typeValue = job.get("command").toString();
+										String associatedElementIDValue = job.get("associatedElementID").toString();
+										String jobValue = job.get("name").toString();
 
-								if (scheduleValue != null) {
-									schedule = scheduleValue.replace("\"", "");
+										if (scheduleValue != null) {
+											schedule = scheduleValue.replace("\"", "");
+										}
+										if (typeValue != null) {
+											type = typeValue.replace("\"", "");
+										}
+										if (associatedElementIDValue != null) {
+											associatedElementID = associatedElementIDValue.replace("\"", "");
+										}
+										if (jobValue != null) {
+										}
+									}
+									else
+									{
+										ObjectNode responseJSON = mapper.createObjectNode();
+										responseJSON.put("message", "Job Element Doesn't Exist on MMS"); 
+										return new ResponseEntity<String>(responseJSON.toString(),HttpStatus.NOT_FOUND); // Job element was not found since jobs array was blank
+									}
 								}
-								if (typeValue != null) {
-									type = typeValue.replace("\"", "");
-								}
-								if (associatedElementIDValue != null) {
-									associatedElementID = associatedElementIDValue.replace("\"", "");
-								}
-								if (jobValue != null) {
+								else
+								{
+									ObjectNode responseJSON = mapper.createObjectNode();
+									responseJSON.put("message", jobJsonString); 
+									return new ResponseEntity<String>(responseJSON.toString(),status); // If jobJson was null, then the job element must not exist or mms returned an error
 								}
 							}
 							else
 							{
 								ObjectNode responseJSON = mapper.createObjectNode();
-								responseJSON.put("message", "Job Element Doesn't Exist on MMS"); 
-								return new ResponseEntity<String>(responseJSON.toString(),HttpStatus.NOT_FOUND); // Job element was not found since jobs array was blank
+								responseJSON.put("message", jobJsonString); 
+								return new ResponseEntity<String>(jobJsonString,status); // If fullJson was null, then the job element must not exist because mms returned an empty json or mms returned an error.
 							}
-						}
-						else
-						{
-							ObjectNode responseJSON = mapper.createObjectNode();
-							responseJSON.put("message", jobJsonString); 
-							return new ResponseEntity<String>(responseJSON.toString(),status); // If jobJson was null, then the job element must not exist or mms returned an error
-						}
-					}
-					else
-					{
-						ObjectNode responseJSON = mapper.createObjectNode();
-						responseJSON.put("message", jobJsonString); 
-						return new ResponseEntity<String>(jobJsonString,status); // If fullJson was null, then the job element must not exist because mms returned an empty json or mms returned an error.
-					}
 
-				} catch (JsonProcessingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-        		
-        		logger.info("Creating Job on Jenkins using job element Information");
-        		System.out.println("Creating Job on Jenkins using job element Information");
-        		
-        		// Creating job on Jenkins with the job element info pulled from MMS.
-        		ResponseEntity<String> createJobOutput = PMAPostUtil.jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobSysmlID, schedule, type, logger,org);
-        		
-        		logger.info("Create JOB OUTPUT: "+createJobOutput.getBody());
-        		System.out.println("Create JOB OUTPUT: "+createJobOutput.getBody());
-        		
-        		String jobCreationResponse = createJobOutput.getBody();
-    	        if(PMAUtil.isJSON(jobCreationResponse))
-    	        {
-    	        	return createJobOutput; // returning Jenkins error
-    	        }
-    	        
-    	        if(jobCreationResponse.equals("HTTP/1.1 200 OK")) // If job was created succesfully on Jenkins
-    	        {	
-    	        	System.out.println("Running Job: "+jobSysmlID);
-    	        	logger.info("Running Job: "+jobSysmlID);
-    	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
-    	        }
-    	        else
-    	        {
-    	      		ObjectNode responseJSON = mapper.createObjectNode();
-    	    		responseJSON.put("message", jobCreationResponse + " Jenkins"); // Jenkins issue when creating job instance
-    		        return new ResponseEntity<String>(responseJSON.toString(),status);
-    	        }
-    	        
+						} catch (JsonProcessingException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		        		
+		        		logger.info("Creating Job on Jenkins using job element Information");
+		        		System.out.println("Creating Job on Jenkins using job element Information");
+		        		
+		        		// Creating job on Jenkins with the job element info pulled from MMS.
+		        		ResponseEntity<String> createJobOutput = PMAPostUtil.jenkinsJobPost(associatedElementID, mmsServer, projectID, refID, jobSysmlID, schedule, type, logger,org);
+		        		
+		        		logger.info("Create JOB OUTPUT: "+createJobOutput.getBody());
+		        		System.out.println("Create JOB OUTPUT: "+createJobOutput.getBody());
+		        		
+		        		String jobCreationResponse = createJobOutput.getBody();
+		    	        if(PMAUtil.isJSON(jobCreationResponse))
+		    	        {
+		    	        	return createJobOutput; // returning Jenkins error
+		    	        }
+		    	        
+		    	        if(jobCreationResponse.equals("HTTP/1.1 200 OK")) // If job was created succesfully on Jenkins
+		    	        {	
+		    	        	System.out.println("Running Job: "+jobSysmlID);
+		    	        	logger.info("Running Job: "+jobSysmlID);
+		    	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
+		    	        }
+		    	        else
+		    	        {
+		    	      		ObjectNode responseJSON = mapper.createObjectNode();
+		    	    		responseJSON.put("message", jobCreationResponse + " Jenkins"); // Jenkins issue when creating job instance
+		    		        return new ResponseEntity<String>(responseJSON.toString(),status);
+		    	        }
+		    	        
+					}
+		        	return new ResponseEntity<String>(jobResponse,status);
+		    	}
 			}
-        	return new ResponseEntity<String>(jobResponse,status);
-    	}
-  
-
+		}
+		else
+		{
+			ObjectNode responseJSON = mapper.createObjectNode();
+			responseJSON.put("message", isJobDisabled);
+			return new ResponseEntity<String>(responseJSON.toString(),status);
+		}
+		
 	}
 	
 	/**
@@ -298,8 +321,6 @@ public class ClientEndpointController {
 	 * @param mmsServer
 	 * @return
 	 */
-	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs/{jobSysmlID}", method = RequestMethod.DELETE, produces = "application/json")
-	@ResponseBody
 	public ResponseEntity<String> deleteJob(@PathVariable String projectID, @PathVariable String refID, @PathVariable String jobSysmlID,@RequestParam String alf_ticket,@RequestParam String mmsServer) {
 		System.out.println("job" + "\n" + projectID + "\n" + refID + "\n");
 		
@@ -351,14 +372,13 @@ public class ClientEndpointController {
     	logger.info( "Jenkins delete response: "+jenkinsDeleteResponse);
     	if(!jenkinsDeleteResponse.equals("HTTP/1.1 302 Found"))
 		{
-			if (jenkinsDeleteResponse.equals("HTTP/1.1 404 Not Found")) 
+			if (!jenkinsDeleteResponse.equals("HTTP/1.1 404 Not Found")) // Not founds are ok.
 			{
-				status = HttpStatus.NOT_FOUND; 
-				jenkinsDeleteResponse="Job Not Found";
+		 		ObjectNode responseJSON = mapper.createObjectNode();
+	    		responseJSON.put("message", jenkinsDeleteResponse); 
+	    		return new ResponseEntity<String>(responseJSON.toString(),status); // returning error during Jenkins job delete 
 			}
-    		ObjectNode responseJSON = mapper.createObjectNode();
-    		responseJSON.put("message", jenkinsDeleteResponse); 
-    		return new ResponseEntity<String>(responseJSON.toString(),status);
+   
 //			return jenkinsDeleteResponse+" Jenkins";
 		}
     	
@@ -368,7 +388,118 @@ public class ClientEndpointController {
 		ObjectNode responseJSON = mapper.createObjectNode();
 		responseJSON.put("message", "Delete Succesfull"); 
         return new ResponseEntity<String>(responseJSON.toString(),status);
-//		return "HTTP/1.1 200 OK";
+	}
+	
+	/**
+	 * Disables job on Jenkins and sets the disabled job element property to true on mms
+	 * 
+	 * @param projectId
+	 * @param refId
+	 * @param jobSysmlId
+	 * @param alf_ticket
+	 * @param mmsServer
+	 * @return
+	 */
+	@RequestMapping(value = "/projects/{projectId}/refs/{refId}/jobs/{jobSysmlId}", method = RequestMethod.DELETE, produces = "application/json")
+	@ResponseBody
+	public ResponseEntity<String> disableJob(@PathVariable String projectId, @PathVariable String refId, @PathVariable String jobSysmlId,@RequestParam String alf_ticket,@RequestParam String mmsServer,@RequestParam(value="enable", required = false, defaultValue = "false") boolean enable) {
+		System.out.println("job" + "\n" + projectId + "\n" + refId + "\n");
+		
+		logger.info("Disabled Job was called");
+		logger.info( "projectID: "+ projectId + "\n" +"refID: "+ refId+ "\n"+"Job SysmlID: "+jobSysmlId+ "\n"+"alf_ticket: "+alf_ticket+ "\n"+"mmsServer: "+mmsServer);
+		System.out.println("Enable: "+enable);
+		
+		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
+		
+		
+		MMSUtil mmsUtil = new MMSUtil(alf_ticket);
+		
+		// Set Job element disabled flag to true
+		String disableJobElementResponse = null;
+		if(enable)
+		{
+			disableJobElementResponse = mmsUtil.modifyJobValueProperty(mmsServer, projectId, refId, jobSysmlId, "disabled", "false");  // set the part property value from false to true.
+		}
+		else
+		{
+			disableJobElementResponse = mmsUtil.modifyJobValueProperty(mmsServer, projectId, refId, jobSysmlId, "disabled", "true");  // set the part property value from false to true.
+		}
+		
+		System.out.println("Job disable response: "+disableJobElementResponse);
+		logger.info( "Job disable response: "+disableJobElementResponse);
+		
+		if(!disableJobElementResponse.equals("HTTP/1.1 200 OK"))
+		{
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", disableJobElementResponse + " MMS"); // mms issue when modifying disabled value property
+	        return new ResponseEntity<String>(responseJSON.toString(),status);
+		}
+
+		String org = mmsUtil.getProjectOrg(mmsServer, projectId);
+		
+		if(PMAUtil.isJSON(org)||(org==null)) // Checking if mms response came back with an error.
+	    {
+			
+	        logger.info("Get org response: "+org); 
+	        System.out.println("Get org response: "+org);
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		if(org==null)
+			{
+				status = HttpStatus.NOT_FOUND;
+				responseJSON.put("message", "Project not found on MMS");
+			}
+    		else
+    		{
+    			responseJSON.put("message", org+" MMS");
+    		}
+    		
+	        return new ResponseEntity<String>(responseJSON.toString(),status);
+	    }
+		
+		// disable job on jenkins
+    	JenkinsEngine je = login(org);
+    	String jenkinsDisableResponse = null;
+    			
+    	if(enable)
+    	{
+    		jenkinsDisableResponse = je.enableNestedJob(jobSysmlId, projectId, refId);
+    	}
+    	else
+    	{
+    		jenkinsDisableResponse = je.disableNestedJob(jobSysmlId, projectId, refId);
+    	}
+    	
+    	System.out.println("Jenkins job disable response: "+jenkinsDisableResponse);
+    	logger.info( "Jenkins job disable response: "+jenkinsDisableResponse);
+    	if(!jenkinsDisableResponse.equals("HTTP/1.1 302 Found"))
+		{
+			if (!jenkinsDisableResponse.equals("HTTP/1.1 404 Not Found")) // Not founds are ok. The job might not always exist on Jenkins because the job might have been created on a different branch.
+			{
+		 		ObjectNode responseJSON = mapper.createObjectNode();
+	    		responseJSON.put("message", jenkinsDisableResponse); 
+	    		return new ResponseEntity<String>(responseJSON.toString(),status); // returning error during Jenkins job disabled 
+			}
+		}
+    	
+    	status = HttpStatus.OK; 
+    	
+      	if(enable)
+    	{
+      		logger.info("Enable Succesfull");
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", "Enable Succesfull"); 
+            return new ResponseEntity<String>(responseJSON.toString(),status);
+    	}
+    	else
+    	{
+    		logger.info("Disable Succesfull");
+    		ObjectNode responseJSON = mapper.createObjectNode();
+    		responseJSON.put("message", "Disable Succesfull"); 
+            return new ResponseEntity<String>(responseJSON.toString(),status);
+    	}
+    
+		        
 	}
 	
     public JenkinsEngine login(String org)

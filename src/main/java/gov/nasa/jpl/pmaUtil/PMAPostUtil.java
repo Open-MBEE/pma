@@ -4,13 +4,21 @@
  */
 package gov.nasa.jpl.pmaUtil;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.w3c.dom.Document;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -28,47 +36,49 @@ public class PMAPostUtil
 	}
 	
 	/**
-	 *  Runs the Jenkins job and creates an Instance specification that will contain the run history.
+	 *  Runs the Jenkins job and updates the job instance specification with the current run information.
 	 * @param jobSysmlID
-	 * @param projectID
-	 * @param refID
+	 * @param projectId
+	 * @param refId
 	 * @param alfrescoToken
 	 * @param mmsServer
 	 * @param je
 	 * @param logger
 	 * @return
 	 */
-	public static ResponseEntity<String> runJob(String jobSysmlID,String projectID, String refID, String alfrescoToken, String mmsServer,JenkinsEngine je,Logger logger)
+	public static ResponseEntity<String> runJob(String jobSysmlID,String projectId, String refId, String alfrescoToken, String mmsServer,JenkinsEngine je,Logger logger)
 	{
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
-		String jobResponse = "";
 		
-		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectID, refID);
+		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectId, refId); // next build number from Jenkins
 		
-		// Create job instance element. Uses the job package as the owner.
-		
+		//	Modifies the job instance with current run information or creates a new one if it doesn't exist
+
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
-		String jobInstanceElementID = mmsUtil.createId();
-		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
-		ObjectNode on = mmsUtil.buildDocGenJobInstanceJSON(jobInstanceElementID,"jobs_bin_"+jobSysmlID, jobSysmlID+"_instance_"+currentTimestamp,nextBuildNumber,"pending", mmsServer, projectID, refID,jobSysmlID); //job element will be the owner of the instance element
-//		System.out.println("job instance JSON: "+on.toString());
-//		logger.info("job instance JSON: "+on);
-		if(on.get("message")!=null)
-		{
-			jobResponse = on.toString();
-			
-			return new ResponseEntity<String>(jobResponse,status);
-		}
-		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
 		
-//		System.out.println("job instance element creation response"+elementCreationResponse);
-		logger.info("job instance element creation response"+elementCreationResponse);
-		if (elementCreationResponse.equals("HTTP/1.1 200 OK"))
+		// Checking if the Jobs Bin is inside the model
+		String packageInsideModelCheckResponse = mmsUtil.isJobPackgeInsideModel(mmsServer, projectId, refId);
+		System.out.println("packageInsideModelCheckResponse: "+packageInsideModelCheckResponse);
+		logger.info("packageInsideModelCheckResponse: "+packageInsideModelCheckResponse);
+		
+		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+		
+		Map<String,String> newJobInstanceValues = new HashMap<String,String>();
+		newJobInstanceValues.put("completed", "");
+		newJobInstanceValues.put("logUrl", "");
+		newJobInstanceValues.put("jobStatus", "pending");
+		newJobInstanceValues.put("started", currentTimestamp);
+		newJobInstanceValues.put("buildNumber", nextBuildNumber);
+		
+		String modifyJobInstanceSpecificationResponse =  mmsUtil.modifyBulkInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber,newJobInstanceValues);
+		
+		logger.info("modify job instance element response: "+modifyJobInstanceSpecificationResponse);
+		if (modifyJobInstanceSpecificationResponse.contains("Instance Specification Updated.")||modifyJobInstanceSpecificationResponse.contains("HTTP/1.1 200 OK"))
 		{
 			// run job on jenkins
-	        String runResponse = je.executeNestedJob(jobSysmlID, projectID, refID); // job name should be the job sysmlID
+	        String runResponse = je.executeNestedJob(jobSysmlID, projectId, refId); // job name should be the job sysmlID
 	        
 //			System.out.println("Job run response: "+runResponse);
 			logger.info("Run job Jenkins response: "+runResponse);
@@ -77,23 +87,46 @@ public class PMAPostUtil
 			{
 				status = HttpStatus.OK;
 				
-				String jobInstanceJSON = mmsUtil.getJobInstanceElement(mmsServer, projectID, refID, jobInstanceElementID,jobSysmlID);
+				String jobInstanceElementId = mmsUtil.getJobInstanceID(mmsServer, projectId, refId, jobSysmlID);
+				if(jobInstanceElementId==null)
+				{
+					ObjectNode responseJSON = mapper.createObjectNode();
+		    		responseJSON.put("message", "Couldn't Find Job Instance Element To Return"); // couldn't find job instance element to return
+		    		runResponse = responseJSON.toString();
+					return new ResponseEntity<String>(runResponse,HttpStatus.NOT_FOUND);
+				}
 				
+				System.out.println("Job instance Id: "+jobInstanceElementId);
+				String jobInstanceJSON = mmsUtil.getJobInstanceElement(mmsServer, projectId, refId, jobInstanceElementId,jobSysmlID);
+				System.out.println("ran succesfully!");
+				System.out.println("Job Instance JSON: "+jobInstanceJSON);
 		        return new ResponseEntity<String>(jobInstanceJSON,status);
 			}
-			mmsUtil.delete(mmsServer, projectID, refID, jobInstanceElementID);
+			
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "Didn't Start Due To Jenkins Error");
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", runResponse);
+			currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", currentTimestamp);
+			
     		ObjectNode responseJSON = mapper.createObjectNode();
     		responseJSON.put("message", runResponse + " Jenkins"); // jenkins error when running job
     		runResponse = responseJSON.toString();
 	        return new ResponseEntity<String>(runResponse,status);
 			
 		}
-		logger.info("MMS Element creation response: "+elementCreationResponse);
+		else
+		{
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "jobStatus", "Didn't Start Due To MMS Error");
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "logUrl", modifyJobInstanceSpecificationResponse);
+			currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+			mmsUtil.modifyInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber, "completed", currentTimestamp);
+		}
+		System.out.println("didn't run succesfully!");
 		
 		ObjectNode responseJSON = mapper.createObjectNode();
-		responseJSON.put("message", elementCreationResponse + " MMS"); // mms issue when creating job instance
-		elementCreationResponse = responseJSON.toString();
-        return new ResponseEntity<String>(elementCreationResponse,status);
+		responseJSON.put("message", modifyJobInstanceSpecificationResponse + " (MMS)"); // mms issue when creating job instance
+		modifyJobInstanceSpecificationResponse = responseJSON.toString();
+        return new ResponseEntity<String>(modifyJobInstanceSpecificationResponse,status);
 	}
 	
 	/**
@@ -126,13 +159,18 @@ public class PMAPostUtil
 		{
 			logger.info("Jobs Bin Does not exist");
 			System.out.println("Jobs Bin Does not exist");
-//			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm","Jobs Bin"); // creating the package inside the project
-			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID,"Jobs Bin"); // creating the package one level above the package, wont get synced back to the model.
+			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID+"_pm","Jobs Bin"); // creating the package inside the project. Will 
+//			ObjectNode packageNode = mmsUtil.buildPackageJSON("jobs_bin_"+projectID,projectID,"Jobs Bin"); // creating the package one level above the package, wont get synced back to the model.
 //			System.out.println(packageNode.toString());
 			String binCreateResponse = mmsUtil.post(mmsServer, projectID, refID, packageNode);
 			System.out.println("Bin Create Response: "+binCreateResponse);
 			logger.info("Bin Create Response: "+binCreateResponse);
 		}
+		
+		// Checking if the Jobs Bin is inside the model
+		String packageInsideModelCheckResponse = mmsUtil.isJobPackgeInsideModel(mmsServer, projectID, refID);
+		System.out.println("packageInsideModelCheckResponse: "+packageInsideModelCheckResponse);
+		logger.info("packageInsideModelCheckResponse: "+packageInsideModelCheckResponse);
 		
 		
 		String jobElementID = mmsUtil.createId();
@@ -342,8 +380,165 @@ public class PMAPostUtil
         
 	}
 	
-	public static void main(String args[])
+	/**
+	 * Checks if there are any differences between the job element on MMS and the job on Jenkins. 
+	 * Will push the differences on MMS to Jenkins.
+	 * Currently checks associatedElement(TARGET_VIEW_ID), schedule, and disabled
+	 * @param mmsUtil
+	 * @param je
+	 * @param projectId
+	 * @param refId
+	 * @param jobId
+	 * @param mmsServer
+	 */
+	public static String updateJenkinsJobFromMMS(Logger logger, MMSUtil mmsUtil,JenkinsEngine je,String projectId,String refId,String jobId,String mmsServer)
 	{
+		Document doc = je.getConfigXML(projectId, refId, jobId);
 
+		if(doc==null)
+		{
+			logger.error("Error when retrieving xml from Jenkins ");
+			return "Error when retrieving xml from Jenkins ";
+			
+		}
+		ResponseEntity<String> re = mmsUtil.getJobElement(mmsServer, projectId, refId, jobId);
+		
+		if(re.getStatusCodeValue()==200) // successful job element get
+		{
+			// Get job elements
+			String jobsJsonString = re.getBody();
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode jobElement = null;
+			try {
+				JsonNode fullJson = mapper.readTree(jobsJsonString);
+				JsonNode jobsArray = fullJson.get("jobs");
+				if(jobsArray!=null)
+				{
+					jobElement = jobsArray.get(0);  // Assuming theres only 1 element in the jobsArray
+				}
+				else
+				{
+					// error
+					System.out.println("jobsArray is null");
+					logger.error("jobsArray is null");
+					return jobsJsonString;
+				}
+
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			// do a diff , could probably put into its own method, params(map,jsonNode) returns a map of diff
+			if(jobElement!=null)
+			{
+				Map<String,String> jobElementToJenkinsMapping = new HashMap();
+				jobElementToJenkinsMapping.put("schedule", "schedule");
+				jobElementToJenkinsMapping.put("TARGET_VIEW_ID", "associatedElementID");
+				jobElementToJenkinsMapping.put("disabled", "disabled");
+				
+				Map<String,String> jenkinsEnvironmentVariables = je.getEnvironmentVariablesFromConfigXml(doc);
+				
+				if(jenkinsEnvironmentVariables!=null)
+				{
+					Map<String,String> jenkinsDifferences = new HashMap();
+					
+//					System.out.println("Values: "+jenkinsEnvironmentVariables.values());
+					String jenkinsSchedule = jenkinsEnvironmentVariables.get("schedule");
+					String jenkinsDisabled = jenkinsEnvironmentVariables.get("disabled");
+					String jenkinsTargetViewId = jenkinsEnvironmentVariables.get("TARGET_VIEW_ID");
+					
+					JsonNode scheduleNode = jobElement.get("schedule");
+					JsonNode disabledNode = jobElement.get("disabled");
+					JsonNode associatedElementIDNode = jobElement.get("associatedElementID");
+					
+					if(scheduleNode!=null)
+					{
+						String mmsJobSchedule = scheduleNode.toString().replace("\"", "");
+						if(jenkinsSchedule!=null&&(!jenkinsSchedule.equals(mmsJobSchedule)))
+						{
+							jenkinsDifferences.put("schedule", mmsJobSchedule);
+							System.out.println("Difference Found. MMS: "+mmsJobSchedule+" Jenkins: "+jenkinsSchedule);
+						}
+						if(jenkinsSchedule==null)
+						{
+							if(!mmsJobSchedule.equals(""))
+							{
+								jenkinsDifferences.put("schedule", mmsJobSchedule);
+								System.out.println("Difference Found. MMS: "+mmsJobSchedule+" Jenkins: "+jenkinsSchedule);
+							}
+						}
+					}
+					if(disabledNode!=null)
+					{
+						String mmsJobDisabled = disabledNode.toString().replace("\"", "");
+						if(jenkinsDisabled==null||(!jenkinsDisabled.equals(mmsJobDisabled)))
+						{
+							jenkinsDifferences.put("disabled", mmsJobDisabled);
+							System.out.println("Difference Found. MMS: "+mmsJobDisabled+" Jenkins: "+jenkinsDisabled);
+						}
+					}
+					if(associatedElementIDNode!=null)
+					{
+						String mmsJobTargetViewId = associatedElementIDNode.toString().replace("\"", "");
+						if(jenkinsTargetViewId==null||(!jenkinsTargetViewId.equals(mmsJobTargetViewId)))
+						{
+							jenkinsDifferences.put("TARGET_VIEW_ID", mmsJobTargetViewId);
+							System.out.println("Difference Found. MMS: "+mmsJobTargetViewId+" Jenkins: "+jenkinsTargetViewId);
+						}
+					}
+
+					System.out.println("Diffs on Jenkins: "+jenkinsDifferences+" "+jenkinsDifferences.size());
+					logger.info("Diffs on Jenkins: "+jenkinsDifferences+" "+jenkinsDifferences.size());
+					
+					if(jenkinsDifferences.size()>0)
+					{
+						
+						Iterator it = jenkinsDifferences.entrySet().iterator();
+					    while (it.hasNext()) {
+					        Map.Entry pair = (Map.Entry)it.next();
+					        System.out.println(pair.getKey() + " = " + pair.getValue());
+					        
+					        // if diff update xml
+							je.replaceEnvironmentValueInConfigXML(doc, pair.getKey().toString(),pair.getValue().toString());
+							
+					        it.remove(); // avoids a ConcurrentModificationException
+					    }
+						// send back xml
+						String xmlString = je.xmlDocToString(doc);
+						String postResponse = je.postModifiedConfigXML(projectId, refId, jobId, xmlString);
+						System.out.println("Job Update Post Response: "+postResponse);
+						logger.info("Job Update Post Response: "+postResponse);
+						// return post response, should be 200 ok
+						return postResponse;
+					}
+					else
+					{
+						return "No difference";
+					}
+				}
+				else
+				{
+					// error jenkins xml didn't have the correct keys
+					logger.error("Error: Jenkins XML didn't have the correct keys");
+					return "Error: Jenkins XML didn't have the correct keys";
+				}
+			}
+			else
+			{
+				// Job element not found
+				logger.error("Error: Job element not found in jobs json");
+				return "Error: Job element not found in jobs json";
+			}
+		}
+		else
+		{
+			// MMS Error
+			logger.debug("MMS ERROR: "+re.getBody().toString());
+			System.out.println("MMS ERROR: "+re.getBody().toString());
+			return "MMS ERROR: "+re.getBody().toString();
+		}
+		
 	}
 }

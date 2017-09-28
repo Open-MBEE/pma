@@ -7,7 +7,12 @@ package gov.nasa.jpl.pmaUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.w3c.dom.Document;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,10 +20,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ch.qos.logback.classic.Logger;
+import gov.nasa.jpl.jenkinsUtil.JenkinsEngine;
 import gov.nasa.jpl.mmsUtil.MMSUtil;
 
 public class PMAUtil 
 {
+
 	public PMAUtil()
 	{
 		
@@ -29,7 +37,7 @@ public class PMAUtil
 	 * @param jobMap
 	 * @return
 	 */
-	public ObjectNode createJobJSON(Map<String,String> jobMap)
+	public static ObjectNode createJobJSON(Map<String,String> jobMap)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		
@@ -39,6 +47,7 @@ public class PMAUtil
 		jobElement.put("command",jobMap.get("type"));
 		jobElement.put("associatedElementID",jobMap.get("associatedElementId"));
 		jobElement.put("schedule",jobMap.get("schedule"));
+		jobElement.put("disabled",jobMap.get("disabled"));
 		
 		return jobElement;
 		
@@ -70,9 +79,19 @@ public class PMAUtil
 	/**
 	 * Generates a json array with job objects. 
 	 * @param mmsJSONString Element data from MMS.
+	 * @return The json array as a string.
+	 */
+	public static String generateJobArrayJSON(String mmsJSONString)
+	{
+		return generateJobArrayJsonObject(mmsJSONString).toString();
+	}
+	
+	/**
+	 * Generates a json array with job objects. 
+	 * @param mmsJSONString Element data from MMS.
 	 * @return
 	 */
-	public String generateJobArrayJSON(String mmsJSONString)
+	public static ObjectNode generateJobArrayJsonObject(String mmsJSONString)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode jobJSON = mapper.createObjectNode();
@@ -113,8 +132,8 @@ public class PMAUtil
 						{
 							String propertyName = element.get("name").toString().replace("\"", "");
 							String propertyValue = element.get("defaultValue").get("value").toString().replace("\"", "");
-							System.out.println(propertyName);
-							System.out.println(propertyValue);
+							System.out.println("PropertyName: "+propertyName);
+							System.out.println("PropertyValue: "+propertyValue);
 							jobMap.put(propertyName, propertyValue);
 						}					
 					}				
@@ -126,11 +145,11 @@ public class PMAUtil
 				System.out.println("Error or empty mms JSON String: "+mmsJSONString);
 				if(mmsJSONString.equals("{}"))
 				{
-					jobJSON.put("jobs",jobElements);
+					jobJSON.set("jobs",jobElements);
 					
-					return jobJSON.toString();
+					return jobJSON;
 				}
-				return mmsJSONString; // Returns status from mms. Should be an error or empty if the elements were null.
+				return (ObjectNode) fullJson; // Returns status from mms. Should be an error or empty if the elements were null.
 			}
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
@@ -139,9 +158,9 @@ public class PMAUtil
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		jobJSON.put("jobs",jobElements);
+		jobJSON.set("jobs",jobElements);
 		
-		return jobJSON.toString();
+		return jobJSON;
 	}
 	
 	/**
@@ -226,7 +245,7 @@ public class PMAUtil
 	 * @param mmsJSONString Element data from MMS.
 	 * @return
 	 */
-	public String generateJobInstanceArrayJSON(String mmsJSONString,String jobID)
+	public static String generateJobInstanceArrayJSON(String mmsJSONString,String jobId,String refId)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode jobJSON = mapper.createObjectNode();
@@ -242,7 +261,7 @@ public class PMAUtil
 					/*
 					 * Find the ID of job instance elements
 					 */
-					if((element.get("type").toString().equals("\"InstanceSpecification\""))&&(element.get("classifierIds").get(0).toString().replace("\"", "").equals(jobID)))
+					if((element.get("type").toString().equals("\"InstanceSpecification\""))&&(element.get("classifierIds").get(0).toString().replace("\"", "").equals(jobId)))
 					{
 						String jobInstanceID = element.get("id").toString().replace("\"", "");//id of owner of part property
 //						System.out.println(jobInstanceID);
@@ -254,31 +273,34 @@ public class PMAUtil
 				{
 					Map<String,String> jobInstanceMap = new HashMap();
 					jobInstanceMap.put("id", jobInstanceID);
-					jobInstanceMap.put("jobId", jobID);
+					jobInstanceMap.put("jobId", jobId);
 					for (JsonNode element : elements) 
 					{	
 						String elementOwner = element.get("ownerId").toString().replace("\"", "");
-						if((element.get("type").toString().equals("\"Slot\""))&&(elementOwner.equals(jobInstanceID)))
+						if((element.get("type").toString().equals("\"Slot\""))&&(elementOwner.equals(jobInstanceID))) // Retrieving values from instance specification slots
 						{
 							String propertyName = element.get("definingFeatureId").toString().replace("\"", "");
 							String propertyValue = element.get("value").get(0).get("value").toString().replace("\"", "");
-//							System.out.println(propertyName);
-//							System.out.println(propertyValue);
+//							System.out.println("PropertyName:"+propertyName);
 							
-							for(JsonNode nestedSearchElement : elements)
+							for(JsonNode nestedSearchElement : elements) // Looking for the property names inside the Job Class properties
 							{
 								if(nestedSearchElement.get("id").toString().replace("\"", "").equals(propertyName))
 								{
-									
+	
 									String redefinedPropertyID = nestedSearchElement.get("redefinedPropertyIds").get(0).toString().replace("\"", "");
 									propertyName=(String) elementIdMap.get(redefinedPropertyID);
-//									System.out.println(propertyName);
+//									System.out.println("PropertyName:"+propertyName);
+//									System.out.println("propertyValue: "+propertyValue);
 								}
 							}
 							jobInstanceMap.put(propertyName, propertyValue);
 						}
 					}
-					jobInstanceElements.add(createJobInstanceJSON(jobInstanceMap));
+					if(jobInstanceMap.get("refId").equals(refId))
+					{
+						jobInstanceElements.add(createJobInstanceJSON(jobInstanceMap));
+					}
 				}
 			}
 			else
@@ -312,7 +334,7 @@ public class PMAUtil
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode fullJson = mapper.readTree(jsonString);
-			System.out.println("jobs "+fullJson.get("jobs"));
+//			System.out.println("jobs "+fullJson.get("jobs"));
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 //			e.printStackTrace();
@@ -323,6 +345,36 @@ public class PMAUtil
 			return false;
 		}
 		return true;
+	}
+	
+	/**
+	 * Turns a json string to a JsonNode Object
+	 * @param jsonString
+	 * @return
+	 */
+	public static JsonNode JSONStringToObject(String jsonString)
+	{
+		if(isJSON(jsonString))
+		{
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				JsonNode fullJson = mapper.readTree(jsonString);
+				return fullJson;
+				
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null; // There was an exception
+		}
+		else
+		{
+			return null; // String wasn't a json.
+		}
+		
 	}
 	
 	// Accepts the get job instances json and returns the most recent instance.
@@ -364,10 +416,5 @@ public class PMAUtil
 			
 	}
 	
-	public static void main(String args[])
-	{
-		String jsonString = "{\"jobInstances\": [{\"id\": \"PMA_1493929692690_e9c15e52-1a21-4dd2-8c14-413ebd519c18\",\"buildNumber\": \"2\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null},{\"id\": \"PMA_1493929332779_c035124d-06af-40b7-ad7f-ce7781b08a3e\",\"buildNumber\": \"1\",\"jobStatus\": \"completed\",\"jenkinsLog\": \"\",\"created\": null,\"completed\": null}]}";
-//		String jsonString = "{\"jobInstances\": []}";
-		System.out.println(getLatestJobInstance(jsonString));
-	}
+
 }

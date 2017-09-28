@@ -1,6 +1,9 @@
 package gov.nasa.jpl.controllers;
 
 import java.io.IOException;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -31,8 +34,14 @@ public class ConfigUpdateController {
 	 */
 	@RequestMapping(value = "/test", method = RequestMethod.GET)
 	@ResponseBody
-	public ResponseEntity getJobs() {
-
+	public ResponseEntity getJobs(HttpServletRequest request) {
+		
+		System.out.println("Client IP: "+request.getRemoteAddr());
+		logger.info("Client IP: "+request.getRemoteAddr());
+		
+		System.out.println("Host IP: "+request.getLocalAddr());
+		logger.info("Host IP: "+request.getLocalAddr());
+		
 		HttpStatus httpStatus = HttpStatus.NOT_FOUND;
 		ObjectMapper mapper = new ObjectMapper();
 
@@ -53,52 +62,68 @@ public class ConfigUpdateController {
 	 */
 	@RequestMapping(value = "/dbUpdate", method = RequestMethod.POST)
 	@ResponseBody
-	public String dbUpdate(@RequestBody String bodyContent) 
+	public String dbUpdate(@RequestBody String bodyContent, HttpServletRequest request) 
 	{
-		logger.info("Updating credentials db");
+		String clientIp = request.getRemoteAddr();
+		String hostIp = request.getLocalAddr();
 		
-		String jenkinsUsername = "";
-		String jenkinsPassword = "";
-		String jenkinsURL = "";
-		String jenkinsAgent = "";
-		String org = "";
+		System.out.println("Client IP: "+clientIp);
+		logger.info("Client IP: "+clientIp);
 		
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			JsonNode fullJson = mapper.readTree(bodyContent);
-			logger.info(fullJson.toString());
-			if ((fullJson.get("username") != null)&&(fullJson.get("password") != null) &&(fullJson.get("url") != null) ) 
-			{
-				jenkinsUsername = fullJson.get("username").toString().replace("\"", "");
-				jenkinsPassword = fullJson.get("password").toString().replace("\"", "");
-				jenkinsURL = fullJson.get("url").toString().replace("\"", "");
-				jenkinsAgent = fullJson.get("agent").toString().replace("\"", "");
-				org = fullJson.get("org").toString().replace("\"", "");
+		System.out.println("Host IP: "+hostIp);
+		logger.info("Host IP: "+hostIp);
+		
+		if(hostIp.equals(clientIp))
+		{
+			logger.info("Updating credentials db");
+			
+			String jenkinsUsername = "";
+			String jenkinsPassword = "";
+			String jenkinsURL = "";
+			String jenkinsAgent = "";
+			String org = "";
+			
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				JsonNode fullJson = mapper.readTree(bodyContent);
+				logger.info(fullJson.toString());
+				if ((fullJson.get("username") != null)&&(fullJson.get("password") != null) &&(fullJson.get("url") != null) ) 
+				{
+					jenkinsUsername = fullJson.get("username").toString().replace("\"", "");
+					jenkinsPassword = fullJson.get("password").toString().replace("\"", "");
+					jenkinsURL = fullJson.get("url").toString().replace("\"", "");
+					jenkinsAgent = fullJson.get("agent").toString().replace("\"", "");
+					org = fullJson.get("org").toString().replace("\"", "");
+					
+					logger.info(jenkinsUsername);
+					logger.info(jenkinsPassword);
+					logger.info(jenkinsURL);
+					logger.info(jenkinsAgent);
+				}
 				
-				logger.info(jenkinsUsername);
-				logger.info(jenkinsPassword);
-				logger.info(jenkinsURL);
-				logger.info(jenkinsAgent);
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return e.toString();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return e.toString();
 			}
 			
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return e.toString();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return e.toString();
+			
+			DBUtil dbUtil = new DBUtil();
+			
+			dbUtil.updateDbCredentials(jenkinsUsername, jenkinsPassword, jenkinsURL, jenkinsAgent, org);
+			
+			logger.info("Credentials Updated");
+			
+			return "Credentials Updated";
 		}
-		
-		
-		DBUtil dbUtil = new DBUtil();
-		
-		dbUtil.updateDbCredentials(jenkinsUsername, jenkinsPassword, jenkinsURL, jenkinsAgent, org);
-		
-		logger.info("Credentials Updated");
-		
-		return "Credentials Updated";
+		else
+		{
+			return "Can only be modified locally";
+		}
 	}
 	
 	/**
@@ -108,36 +133,54 @@ public class ConfigUpdateController {
 	 */
 	@RequestMapping(value = "/dbDelete", method = RequestMethod.POST)
 	@ResponseBody
-	public String dbDelete(@RequestBody String bodyContent) 
+	public String dbDelete(@RequestBody String bodyContent, HttpServletRequest request) 
 	{
-		String org = "";
 		
-		// Retrieving org parameter from accepted json
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			JsonNode fullJson = mapper.readTree(bodyContent);
-			logger.info(fullJson.toString());
-			if ((fullJson.get("org") != null) ) 
-			{
-				org = fullJson.get("org").toString().replace("\"", "");
-				logger.info(org);
-			}
-			else
-			{
-				return "Invalid JSON";
-			}
+		String clientIp = request.getRemoteAddr();
+		String hostIp = request.getLocalAddr();
+		
+		System.out.println("Client IP: "+clientIp);
+		logger.info("Client IP: "+clientIp);
+		
+		System.out.println("Host IP: "+hostIp);
+		logger.info("Host IP: "+hostIp);
+		
+		if(hostIp.equals(clientIp))
+		{
 			
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return e.toString();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return e.toString();
+			String org = "";
+			
+			// Retrieving org parameter from accepted json
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				JsonNode fullJson = mapper.readTree(bodyContent);
+				logger.info(fullJson.toString());
+				if ((fullJson.get("org") != null) ) 
+				{
+					org = fullJson.get("org").toString().replace("\"", "");
+					logger.info(org);
+				}
+				else
+				{
+					return "Invalid JSON";
+				}
+				
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return e.toString();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return e.toString();
+			}
+			DBUtil dbUtil = new DBUtil();
+			return dbUtil.deleteDBCredential(org);
 		}
-		DBUtil dbUtil = new DBUtil();
-		return dbUtil.deleteDBCredential(org);
+		else
+		{
+			return "Can only be modified locally";
+		}
 	}
 	
 	/**
