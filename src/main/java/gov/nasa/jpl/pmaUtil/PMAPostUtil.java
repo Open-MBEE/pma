@@ -4,16 +4,21 @@
  */
 package gov.nasa.jpl.pmaUtil;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.w3c.dom.Document;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -375,8 +380,165 @@ public class PMAPostUtil
         
 	}
 	
-	public static void main(String args[])
+	/**
+	 * Checks if there are any differences between the job element on MMS and the job on Jenkins. 
+	 * Will push the differences on MMS to Jenkins.
+	 * Currently checks associatedElement(TARGET_VIEW_ID), schedule, and disabled
+	 * @param mmsUtil
+	 * @param je
+	 * @param projectId
+	 * @param refId
+	 * @param jobId
+	 * @param mmsServer
+	 */
+	public static String updateJenkinsJobFromMMS(Logger logger, MMSUtil mmsUtil,JenkinsEngine je,String projectId,String refId,String jobId,String mmsServer)
 	{
+		Document doc = je.getConfigXML(projectId, refId, jobId);
 
+		if(doc==null)
+		{
+			logger.error("Error when retrieving xml from Jenkins ");
+			return "Error when retrieving xml from Jenkins ";
+			
+		}
+		ResponseEntity<String> re = mmsUtil.getJobElement(mmsServer, projectId, refId, jobId);
+		
+		if(re.getStatusCodeValue()==200) // successful job element get
+		{
+			// Get job elements
+			String jobsJsonString = re.getBody();
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode jobElement = null;
+			try {
+				JsonNode fullJson = mapper.readTree(jobsJsonString);
+				JsonNode jobsArray = fullJson.get("jobs");
+				if(jobsArray!=null)
+				{
+					jobElement = jobsArray.get(0);  // Assuming theres only 1 element in the jobsArray
+				}
+				else
+				{
+					// error
+					System.out.println("jobsArray is null");
+					logger.error("jobsArray is null");
+					return jobsJsonString;
+				}
+
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			// do a diff , could probably put into its own method, params(map,jsonNode) returns a map of diff
+			if(jobElement!=null)
+			{
+				Map<String,String> jobElementToJenkinsMapping = new HashMap();
+				jobElementToJenkinsMapping.put("schedule", "schedule");
+				jobElementToJenkinsMapping.put("TARGET_VIEW_ID", "associatedElementID");
+				jobElementToJenkinsMapping.put("disabled", "disabled");
+				
+				Map<String,String> jenkinsEnvironmentVariables = je.getEnvironmentVariablesFromConfigXml(doc);
+				
+				if(jenkinsEnvironmentVariables!=null)
+				{
+					Map<String,String> jenkinsDifferences = new HashMap();
+					
+//					System.out.println("Values: "+jenkinsEnvironmentVariables.values());
+					String jenkinsSchedule = jenkinsEnvironmentVariables.get("schedule");
+					String jenkinsDisabled = jenkinsEnvironmentVariables.get("disabled");
+					String jenkinsTargetViewId = jenkinsEnvironmentVariables.get("TARGET_VIEW_ID");
+					
+					JsonNode scheduleNode = jobElement.get("schedule");
+					JsonNode disabledNode = jobElement.get("disabled");
+					JsonNode associatedElementIDNode = jobElement.get("associatedElementID");
+					
+					if(scheduleNode!=null)
+					{
+						String mmsJobSchedule = scheduleNode.toString().replace("\"", "");
+						if(jenkinsSchedule!=null&&(!jenkinsSchedule.equals(mmsJobSchedule)))
+						{
+							jenkinsDifferences.put("schedule", mmsJobSchedule);
+							System.out.println("Difference Found. MMS: "+mmsJobSchedule+" Jenkins: "+jenkinsSchedule);
+						}
+						if(jenkinsSchedule==null)
+						{
+							if(!mmsJobSchedule.equals(""))
+							{
+								jenkinsDifferences.put("schedule", mmsJobSchedule);
+								System.out.println("Difference Found. MMS: "+mmsJobSchedule+" Jenkins: "+jenkinsSchedule);
+							}
+						}
+					}
+					if(disabledNode!=null)
+					{
+						String mmsJobDisabled = disabledNode.toString().replace("\"", "");
+						if(jenkinsDisabled==null||(!jenkinsDisabled.equals(mmsJobDisabled)))
+						{
+							jenkinsDifferences.put("disabled", mmsJobDisabled);
+							System.out.println("Difference Found. MMS: "+mmsJobDisabled+" Jenkins: "+jenkinsDisabled);
+						}
+					}
+					if(associatedElementIDNode!=null)
+					{
+						String mmsJobTargetViewId = associatedElementIDNode.toString().replace("\"", "");
+						if(jenkinsTargetViewId==null||(!jenkinsTargetViewId.equals(mmsJobTargetViewId)))
+						{
+							jenkinsDifferences.put("TARGET_VIEW_ID", mmsJobTargetViewId);
+							System.out.println("Difference Found. MMS: "+mmsJobTargetViewId+" Jenkins: "+jenkinsTargetViewId);
+						}
+					}
+
+					System.out.println("Diffs on Jenkins: "+jenkinsDifferences+" "+jenkinsDifferences.size());
+					logger.info("Diffs on Jenkins: "+jenkinsDifferences+" "+jenkinsDifferences.size());
+					
+					if(jenkinsDifferences.size()>0)
+					{
+						
+						Iterator it = jenkinsDifferences.entrySet().iterator();
+					    while (it.hasNext()) {
+					        Map.Entry pair = (Map.Entry)it.next();
+					        System.out.println(pair.getKey() + " = " + pair.getValue());
+					        
+					        // if diff update xml
+							je.replaceEnvironmentValueInConfigXML(doc, pair.getKey().toString(),pair.getValue().toString());
+							
+					        it.remove(); // avoids a ConcurrentModificationException
+					    }
+						// send back xml
+						String xmlString = je.xmlDocToString(doc);
+						String postResponse = je.postModifiedConfigXML(projectId, refId, jobId, xmlString);
+						System.out.println("Job Update Post Response: "+postResponse);
+						logger.info("Job Update Post Response: "+postResponse);
+						// return post response, should be 200 ok
+						return postResponse;
+					}
+					else
+					{
+						return "No difference";
+					}
+				}
+				else
+				{
+					// error jenkins xml didn't have the correct keys
+					logger.error("Error: Jenkins XML didn't have the correct keys");
+					return "Error: Jenkins XML didn't have the correct keys";
+				}
+			}
+			else
+			{
+				// Job element not found
+				logger.error("Error: Job element not found in jobs json");
+				return "Error: Job element not found in jobs json";
+			}
+		}
+		else
+		{
+			// MMS Error
+			logger.debug("MMS ERROR: "+re.getBody().toString());
+			System.out.println("MMS ERROR: "+re.getBody().toString());
+			return "MMS ERROR: "+re.getBody().toString();
+		}
+		
 	}
 }

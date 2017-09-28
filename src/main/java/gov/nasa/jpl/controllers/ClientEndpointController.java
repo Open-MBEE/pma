@@ -154,11 +154,13 @@ public class ClientEndpointController {
 		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
 		JenkinsEngine je = login(org);
 		
+		PMAPostUtil.updateJenkinsJobFromMMS(logger,mmsUtil, je, projectID, refID, jobSysmlID, mmsServer);
+		
 		String isJobDisabled = mmsUtil.isJobDisabled(mmsServer, projectID, refID, jobSysmlID);
 		if(isJobDisabled.equals("true")||isJobDisabled.equals("false"))
 		{
 			
-			PMAUtil.updateJenkinsJobFromMMS(mmsUtil, je, projectID, refID, jobSysmlID, mmsServer);
+			
 			
 			if(isJobDisabled.equals("true"))
 			{
