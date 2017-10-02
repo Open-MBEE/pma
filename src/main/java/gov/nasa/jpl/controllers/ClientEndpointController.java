@@ -154,22 +154,11 @@ public class ClientEndpointController {
 		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
 		JenkinsEngine je = login(org);
 		
-		PMAPostUtil.updateJenkinsJobFromMMS(logger,mmsUtil, je, projectID, refID, jobSysmlID, mmsServer);
 		
 		String isJobDisabled = mmsUtil.isJobDisabled(mmsServer, projectID, refID, jobSysmlID);
 		if(isJobDisabled.equals("true")||isJobDisabled.equals("false"))
 		{
 			
-			
-			
-			if(isJobDisabled.equals("true"))
-			{
-				ObjectNode responseJSON = mapper.createObjectNode();
-				responseJSON.put("message", "Job is disabled");
-				return new ResponseEntity<String>(responseJSON.toString(),HttpStatus.METHOD_NOT_ALLOWED);
-			}
-			else
-			{
 				if(PMAUtil.isJSON(org)||(org==null)) // Checking if mms response came back with an error.
 			    {
 					
@@ -193,9 +182,17 @@ public class ClientEndpointController {
 		    	String jobResponse = je.getNestedJob(jobSysmlID, projectID+"/job/"+refID);
 		    	if((!jobResponse.equals("Job not found on Jenkins"))&&(!jobResponse.equals("HTTP/1.1 404 Not Found"))) // Job exists on Jenkins
 		    	{
-		    		
+		    		PMAPostUtil.updateJenkinsJobFromMMS(logger,mmsUtil, je, projectID, refID, jobSysmlID, mmsServer);
 		    	   	System.out.println("Running Job: "+jobSysmlID);
 		        	logger.info("Running Job: "+jobSysmlID);
+		        	
+		    			if(isJobDisabled.equals("true"))
+		    			{
+		    				ObjectNode responseJSON = mapper.createObjectNode();
+		    				responseJSON.put("message", "Job is disabled");
+		    				return new ResponseEntity<String>(responseJSON.toString(),HttpStatus.METHOD_NOT_ALLOWED);
+		    			}
+
 		    		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
 			        
 		    	}
@@ -286,6 +283,13 @@ public class ClientEndpointController {
 		    	        
 		    	        if(jobCreationResponse.equals("HTTP/1.1 200 OK")) // If job was created succesfully on Jenkins
 		    	        {	
+		    	        	PMAPostUtil.updateJenkinsJobFromMMS(logger,mmsUtil, je, projectID, refID, jobSysmlID, mmsServer);
+			    			if(isJobDisabled.equals("true"))
+			    			{
+			    				ObjectNode responseJSON = mapper.createObjectNode();
+			    				responseJSON.put("message", "Job is disabled");
+			    				return new ResponseEntity<String>(responseJSON.toString(),HttpStatus.METHOD_NOT_ALLOWED);
+			    			}
 		    	        	System.out.println("Running Job: "+jobSysmlID);
 		    	        	logger.info("Running Job: "+jobSysmlID);
 		    	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
@@ -300,7 +304,6 @@ public class ClientEndpointController {
 					}
 		        	return new ResponseEntity<String>(jobResponse,status);
 		    	}
-			}
 		}
 		else
 		{
