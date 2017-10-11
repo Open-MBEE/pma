@@ -241,7 +241,7 @@ public class ClientEndpointController {
 										if (associatedElementIDValue != null) {
 											associatedElementID = associatedElementIDValue.replace("\"", "");
 										}
-										if (jobValue != null) {
+										if (jobValue != null) { // TODO REMOVE THIS
 										}
 									}
 									else
