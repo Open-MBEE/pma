@@ -297,7 +297,8 @@ public class JenkinsEngine {
 			// be manipulated into a string.
 			HttpEntity entity = response.getEntity();
 			entityString = EntityUtils.toString(entity);
-
+			
+			//TODO add null check for entity string
 			// this means there is no proper response... comes in as HTML?
 			// returning will prevent json errors
 			if (entityString.contains("<html>")) {
@@ -392,6 +393,7 @@ public class JenkinsEngine {
 	 * @return Event details in a string form
 	 * @Override
 	 */
+	//TODO Delete this
 	public String getEventDetail(String jobName, String detailName) {
 		String returnString = null;
 
