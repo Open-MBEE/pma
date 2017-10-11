@@ -407,7 +407,7 @@ public class JenkinsEngine {
 
 		return returnString;
 	}
-
+	// TODO delete this 
 	public String getMagicDrawLogFromJob(String jobId) {
 		String url;
 
@@ -444,7 +444,7 @@ public class JenkinsEngine {
 	 * @param property
 	 */
 	public void constructJobUrl(detail property) {
-		String url;
+		String url; // TODO Delete this or rename
 
 		url = "/api/json?tree=jobs";
 
@@ -474,7 +474,7 @@ public class JenkinsEngine {
 			url = url + "[description]";
 			break;
 		case LAST_BUILD:
-			url = url + "[lastBuild]";
+			url = url + "[lastBuild]"; // TODO add break;
 		default:
 			break;
 		}
@@ -484,7 +484,7 @@ public class JenkinsEngine {
 
 	public void constructBuildUrl(String jobUrl, detail property) {
 
-		String url;
+		String url; // TODO Delete or rename this
 
 		if (!jobUrl.startsWith("/")) {
 			jobUrl = "/" + jobUrl;
@@ -663,6 +663,7 @@ public class JenkinsEngine {
 		{
 			nestedPMAFolder=jobParentFolderName+"/";
 		}
+		// TODO rename this
 		String url = this.url + "/job/PMA/job/"+nestedPMAFolder+"api/json?tree=jobs[name,color]"; // Jenkins 2
 
 //		System.out.println("Current construction url is " + url);
