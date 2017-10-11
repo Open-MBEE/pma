@@ -813,7 +813,8 @@ public class MMSUtil {
 			request.setHeader("Accept", "application/json");
 			request.setHeader("Content-type", "application/json");
 		    HttpResponse response = httpClient.execute(request);
-		    
+		    	
+			//TODO close input stream reader , add finally or try with resources
 			BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 			
 			String result = "";
@@ -870,7 +871,7 @@ public class MMSUtil {
 			request.setHeader("Content-type", "application/json");
 		    request.setEntity(params);
 		    HttpResponse response = httpClient.execute(request);
-		    
+		    //TODO close input stream reader , add finally or try with resources
 			BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 			
 			String result = "";
@@ -919,7 +920,7 @@ public class MMSUtil {
 			request.setHeader("Accept", "application/json");
 			request.setHeader("Content-type", "application/json");
 		    HttpResponse response = httpClient.execute(request);
-		    
+		    //TODO close input stream reader , add finally or try with resources
 			BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 			
 			String result = "";
