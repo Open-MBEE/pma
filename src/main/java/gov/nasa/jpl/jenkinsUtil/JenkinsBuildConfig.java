@@ -347,19 +347,8 @@ public class JenkinsBuildConfig {
 			Element infoElement = doc.createElement("info");
 			Element buildWrappers = doc.createElement("buildWrappers");
 			Element propertiesContent = doc.createElement("propertiesContent");
-			Element injectEnvironmentVar = doc.createElement("EnvInjectBuildWrapper");
-			propertiesContent.appendChild(doc.createTextNode("\n"));
 			
-			propertiesContent.appendChild(doc.createTextNode(this.environmentVariables));
-			
-//			propertiesContent.appendChild(doc.createTextNode("JOB_ID=" + this.jobID + "\n"));
-//			propertiesContent.appendChild(doc.createTextNode("DOCUMENTS=" + this.documentID + "\n"));
-//			propertiesContent
-//					.appendChild(doc.createTextNode("CREDENTIALS=/opt/local/jenkins/credentials/mms.properties\n"));
-//			propertiesContent.appendChild(doc.createTextNode("TEAMWORK_PROJECT=" + this.teamworkProject + "\n"));
-//			propertiesContent.appendChild(doc.createTextNode("MMS_SERVER=" + this.mmsServer + "\n"));
-//			propertiesContent.appendChild(doc.createTextNode("MMS_WORKSPACE=" + this.workspace + "\n"));
-
+			// Configuration for the build timeout plugin
 			Element hudsonTimeout = doc.createElement("hudson.plugins.build__timeout.BuildTimeoutWrapper");
 			Element strategy = doc.createElement("strategy");
 			Element timeOut = doc.createElement("timeoutMinutes");
@@ -373,11 +362,31 @@ public class JenkinsBuildConfig {
 			strategy.appendChild(timeOut);
 			hudsonTimeout.appendChild(strategy);
 			buildWrappers.appendChild(hudsonTimeout);
-
+			
+			// Configuration for the Environment Inject plugin.
+			Element injectEnvironmentVar = doc.createElement("EnvInjectBuildWrapper");
+			propertiesContent.appendChild(doc.createTextNode("\n"));
+			propertiesContent.appendChild(doc.createTextNode(this.environmentVariables));
+			
 			injectEnvironmentVar.setAttribute("plugin", "envinject@1.91.3");
 			infoElement.appendChild(propertiesContent);
 			injectEnvironmentVar.appendChild(infoElement);
 			buildWrappers.appendChild(injectEnvironmentVar);
+			
+			// Configuration for Credentials Binding Plugin
+			Element credentialsBinding = doc.createElement("org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper");
+			credentialsBinding.setAttribute("plugin", "credentials-binding@1.13");
+		
+			Element bindings = doc.createElement("bindings");
+			Element mmsCredentials = createCredentialBinding(doc,"mmscredentials","","");
+			Element twcCredentials = createCredentialBinding(doc,"twccredentials","","");
+			
+			bindings.appendChild(mmsCredentials);
+			bindings.appendChild(twcCredentials);
+			
+			credentialsBinding.appendChild(bindings);
+			buildWrappers.appendChild(credentialsBinding);
+			
 			rootElement.appendChild(buildWrappers);
 
 			tempElement = doc.createElement("reporters");
@@ -507,6 +516,33 @@ public class JenkinsBuildConfig {
 					+ this.workspace + "\n");
 		}
 	}
+	
+	/**
+	 * Used for creating the xml config for credentials binding plugin
+	 * @param doc
+	 * @param credentialsId Jenkins credential Id
+	 * @param usernameVariable environment variable name to bind the username to.
+	 * @param passwordVariable environment variable name to bind the password to.
+	 * @return
+	 */
+	public static Element createCredentialBinding(Document doc,String credentialsId,String usernameVariable,String passwordVariable)
+	{
+		Element credentials = doc.createElement("org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding");
+		Element credentialsIdElement = doc.createElement("credentialsId");
+		Element usernameVariableElement = doc.createElement("usernameVariable");
+		Element passwordVariableElement = doc.createElement("passwordVariable");
+		
+		credentialsIdElement.appendChild(doc.createTextNode(credentialsId));
+		usernameVariableElement.appendChild(doc.createTextNode(usernameVariable));
+		passwordVariableElement.appendChild(doc.createTextNode(passwordVariable));
+		
+		credentials.appendChild(credentialsIdElement);
+		credentials.appendChild(usernameVariableElement);
+		credentials.appendChild(passwordVariableElement);
+		
+		return credentials;
+	}
+	
 	
 	/*
 	 * Setters and getters
