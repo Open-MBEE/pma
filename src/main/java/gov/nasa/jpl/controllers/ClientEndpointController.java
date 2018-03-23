@@ -105,24 +105,24 @@ public class ClientEndpointController {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<String> createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromClient jobFromVE) {
+	public ResponseEntity<String> createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromClient jobFromClient) {
 		
 		logger.info("Create Job was called");
 		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Job Name: "
-				+ jobFromVE.getJobName() + "\n" + "Command: " + jobFromVE.getCommand() + "\n" + "Arguments: "
-				+ jobFromVE.getArguments() + "\n" + "Schedule: " + jobFromVE.getSchedule() + "\n"
-				+ "Associated Element ID: " + jobFromVE.getAssociatedElementID() + "\n" + "MMS Server: "
-				+ jobFromVE.getMmsServer() + "\n" + "Alfresco Token: " + jobFromVE.getAlfrescoToken() );
+				+ jobFromClient.getJobName() + "\n" + "Command: " + jobFromClient.getCommand() + "\n" + "From Ref Id: "
+				+ jobFromClient.getFromRefId() + "\n" + "Schedule: " + jobFromClient.getSchedule() + "\n"
+				+ "Associated Element ID: " + jobFromClient.getAssociatedElementID() + "\n" + "MMS Server: "
+				+ jobFromClient.getMmsServer() + "\n" + "Alfresco Token: " + jobFromClient.getAlfrescoToken() );
 		
+		String jobName = jobFromClient.getJobName();
+		String alfrescoToken = jobFromClient.getAlfrescoToken();
+		String mmsServer = jobFromClient.getMmsServer();
+		String associatedElementID = jobFromClient.getAssociatedElementID();
+		String schedule = jobFromClient.getSchedule();
+		String command = jobFromClient.getCommand();
+		String fromRefId = jobFromClient.getFromRefId();
 		
-		String jobName = jobFromVE.getJobName();
-		String alfrescoToken = jobFromVE.getAlfrescoToken();
-		String mmsServer = jobFromVE.getMmsServer();
-		String associatedElementID = jobFromVE.getAssociatedElementID();
-		String schedule = jobFromVE.getSchedule();
-		String command = jobFromVE.getCommand();
-		
-		return PMAPostUtil.createJob(jobName, alfrescoToken, mmsServer, associatedElementID, schedule, command, projectID, refID, logger);
+		return PMAPostUtil.createJob(jobName, alfrescoToken, mmsServer, associatedElementID, schedule, command, projectID, refID, logger, fromRefId);
 	}
 	
 	/**

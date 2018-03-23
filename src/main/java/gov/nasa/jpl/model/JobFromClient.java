@@ -22,11 +22,11 @@ public class JobFromClient implements Serializable {
 	
 	private String jobName;
 	private String command;
-	private String[] arguments;
 	private String schedule;
 	private String associatedElementID;
 	private String mmsServer;
 	private String alfrescoToken;
+	private String fromRefId;
 	
 	public String getJobName() {
 		return jobName;
@@ -44,12 +44,12 @@ public class JobFromClient implements Serializable {
 		this.command = command;
 	}
 	
-	public String[] getArguments() {
-		return arguments;
+	public String getFromRefId() {
+		return fromRefId;
 	}
 
-	public void setArguments(String[] arguments) {
-		this.arguments = arguments;
+	public void setFromRefId(String fromRefId) {
+		this.fromRefId = fromRefId;
 	}
 	
 	public String getSchedule() {

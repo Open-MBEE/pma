@@ -89,7 +89,6 @@ public class ClientEndpointControllerTests {
         job.setMmsServer(testServer);
         job.setJobName(jobName);
         job.setAlfrescoToken(alfTicket);
-        job.setArguments(new String[0]);
         job.setAssociatedElementID(testDocument);
         job.setCommand("");
         job.setSchedule("");

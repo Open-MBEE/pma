@@ -142,9 +142,10 @@ public class PMAPostUtil
 	 * @param logger
 	 * @param onlyCreateJenkinsJob If it is true, this method will create the Jenkins job without creating the mms element.
 	 * @param jobID SysmlID of job if it needs to be specified.
+	 * @param fromRefId The id of the ref to merge with the current ref.
 	 * @return
 	 */
-	public static ResponseEntity<String> createJob(String jobName, String alfrescoToken,String mmsServer, String associatedElementID,String schedule, String type, String projectID,String refID,Logger logger)
+	public static ResponseEntity<String> createJob(String jobName, String alfrescoToken,String mmsServer, String associatedElementID,String schedule, String type, String projectID,String refID,Logger logger,String fromRefId)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		
@@ -192,11 +193,17 @@ public class PMAPostUtil
 			logger.info("Package Create Response: "+packageCreateResponse);
 		}
 		
+		// Creating the job element json to send to mms. Job elements should be created in the jobs bin package
 		
-		ObjectNode on = mmsUtil.buildDocgenJobElementJSON(jobElementID, "jobs_bin_"+jobElementID, jobName, associatedElementID, type, schedule, refID, projectID); // Job elements should be created in the jobs bin package
-		
-//		System.out.println("Job class JSON: "+on.toString());
-//		logger.info("Job class JSON: "+on.toString());
+		ObjectNode on;
+		if(type.equals("docmerge"))
+		{
+			on = mmsUtil.buildDocMergeJobElementJSON(jobElementID, "jobs_bin_"+jobElementID, jobName, associatedElementID, type, schedule, refID, projectID,fromRefId); 
+		}
+		else
+		{
+			on = mmsUtil.buildDocgenJobElementJSON(jobElementID, "jobs_bin_"+jobElementID, jobName, associatedElementID, type, schedule, refID, projectID); 
+		}
 		
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
 		System.out.println("MMS Job element response: "+elementCreationResponse);
@@ -433,10 +440,6 @@ public class PMAPostUtil
 			// do a diff , could probably put into its own method, params(map,jsonNode) returns a map of diff
 			if(jobElement!=null)
 			{
-				Map<String,String> jobElementToJenkinsMapping = new HashMap();
-				jobElementToJenkinsMapping.put("schedule", "schedule");
-				jobElementToJenkinsMapping.put("TARGET_VIEW_ID", "associatedElementID");
-				jobElementToJenkinsMapping.put("disabled", "disabled");
 				
 				Map<String,String> jenkinsEnvironmentVariables = je.getEnvironmentVariablesFromConfigXml(doc);
 				

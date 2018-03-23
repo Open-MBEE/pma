@@ -42,7 +42,7 @@ public class ElasticSearchQueryBuilder
 		term.put("_projectId", projectId);
 		term1.put("_inRefIds", refId);
 		term2.put("type", "Generalization");
-		term3.put("generalId", MMSUtil.docgenJobBlockID);
+		term3.put("generalId", MMSUtil.docgenJobBlockId);
 		
 		condition.set("term", term);
 		condition1.set("term", term1); 
