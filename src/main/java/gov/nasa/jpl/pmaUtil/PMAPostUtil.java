@@ -198,7 +198,7 @@ public class PMAPostUtil
 		ObjectNode on;
 		if(type.equals("docmerge"))
 		{
-			on = mmsUtil.buildDocMergeJobElementJSON(jobElementID, "jobs_bin_"+jobElementID, jobName, associatedElementID, type, schedule, refID, projectID,fromRefId); 
+			on = mmsUtil.buildDocMergeJobElementJSON(jobElementID, "jobs_bin_"+jobElementID, jobName, associatedElementID, type, refID, projectID,fromRefId); 
 		}
 		else
 		{

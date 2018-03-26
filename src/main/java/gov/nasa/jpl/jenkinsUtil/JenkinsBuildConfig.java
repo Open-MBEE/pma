@@ -113,6 +113,12 @@ public class JenkinsBuildConfig {
 			tempElement.appendChild(doc.createTextNode("false"));
 			rootElement.appendChild(tempElement);
 
+			
+
+			/**
+			 * Property section.
+			 * 
+			 */
 			tempElement = doc.createElement("properties");
 
 			Element discardOldBuilds = doc.createElement("jenkins.model.BuildDiscarderProperty");
@@ -212,6 +218,8 @@ public class JenkinsBuildConfig {
 			tempElement.appendChild(doc.createTextNode("false"));
 			rootElement.appendChild(tempElement);
 
+			// end property section
+			
 			/**
 			 *
 			 * Builder Section This is where the console / shell commands will
@@ -259,14 +267,6 @@ public class JenkinsBuildConfig {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			// Old way of reading in template. Does not work when project is exported as a jar.
-//			try {
-//				content = new String(Files.readAllBytes(Paths.get("src/main/resources/templates/pmaTestJenkins2.sh")));
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
 
 			command.appendChild(doc.createTextNode(content));
 			hudson.appendChild(command);
@@ -372,23 +372,25 @@ public class JenkinsBuildConfig {
 			infoElement.appendChild(propertiesContent);
 			injectEnvironmentVar.appendChild(infoElement);
 			buildWrappers.appendChild(injectEnvironmentVar);
+			// -------------------------------------------------------
 			
 			// Configuration for Credentials Binding Plugin
 			Element credentialsBinding = doc.createElement("org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper");
 			credentialsBinding.setAttribute("plugin", "credentials-binding@1.13");
-		
+
 			Element bindings = doc.createElement("bindings");
-			Element mmsCredentials = createCredentialBinding(doc,"mmscredentials","","");
-			Element twcCredentials = createCredentialBinding(doc,"twccredentials","","");
-			
+			Element mmsCredentials = createCredentialBinding(doc, "mmscredentials", "", "");
+			Element twcCredentials = createCredentialBinding(doc, "twccredentials", "", "");
+
 			bindings.appendChild(mmsCredentials);
 			bindings.appendChild(twcCredentials);
-			
+
 			credentialsBinding.appendChild(bindings);
 			buildWrappers.appendChild(credentialsBinding);
-			
-			rootElement.appendChild(buildWrappers);
 
+			rootElement.appendChild(buildWrappers);
+			// -------------------------------------------------------
+			
 			tempElement = doc.createElement("reporters");
 			rootElement.appendChild(tempElement);
 			tempElement = doc.createElement("publishers");
@@ -508,6 +510,25 @@ public class JenkinsBuildConfig {
 			"PMA_HOST=" + pmaHost+""+ "\n"+
 			"PMA_PORT="+ "8443" + "\n");
 		}
+		else if(this.jobType.equals("docmerge"))
+		{
+			String pmaHost = "";
+			try {
+				pmaHost = InetAddress.getLocalHost().getHostName();
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			setArtifactFile("DocMergeLog.txt");
+			setJenkinsShellFile("docmerge.sh");
+			setEnvironmentVariables("JOB_ID=" + this.jobID + "\n" + 
+			"TARGET_VIEW_ID=" + this.targetElement + "\n"+ 
+			"PROJECT_ID="+ this.teamworkProject + "\n" + 
+			"MMS_HOST=" + this.mmsServer + "\n" + 
+			"REF_ID="+ this.workspace + "\n" + 
+			"PMA_HOST=" + pmaHost+""+ "\n"+
+			"PMA_PORT="+ "8443" + "\n");
+		}
 		else
 		{
 			setEnvironmentVariables("JOB_ID=" + this.jobID + "\n" + "DOCUMENTS=" + this.targetElement + "\n"
@@ -543,6 +564,35 @@ public class JenkinsBuildConfig {
 		return credentials;
 	}
 	
+	/**
+	 * Used for creating a string parameter definition for parameterized jobs.
+	 * @param doc
+	 * @param parameterName
+	 * @param parameterDescription
+	 * @param parameterDefaultValue
+	 * @return
+	 */
+	public static Element createStringParameterDefinition(Document doc,String parameterName, String parameterDescription, String parameterDefaultValue)
+	{
+		// creating the elements
+		Element stringParameterDefinition = doc.createElement("hudson.model.StringParameterDefinition");
+
+		Element name = doc.createElement("name");
+		Element description = doc.createElement("description");
+		Element defaultValue = doc.createElement("defaultValue");
+		
+		// adding text nodes to the elements
+		name.appendChild(doc.createTextNode(parameterName));
+		description.appendChild(doc.createTextNode(parameterDescription));
+		defaultValue.appendChild(doc.createTextNode(parameterDefaultValue));
+		
+		// adding the elements as children to parameterDefinitions
+		stringParameterDefinition.appendChild(name);
+		stringParameterDefinition.appendChild(description);
+		stringParameterDefinition.appendChild(defaultValue);
+		
+		return stringParameterDefinition;
+	}
 	
 	/*
 	 * Setters and getters
