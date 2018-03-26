@@ -18,6 +18,7 @@ public class JobInstanceFromClient implements Serializable {
 	private String[] arguments;
 	private String mmsServer;
 	private String alfrescoToken;
+	private String fromRefId;
 	
 	public String[] getArguments() {
 		return arguments;

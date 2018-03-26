@@ -51,7 +51,6 @@ public class PMAPostUtil
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
-		
 		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectId, refId); // next build number from Jenkins
 		
 		//	Modifies the job instance with current run information or creates a new one if it doesn't exist

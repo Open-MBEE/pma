@@ -807,7 +807,7 @@ public class MMSUtil {
 		ObjectNode projectIdPropertyInstanceSpecification = buildInstanceSpecificationNode(projectIdPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
 		ObjectNode disabledPropertyNode = buildPropertyNode(sysmlID,"disabled","",docgenJobProjectIdPropertyId,"LiteralBoolean");
 		ObjectNode disabledPropertyInstanceSpecification = buildInstanceSpecificationNode(disabledPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
-		ObjectNode fromRefIdPropertyNode = buildPropertyNode(sysmlID,"refId",fromRefId,docgenJobRefIdPropertyId,"LiteralString");
+		ObjectNode fromRefIdPropertyNode = buildPropertyNode(sysmlID,"fromRefId","",docgenJobRefIdPropertyId,"LiteralString");
 		ObjectNode fromRefIdPropertyInstanceSpecification = buildInstanceSpecificationNode(fromRefIdPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
 		
 		elements.add(generalizationNode);

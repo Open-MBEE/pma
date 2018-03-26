@@ -42,12 +42,29 @@ public class PMAUtil
 		ObjectMapper mapper = new ObjectMapper();
 		
 		ObjectNode jobElement = mapper.createObjectNode();
-		jobElement.put("id",jobMap.get("id"));
-		jobElement.put("name",jobMap.get("name"));
-		jobElement.put("command",jobMap.get("type"));
-		jobElement.put("associatedElementID",jobMap.get("associatedElementId"));
-		jobElement.put("schedule",jobMap.get("schedule"));
-		jobElement.put("disabled",jobMap.get("disabled"));
+		
+		Iterator it = jobMap.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry pair = (Map.Entry) it.next();
+			
+			/*
+			 * These two ifs are because I changed my variable names, but I wanted to keep my output the same. 
+			 */
+			if (pair.getKey().toString().equals("type"))
+			{
+				jobElement.put("command",jobMap.get("type"));
+			}
+			else if (pair.getKey().toString().equals("associatedElementId"))
+			{
+				jobElement.put("associatedElementID",jobMap.get("associatedElementId"));
+			}
+			else
+			{
+				jobElement.put(pair.getKey().toString(),pair.getValue().toString());
+			}
+			System.out.println(pair.getKey() + " = " + pair.getValue());
+			it.remove(); // avoids a ConcurrentModificationException
+		}
 		
 		return jobElement;
 		

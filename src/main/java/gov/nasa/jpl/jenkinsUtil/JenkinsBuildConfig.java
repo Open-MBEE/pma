@@ -113,14 +113,27 @@ public class JenkinsBuildConfig {
 			tempElement.appendChild(doc.createTextNode("false"));
 			rootElement.appendChild(tempElement);
 
-			
-
 			/**
 			 * Property section.
 			 * 
 			 */
 			tempElement = doc.createElement("properties");
-
+			
+			// For parameterized build in docmerge job
+			if(this.jobType.equals("docmerge"))
+			{
+				Element parametersDefinitionProperty = doc.createElement("hudson.model.ParametersDefinitionProperty");
+				Element parameterDefintion = doc.createElement("parameterDefinitions");
+				
+				parameterDefintion.appendChild(createStringParameterDefinition(doc,"fromRefId","The branch to merge with the current ref.",""));
+				parameterDefintion.appendChild(createStringParameterDefinition(doc,"ticket","User MMS Ticket",""));
+				
+				parametersDefinitionProperty.appendChild(parameterDefintion);			
+				
+				tempElement.appendChild(parametersDefinitionProperty);
+			}
+			
+			
 			Element discardOldBuilds = doc.createElement("jenkins.model.BuildDiscarderProperty");
 
 			Element logRotator = doc.createElement("strategy");
@@ -218,6 +231,7 @@ public class JenkinsBuildConfig {
 			tempElement.appendChild(doc.createTextNode("false"));
 			rootElement.appendChild(tempElement);
 
+			
 			// end property section
 			
 			/**
