@@ -79,7 +79,7 @@ public class MMSUtil {
 	public static final String docmergeJobAssociatedElementIdPropertyId = "_18_5_1_8bf0285_1501191821885_586435_16133";
 	public static final String docmergeJobRefIdPropertyId = "_18_5_1_8bf0285_1501191821885_436667_16134";
 	public static final String docmergeJobProjectIdPropertyId = "_18_5_1_8bf0285_1501191821885_300964_16135";
-	public static final String docmergeJobFromRefPropertyId = "_18_5_1_8bf0285_1501191821885_300964_16135";
+	public static final String docmergeJobFromRefPropertyId =  "_18_5_1_8bf0285_1501191821884_399553_16127";
 
 	
 	public static final String PMAVERSION = "3.3.0";
@@ -602,26 +602,27 @@ public class MMSUtil {
 					JsonNode job = jobJson.get(0);
 					if (job != null) 
 					{
-						String scheduleValue = job.get("schedule").toString();
-						String typeValue = job.get("command").toString();
-						String associatedElementIDValue = job.get("associatedElementID").toString();
-						String jobValue = job.get("name").toString();
-						String fromRefIdValue = job.get("fromRefId").toString();
+						JsonNode scheduleValueJson = job.get("schedule");
+						JsonNode typeValueJson = job.get("command");
+						JsonNode associatedElementIDValueJson = job.get("associatedElementID");
+						JsonNode jobValueJson = job.get("name");
+						JsonNode fromRefIdValueJson = job.get("fromRefId");
 
-						if (scheduleValue != null) {
+						if (scheduleValueJson != null) {
+							String scheduleValue = scheduleValueJson.toString();
 							schedule = scheduleValue.replace("\"", "");
 						}
-						if (typeValue != null) {
-							type = typeValue.replace("\"", "");
+						if (typeValueJson != null) {
+							type = typeValueJson.toString().replace("\"", "");
 						}
-						if (associatedElementIDValue != null) {
-							associatedElementID = associatedElementIDValue.replace("\"", "");
+						if (associatedElementIDValueJson != null) {
+							associatedElementID = associatedElementIDValueJson.toString().replace("\"", "");
 						}
-						if (jobValue != null) {
-							jobName = jobValue.replace("\"", "");
+						if (jobValueJson != null) {
+							jobName = jobValueJson.toString().replace("\"", "");
 						}
-						if (fromRefIdValue != null) {
-							fromRefId = jobValue.replace("\"", "");
+						if (fromRefIdValueJson != null) {
+							fromRefId = fromRefIdValueJson.toString().replace("\"", "");
 						}
 					}
 					else

@@ -80,16 +80,31 @@ public class PMAUtil
 		ObjectMapper mapper = new ObjectMapper();
 		
 		ObjectNode jobInstanceElement = mapper.createObjectNode();
-		jobInstanceElement.put("id",jobInstancesMap.get("id"));
-		jobInstanceElement.put("jobId",jobInstancesMap.get("jobId"));
-		jobInstanceElement.put("buildNumber",jobInstancesMap.get("buildNumber"));
-		jobInstanceElement.put("jobStatus",jobInstancesMap.get("jobStatus"));
-		jobInstanceElement.put("jenkinsLog",jobInstancesMap.get("logUrl"));
-		jobInstanceElement.put("created",jobInstancesMap.get("started"));
-		jobInstanceElement.put("completed",jobInstancesMap.get("completed"));
 		
-		jobInstanceElement.put("type",jobInstancesMap.get("type"));
-		jobInstanceElement.put("refId",jobInstancesMap.get("refId"));
+		Iterator it = jobInstancesMap.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry pair = (Map.Entry) it.next();
+			
+			/*
+			 * These two ifs are because I changed my variable names, but I wanted to keep my output the same. 
+			 */
+			if (pair.getKey().toString().equals("logUrl"))
+			{
+				jobInstanceElement.put("jenkinsLog",jobInstanceElement.get("logUrl"));
+			}
+			else if (pair.getKey().toString().equals("started"))
+			{
+				jobInstanceElement.put("created",jobInstanceElement.get("started"));
+			}
+			else
+			{
+				jobInstanceElement.put(pair.getKey().toString(),pair.getValue().toString());
+			}
+			System.out.println(pair.getKey() + " = " + pair.getValue());
+			it.remove(); // avoids a ConcurrentModificationException
+		}
+		
+		
 		return jobInstanceElement;
 	}
 	

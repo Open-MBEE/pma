@@ -141,20 +141,19 @@ public class ClientEndpointController {
 		
 		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Arguments: "
 				+ jobInstance.getArguments() + "\n" + "MMS Server: " + jobInstance.getMmsServer() + "\n"
-				+ "Alfresco Token: " + jobInstance.getAlfrescoToken());
+				+ "Alfresco Token: " + jobInstance.getAlfrescoToken() +"\n"+"fromRefId: "+jobInstance.getFromRefId());
 		
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
 		String alfrescoToken = jobInstance.getAlfrescoToken();
 		String mmsServer = jobInstance.getMmsServer();
-		
+		String fromRefId = jobInstance.getFromRefId();
     	
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
 		JenkinsEngine je = login(org);
-		
-		
+
 		String isJobDisabled = mmsUtil.isJobDisabled(mmsServer, projectID, refID, jobSysmlID);
 		if(isJobDisabled.equals("true")||isJobDisabled.equals("false"))
 		{
@@ -200,7 +199,7 @@ public class ClientEndpointController {
 	    				return new ResponseEntity<String>(responseJSON.toString(),HttpStatus.METHOD_NOT_ALLOWED);
 	    			}
 
-		    		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
+		    		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger,fromRefId);
 			        
 		    	}
 		    	else 
@@ -305,7 +304,7 @@ public class ClientEndpointController {
 			    			}
 		    	        	System.out.println("Running Job: "+jobSysmlID);
 		    	        	logger.info("Running Job: "+jobSysmlID);
-		    	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
+		    	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger,fromRefId);
 		    	        }
 		    	        else
 		    	        {

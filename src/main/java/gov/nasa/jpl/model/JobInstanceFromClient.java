@@ -40,8 +40,17 @@ public class JobInstanceFromClient implements Serializable {
 		return alfrescoToken;
 	}
 
+	public void setFromRefId(String fromRefId) {
+		this.fromRefId = fromRefId;
+	}
+	
+	public String getFromRefId() {
+		return fromRefId;
+	}
+
 	public void setAlfrescoToken(String alfrescoToken) {
 		this.alfrescoToken = alfrescoToken;
 	}
+
 
 }

@@ -44,9 +44,10 @@ public class PMAPostUtil
 	 * @param mmsServer
 	 * @param je
 	 * @param logger
+	 * @param fromRefId
 	 * @return
 	 */
-	public static ResponseEntity<String> runJob(String jobSysmlID,String projectId, String refId, String alfrescoToken, String mmsServer,JenkinsEngine je,Logger logger)
+	public static ResponseEntity<String> runJob(String jobSysmlID,String projectId, String refId, String alfrescoToken, String mmsServer,JenkinsEngine je,Logger logger, String fromRefId)
 	{
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
@@ -71,17 +72,34 @@ public class PMAPostUtil
 		newJobInstanceValues.put("started", currentTimestamp);
 		newJobInstanceValues.put("buildNumber", nextBuildNumber);
 		
+		if (fromRefId != null) {
+			newJobInstanceValues.put("fromRefId", fromRefId);
+		}
+		
 		String modifyJobInstanceSpecificationResponse =  mmsUtil.modifyBulkInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber,newJobInstanceValues);
 		
 		logger.info("modify job instance element response: "+modifyJobInstanceSpecificationResponse);
 		if (modifyJobInstanceSpecificationResponse.contains("Instance Specification Updated.")||modifyJobInstanceSpecificationResponse.contains("HTTP/1.1 200 OK"))
 		{
+			
 			// run job on jenkins
-	        String runResponse = je.executeNestedJob(jobSysmlID, projectId, refId); // job name should be the job sysmlID
+	        String runResponse = null;
 	        
-//			System.out.println("Job run response: "+runResponse);
+	        if (fromRefId != null)  // docmerge job
+	        {
+	        	HashMap<String,String> parameterMap = new HashMap<String,String>();
+	        	parameterMap.put("ticket", alfrescoToken);
+	        	parameterMap.put("fromRefId", fromRefId);
+	        	runResponse = je.executeNestedParamerterizedJob(jobSysmlID, projectId, refId,parameterMap); // job name should be the job sysmlID
+	        }
+	        else
+	        {
+	        	runResponse = je.executeNestedJob(jobSysmlID, projectId, refId); // job name should be the job sysmlID
+	        }
+	        
+
 			logger.info("Run job Jenkins response: "+runResponse);
-//			System.out.println("JOBRUN: "+runResponse);
+
 			if(runResponse.equals("HTTP/1.1 201 Created"))
 			{
 				status = HttpStatus.OK;
