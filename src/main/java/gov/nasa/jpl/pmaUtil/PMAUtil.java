@@ -204,7 +204,8 @@ public class PMAUtil
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ArrayList<String> jobInstanceIDElementList = new ArrayList<String>();
-		Map elementIdMap = MMSUtil.getElementIdMap();
+		String jobType = MMSUtil.getJobType(mmsJSONString);
+		Map elementIdMap = MMSUtil.getElementIdMap(jobType);
 		ArrayList<Map<String,String>> jobInstancesMapList = new ArrayList<Map<String, String>>();
 		try {
 			JsonNode fullJson = mapper.readTree(mmsJSONString);
@@ -283,7 +284,8 @@ public class PMAUtil
 		ObjectNode jobJSON = mapper.createObjectNode();
 		ArrayNode jobInstanceElements = mapper.createArrayNode();
 		ArrayList<String> jobInstanceIDElementList = new ArrayList<String>();
-		Map elementIdMap = MMSUtil.getElementIdMap();
+		String jobType = MMSUtil.getJobType(mmsJSONString);
+		Map elementIdMap = MMSUtil.getElementIdMap(jobType);
 		try {
 			JsonNode fullJson = mapper.readTree(mmsJSONString);
 			JsonNode elements = fullJson.get("elements");
