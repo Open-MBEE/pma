@@ -1306,9 +1306,6 @@ public class JenkinsEngine {
 
 		DBUtil dbUtil = new DBUtil();
 		dbUtil.getCredentials(org);
-		System.out.println(dbUtil.getJenkinsUsername());
-		System.out.println(dbUtil.getJenkinsPassword());
-		System.out.println("JenkinsURL: "+dbUtil.getJenkinsURL());
 		
 		this.setUsername(dbUtil.getJenkinsUsername());
 		this.setPassword(dbUtil.getJenkinsPassword());
