@@ -19,6 +19,7 @@ public class JobInstanceFromClient implements Serializable {
 	private String mmsServer;
 	private String alfrescoToken;
 	private String fromRefId;
+	private String comment;
 	
 	public String[] getArguments() {
 		return arguments;
@@ -40,16 +41,24 @@ public class JobInstanceFromClient implements Serializable {
 		return alfrescoToken;
 	}
 
+	public void setAlfrescoToken(String alfrescoToken) {
+		this.alfrescoToken = alfrescoToken;
+	}
+	
 	public void setFromRefId(String fromRefId) {
 		this.fromRefId = fromRefId;
 	}
 	
 	public String getFromRefId() {
 		return fromRefId;
-	}
+	}	
 
-	public void setAlfrescoToken(String alfrescoToken) {
-		this.alfrescoToken = alfrescoToken;
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+	
+	public String getComment() {
+		return comment;
 	}
 
 

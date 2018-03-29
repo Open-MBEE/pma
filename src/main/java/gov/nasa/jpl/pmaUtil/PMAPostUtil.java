@@ -47,7 +47,7 @@ public class PMAPostUtil
 	 * @param fromRefId
 	 * @return
 	 */
-	public static ResponseEntity<String> runJob(String jobSysmlID,String projectId, String refId, String alfrescoToken, String mmsServer,JenkinsEngine je,Logger logger, String fromRefId)
+	public static ResponseEntity<String> runJob(String jobSysmlID,String projectId, String refId, String alfrescoToken, String mmsServer,JenkinsEngine je,Logger logger, String fromRefId,String comment)
 	{
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
@@ -90,6 +90,7 @@ public class PMAPostUtil
 	        	HashMap<String,String> parameterMap = new HashMap<String,String>();
 	        	parameterMap.put("ticket", alfrescoToken);
 	        	parameterMap.put("fromRefId", fromRefId);
+	        	parameterMap.put("comment", comment);
 	        	runResponse = je.executeNestedParamerterizedJob(jobSysmlID, projectId, refId,parameterMap); // job name should be the job sysmlID
 	        }
 	        else

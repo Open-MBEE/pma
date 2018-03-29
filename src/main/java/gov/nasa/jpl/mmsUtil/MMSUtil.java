@@ -82,7 +82,7 @@ public class MMSUtil {
 	public static final String docmergeJobFromRefPropertyId =  "_18_5_1_8bf0285_1501191821884_399553_16127";
 
 	
-	public static final String PMAVERSION = "3.3.0";
+	public static final String PMAVERSION = "3.3.0"; // TODO: Figure out a way to read in version from pom.xml
 	
 	
 	String alfrescoToken = "";
@@ -580,7 +580,7 @@ public class MMSUtil {
 	 * @param jobID
 	 * @return
 	 */
-	public ObjectNode buildJobInstanceJSON(String id, String ownerID,String name,String buildNumber,String jobStatus,String server, String projectID, String refID,String jobID) 
+	public ObjectNode buildJobInstanceJSON(String id, String ownerID,String name,String buildNumber,String jobStatus,String server, String projectID, String refID,String jobID,String fromRefId) 
 	{
 		
 		ObjectMapper mapper = new ObjectMapper();	
@@ -589,7 +589,7 @@ public class MMSUtil {
 		String type = "";
 		String associatedElementID = "";
 		String jobName = "";
-		String fromRefId = "";
+
 		
 		try {
 			String jobJsonString = getJobElement(server, projectID, refID, jobID).getBody();
@@ -606,7 +606,6 @@ public class MMSUtil {
 						JsonNode typeValueJson = job.get("command");
 						JsonNode associatedElementIDValueJson = job.get("associatedElementID");
 						JsonNode jobValueJson = job.get("name");
-						JsonNode fromRefIdValueJson = job.get("fromRefId");
 
 						if (scheduleValueJson != null) {
 							String scheduleValue = scheduleValueJson.toString();
@@ -620,9 +619,6 @@ public class MMSUtil {
 						}
 						if (jobValueJson != null) {
 							jobName = jobValueJson.toString().replace("\"", "");
-						}
-						if (fromRefIdValueJson != null) {
-							fromRefId = fromRefIdValueJson.toString().replace("\"", "");
 						}
 					}
 					else
@@ -1358,7 +1354,7 @@ public class MMSUtil {
 				{
 					newSlotValue = "pending";
 				}
-				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, newSlotValue);
+				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, newSlotValue,null);
 				System.out.println("CREATE JOB INSTANCE RESPONSE: "+createJobInstanceElementResponse);
 				return createJobInstanceElementResponse;
 				
@@ -1499,7 +1495,8 @@ public class MMSUtil {
 			}
 			else // Instance isn't found, a new one will be created. Happens when a job is ran without being triggered by PMA. EX. (Manual run on Jenkins or a scheduled run.)
 			{
-				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, "pending");
+				String fromRefId = newJobInstanceValues.get("fromRefId");
+				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, "pending",fromRefId);
 //				System.out.println("CREATE JOB INSTANCE RESPONSE: "+createJobInstanceElementResponse);
 				return createJobInstanceElementResponse;
 				
@@ -1562,13 +1559,13 @@ public class MMSUtil {
 	 * @param jobStatus
 	 * @return
 	 */
-	public String createJobInstanceElement(String jobId,String projectId,String refId, String server,String buildNumber, String jobStatus)
+	public String createJobInstanceElement(String jobId,String projectId,String refId, String server,String buildNumber, String jobStatus, String fromRefId)
 	{
 		// Creating job instance for the job run because it doesn't currently exist.
 
 		System.out.println("inside job status");
 		String jobInstanceElementID = createId();
-		ObjectNode on = buildJobInstanceJSON(jobInstanceElementID, "jobs_bin_" + jobId, jobId + "_instance", buildNumber, jobStatus, server, projectId, refId, jobId); // jobs bin will be the owner of the instance element 
+		ObjectNode on = buildJobInstanceJSON(jobInstanceElementID, "jobs_bin_" + jobId, jobId + "_instance", buildNumber, jobStatus, server, projectId, refId, jobId,fromRefId); // jobs bin will be the owner of the instance element 
 			
 		if (on == null) {
 			logger.info("buildDocGenJobInstanceJSON output was null");

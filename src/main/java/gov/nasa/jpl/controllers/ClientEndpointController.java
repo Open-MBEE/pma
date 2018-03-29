@@ -141,7 +141,8 @@ public class ClientEndpointController {
 		
 		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Arguments: "
 				+ jobInstance.getArguments() + "\n" + "MMS Server: " + jobInstance.getMmsServer() + "\n"
-				+ "Alfresco Token: " + jobInstance.getAlfrescoToken() +"\n"+"fromRefId: "+jobInstance.getFromRefId());
+				+ "Alfresco Token: " + jobInstance.getAlfrescoToken() +"\n"+"fromRefId: "+jobInstance.getFromRefId()
+				+ "comment" + jobInstance.getComment());
 		
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
@@ -149,7 +150,8 @@ public class ClientEndpointController {
 		String alfrescoToken = jobInstance.getAlfrescoToken();
 		String mmsServer = jobInstance.getMmsServer();
 		String fromRefId = jobInstance.getFromRefId();
-    	
+    	String comment = jobInstance.getComment();
+		
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
 		JenkinsEngine je = login(org);
@@ -199,7 +201,7 @@ public class ClientEndpointController {
 	    				return new ResponseEntity<String>(responseJSON.toString(),HttpStatus.METHOD_NOT_ALLOWED);
 	    			}
 
-		    		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger,fromRefId);
+		    		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger,fromRefId,comment);
 			        
 		    	}
 		    	else 
@@ -304,7 +306,7 @@ public class ClientEndpointController {
 			    			}
 		    	        	System.out.println("Running Job: "+jobSysmlID);
 		    	        	logger.info("Running Job: "+jobSysmlID);
-		    	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger,fromRefId);
+		    	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger,fromRefId,comment);
 		    	        }
 		    	        else
 		    	        {

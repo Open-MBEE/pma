@@ -127,6 +127,7 @@ public class JenkinsBuildConfig {
 				
 				parameterDefintion.appendChild(createStringParameterDefinition(doc,"fromRefId","The branch to merge with the current ref.",""));
 				parameterDefintion.appendChild(createStringParameterDefinition(doc,"ticket","User MMS Ticket",""));
+				parameterDefintion.appendChild(createStringParameterDefinition(doc,"comment","Comment for document merge",""));
 				
 				parametersDefinitionProperty.appendChild(parameterDefintion);			
 				

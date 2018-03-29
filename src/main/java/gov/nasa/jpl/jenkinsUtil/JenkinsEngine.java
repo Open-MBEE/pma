@@ -759,7 +759,10 @@ public class JenkinsEngine {
 			Iterator it = parameters.entrySet().iterator();
 			while (it.hasNext()) {
 				Map.Entry pair = (Map.Entry) it.next();
-				postParameters.add(new BasicNameValuePair(pair.getKey().toString(), pair.getValue().toString()));
+				if(pair.getValue()!=null&&pair.getKey()!=null)
+				{
+					postParameters.add(new BasicNameValuePair(pair.getKey().toString(), pair.getValue().toString()));
+				}
 //				System.out.println(pair.getKey() + " = " + pair.getValue());
 				it.remove(); // avoids a ConcurrentModificationException
 			}
