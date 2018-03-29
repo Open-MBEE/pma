@@ -90,11 +90,11 @@ public class PMAUtil
 			 */
 			if (pair.getKey().toString().equals("logUrl"))
 			{
-				jobInstanceElement.put("jenkinsLog",jobInstanceElement.get("logUrl"));
+				jobInstanceElement.put(pair.getKey().toString(),pair.getValue().toString());
 			}
 			else if (pair.getKey().toString().equals("started"))
 			{
-				jobInstanceElement.put("created",jobInstanceElement.get("started"));
+				jobInstanceElement.put(pair.getKey().toString(),pair.getValue().toString());
 			}
 			else
 			{
