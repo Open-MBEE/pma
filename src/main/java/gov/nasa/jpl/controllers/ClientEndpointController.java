@@ -228,22 +228,20 @@ public class ClientEndpointController {
 									JsonNode job = jobJson.get(0);
 									if(job!=null)
 									{
-										String scheduleValue = job.get("schedule").toString();
-										String typeValue = job.get("command").toString();
-										String associatedElementIDValue = job.get("associatedElementID").toString();
-										String jobValue = job.get("name").toString();
+										JsonNode scheduleNode = job.get("schedule");
+										JsonNode typeNode = job.get("command");
+										JsonNode associatedElementIDNode = job.get("associatedElementID");
+										
+										if (scheduleNode != null) {
+											schedule = scheduleNode.toString().replace("\"", "");
+										}
+										if (typeNode != null) {
+											type = typeNode.toString().replace("\"", "");
+										}
+										if (associatedElementIDNode != null) {
+											associatedElementID = associatedElementIDNode.toString().replace("\"", "");
+										}
 
-										if (scheduleValue != null) {
-											schedule = scheduleValue.replace("\"", "");
-										}
-										if (typeValue != null) {
-											type = typeValue.replace("\"", "");
-										}
-										if (associatedElementIDValue != null) {
-											associatedElementID = associatedElementIDValue.replace("\"", "");
-										}
-										if (jobValue != null) {
-										}
 									}
 									else
 									{

@@ -56,7 +56,18 @@ curlResponse=$(curl -H "application/json" -d $jsonBody -XPOST $docmergeServiceUr
 
 echo $curlResponse > DocMergeLog.txt
 
-status=completed
+if [[ $curlResponse = *"200"* ]];
+then
+	status=Completed
+  exitCode=0
+else
+	status=Failed
+  exitCode=1
+fi
+
+echo buildStatus: $status
+echo exitCode: $exitCode
+
 param='"'$status'"'
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 
@@ -70,3 +81,5 @@ param='"'$artifactLink'"'
 pmaUpdateJSON="{$ticketKey:$ticket,$valueKey:$param}" #JSON to send to PMA
 pmaResponse=$(curl -X POST -H Content-Type:application/json --data "$pmaUpdateJSON" https://$PMA_HOST:$PMA_PORT/projects/$PROJECT_ID/refs/$REF_ID/jobs/$JOB_BASE_NAME/instances/$BUILD_NUMBER/logUrl?mmsServer=${MMS_HOST})
 echo pmaResponse $pmaResponse # Updating logUrl
+
+exit $exitCode
