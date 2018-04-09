@@ -67,21 +67,21 @@ public class MMSUtil {
 	public static final String docgenJobRefIdPropertyId = "_18_5_1_8bf0285_1501191821885_436667_16134";
 	public static final String docgenJobProjectIdPropertyId = "_18_5_1_8bf0285_1501191821885_300964_16135";
 	
-	//TODO: Update the docmerge job id's
-	// element ids of docmerge job block and its properties 
-	public static final String docmergeJobBlockId = "_18_5_1_8bf0285_1501191821803_878234_16095";
-	public static final String docmergeJobTypePropertyId = "_18_5_1_8bf0285_1501191821884_107041_16126";
-	public static final String docmergeJobBuildNumberPropertyId = "_18_5_1_8bf0285_1501191821884_977257_16128";
-	public static final String docmergeJobJobStatusId = "_18_5_1_8bf0285_1501191821884_370214_16129";
-	public static final String docmergeJobLogUrlPropertyId = "_18_5_1_8bf0285_1501191821885_707280_16130";
-	public static final String docmergeJobStartedPropertyId = "_18_5_1_8bf0285_1501191821885_603965_16131";
-	public static final String docmergeJobCompletedPropertyId = "_18_5_1_8bf0285_1501191821885_292854_16132";
-	public static final String docmergeJobAssociatedElementIdPropertyId = "_18_5_1_8bf0285_1501191821885_586435_16133";
-	public static final String docmergeJobRefIdPropertyId = "_18_5_1_8bf0285_1501191821885_436667_16134";
-	public static final String docmergeJobProjectIdPropertyId = "_18_5_1_8bf0285_1501191821885_300964_16135";
-	public static final String docmergeJobFromRefPropertyId =  "_18_5_1_8bf0285_1501191821884_399553_16127";
 
-	
+	// element ids of docmerge job block and its properties 
+	public static final String docmergeJobBlockId = "_18_5_3_8bf0285_1523292390261_86479_15754";
+	public static final String docmergeJobTypePropertyId = "_18_5_3_8bf0285_1523292390268_925033_15755";
+	public static final String docmergeJobSchedulePropertyId = "_18_5_3_8bf0285_1523292881895_992156_15905"; // TODO: add schedule block to docmerge blocks.
+	public static final String docmergeJobBuildNumberPropertyId = "_18_5_3_8bf0285_1523292390270_777285_15756";
+	public static final String docmergeJobJobStatusId = "_18_5_3_8bf0285_1523292390270_849219_15757";
+	public static final String docmergeJobLogUrlPropertyId = "_18_5_3_8bf0285_1523292390271_630478_15758";
+	public static final String docmergeJobStartedPropertyId = "_18_5_3_8bf0285_1523292390271_589382_15759";
+	public static final String docmergeJobCompletedPropertyId = "_18_5_3_8bf0285_1523292390271_201090_15760";
+	public static final String docmergeJobAssociatedElementIdPropertyId = "_18_5_3_8bf0285_1523292390271_706973_15761";
+	public static final String docmergeJobRefIdPropertyId = "_18_5_3_8bf0285_1523292390271_448611_15762";
+	public static final String docmergeJobProjectIdPropertyId = "_18_5_3_8bf0285_1523292390272_743959_15763";
+	public static final String docmergeJobFromRefPropertyId =  "_18_5_3_8bf0285_1523292390272_249126_15764";
+
 	public static final String PMAVERSION = "3.3.0"; // TODO: Figure out a way to read in version from pom.xml
 	
 	
