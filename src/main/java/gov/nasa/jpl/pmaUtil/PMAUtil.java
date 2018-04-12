@@ -86,15 +86,19 @@ public class PMAUtil
 			Map.Entry pair = (Map.Entry) it.next();
 			
 			/*
-			 * These two ifs are because I changed my variable names, but I wanted to keep my output the same. 
+			 * These ifs are because I changed my variable names, but I wanted to keep my output the same. 
 			 */
-			if (pair.getKey().toString().equals("logUrl"))
+			if (pair.getKey().toString().equals("type"))
 			{
-				jobInstanceElement.put(pair.getKey().toString(),pair.getValue().toString());
+				jobInstanceElement.put("command",pair.getValue().toString());
+			}
+			else if (pair.getKey().toString().equals("logUrl"))
+			{
+				jobInstanceElement.put("jenkinsLog",pair.getValue().toString());
 			}
 			else if (pair.getKey().toString().equals("started"))
 			{
-				jobInstanceElement.put(pair.getKey().toString(),pair.getValue().toString());
+				jobInstanceElement.put("created".toString(),pair.getValue().toString());
 			}
 			else
 			{
