@@ -1390,13 +1390,21 @@ public class MMSUtil {
 //			System.out.println("beforeFor: "+PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId));
 			// looking for job instance element
 			ArrayList<Map<String,String>> jobInstancesmapList = PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId); // map contains slot id's with their values
-			for(Map jobInstanceMap:jobInstancesmapList)
+			for(Map<String,String> jobInstanceMap:jobInstancesmapList)
 			{
-				if(jobInstanceMap.get("refId").equals(refId))
+				String jobInstanceRefId = jobInstanceMap.get("refId");
+				if(jobInstanceRefId!=null)
 				{
-					jobInstanceInformationMap = jobInstanceMap;
-//					System.out.println("INFOMAP: "+jobInstanceInformationMap);
-					break; // Assuming job instance is the first instance in the jobInstancesmapList
+					if(jobInstanceRefId.equals(refId))
+					{
+						jobInstanceInformationMap = jobInstanceMap;
+	//					System.out.println("INFOMAP: "+jobInstanceInformationMap);
+						break; // Assuming job instance is the first instance in the jobInstancesmapList
+					}
+				}
+				else
+				{
+					return "refId job instance property is null. Error occurerd during retrieval of job instance element.";
 				}
 			}
 	
@@ -2598,9 +2606,11 @@ public class MMSUtil {
 			if(jobs!=null)
 			{
 				ObjectNode job = (ObjectNode) jobs.get(0);
-				String disabledPropertyValue = job.get("disabled").toString();
-				if(!disabledPropertyValue.equals("null"))
+				JsonNode disabledPropertyNode = job.get("disabled");
+				String disabledPropertyValue = "";
+				if(disabledPropertyNode!=null)
 				{
+					disabledPropertyValue = job.get("disabled").toString();
 					disabledPropertyValue=disabledPropertyValue.replace("\"", "");
 					System.out.println(disabledPropertyValue);
 					if(disabledPropertyValue.equals("false")||disabledPropertyValue.equals("true"))
