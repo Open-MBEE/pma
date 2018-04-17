@@ -52,7 +52,7 @@ docmergeServiceUrl="https://bwtj0li4ii.execute-api.us-gov-west-1.amazonaws.com/d
 
 jsonBody="{$ticketKey:$ticket,$projectIdKey:$projectId,$docIdKey:$docId,$toRefIdKey:$toRefId,$fromRefIdKey:$fromRefId,$mmsServerKey:$mmsServer,$commentKey:$comment}"
 
-curlResponse=$(curl -H "Content-Type: application/json" -d $jsonBody -XPOST $docmergeServiceUrl)
+curlResponse=$(curl -H "Content-Type: application/json" -d "$jsonBody" -XPOST $docmergeServiceUrl)
 
 echo $curlResponse > DocMergeLog.txt
 
