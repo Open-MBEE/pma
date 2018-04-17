@@ -396,7 +396,7 @@ public class ClientEndpointControllerTests {
         
         assert(jobPackageLocationCheckResponse);
         
-//        deleteJob(testProject, "master", id);
+        deleteJob(testProject, "master", id);
         
         System.out.println("\n----------------------------------------------------------------------------------------\n");
       
