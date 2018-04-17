@@ -5,6 +5,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ElasticSearchQueryBuilder 
 {
+	/**
+	 * Builds query to search elastic search for all the job in a project
+	 * @param projectId 
+	 * @param refId
+	 * @return
+	 */
 	public static String getJobsQuery(String projectId,String refId)
 	{ 
 		
@@ -29,7 +35,14 @@ public class ElasticSearchQueryBuilder
 		ObjectNode term = mapper.createObjectNode();
 		ObjectNode term1 = mapper.createObjectNode();
 		ObjectNode term2 = mapper.createObjectNode();
+		
+		
+		ObjectNode bool3 = mapper.createObjectNode();
+		ArrayNode should = mapper.createArrayNode();
+		ObjectNode nestedCondition = mapper.createObjectNode();
+		ObjectNode nestedCondition1 = mapper.createObjectNode();
 		ObjectNode term3 = mapper.createObjectNode();
+		ObjectNode term4 = mapper.createObjectNode();
 		
 		sort.add("_score");
 		ObjectNode modified = mapper.createObjectNode();
@@ -42,12 +55,24 @@ public class ElasticSearchQueryBuilder
 		term.put("_projectId", projectId);
 		term1.put("_inRefIds", refId);
 		term2.put("type", "Generalization");
+		
+		/**
+		 * Job block elements to look for
+		 */
 		term3.put("generalId", MMSUtil.docgenJobBlockId);
+		term4.put("generalId", MMSUtil.docmergeJobBlockId);
+		
+		nestedCondition.set("term", term3);
+		nestedCondition1.set("term", term4);
+		
+		should.add(nestedCondition);
+		should.add(nestedCondition1);
+		bool3.set("should", should);
 		
 		condition.set("term", term);
 		condition1.set("term", term1); 
 		condition2.set("term", term2); 
-		condition3.set("term", term3); 
+		condition3.set("bool", bool3); 
 		
 		must.add(condition);
 		must.add(condition1);
