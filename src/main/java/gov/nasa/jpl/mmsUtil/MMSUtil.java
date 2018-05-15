@@ -102,6 +102,7 @@ public class MMSUtil {
 		packageElement.set("_appliedStereotypeIds", mapper.createArrayNode());
 		packageElement.put("documentation", "");
 		packageElement.put("_isSite", Boolean.FALSE);
+		packageElement.put("_isGroup", Boolean.FALSE);
 		packageElement.put("type", "Package");
 		packageElement.put("id", id);
 		packageElement.set("mdExtensionsIds", mapper.createArrayNode());
