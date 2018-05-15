@@ -54,18 +54,35 @@ public class MMSUtil {
 	 */
 	public static final String valuePropertyStereotypeID = "_12_0_be00301_1164123483951_695645_2041";
 	
-	public static final String docgenJobBlockID = "_18_5_1_8bf0285_1501191821803_878234_16095";
-	public static final String typePropertyID = "_18_5_1_8bf0285_1501191821884_107041_16126";
-	public static final String schedulePropertyID = "_18_5_1_8bf0285_1501191821884_399553_16127";
-	public static final String buildNumberPropertyID = "_18_5_1_8bf0285_1501191821884_977257_16128";
-	public static final String jobStatusID = "_18_5_1_8bf0285_1501191821884_370214_16129";
-	public static final String logUrlPropertyID = "_18_5_1_8bf0285_1501191821885_707280_16130";
-	public static final String startedPropertyID = "_18_5_1_8bf0285_1501191821885_603965_16131";
-	public static final String completedPropertyID = "_18_5_1_8bf0285_1501191821885_292854_16132";
-	public static final String associatedElementIdPropertyID = "_18_5_1_8bf0285_1501191821885_586435_16133";
-	public static final String refIdPropertyID = "_18_5_1_8bf0285_1501191821885_436667_16134";
-	public static final String projectIdPropertyID = "_18_5_1_8bf0285_1501191821885_300964_16135";
+	// element ids of docgen job block and its properties
+	public static final String docgenJobBlockId = "_18_5_1_8bf0285_1501191821803_878234_16095";
+	public static final String docgenJobTypePropertyId = "_18_5_1_8bf0285_1501191821884_107041_16126";
+	public static final String docgenJobSchedulePropertyId = "_18_5_1_8bf0285_1501191821884_399553_16127";
+	public static final String docgenJobBuildNumberPropertyId = "_18_5_1_8bf0285_1501191821884_977257_16128";
+	public static final String docgenJobJobStatusId = "_18_5_1_8bf0285_1501191821884_370214_16129";
+	public static final String docgenJobLogUrlPropertyId = "_18_5_1_8bf0285_1501191821885_707280_16130";
+	public static final String docgenJobStartedPropertyId = "_18_5_1_8bf0285_1501191821885_603965_16131";
+	public static final String docgenJobCompletedPropertyId = "_18_5_1_8bf0285_1501191821885_292854_16132";
+	public static final String docgenJobAssociatedElementIdPropertyId = "_18_5_1_8bf0285_1501191821885_586435_16133";
+	public static final String docgenJobRefIdPropertyId = "_18_5_1_8bf0285_1501191821885_436667_16134";
+	public static final String docgenJobProjectIdPropertyId = "_18_5_1_8bf0285_1501191821885_300964_16135";
 	
+
+	// element ids of docmerge job block and its properties 
+	public static final String docmergeJobBlockId = "_18_5_3_8bf0285_1523292390261_86479_15754";
+	public static final String docmergeJobTypePropertyId = "_18_5_3_8bf0285_1523292390268_925033_15755";
+	public static final String docmergeJobSchedulePropertyId = "_18_5_3_8bf0285_1523292881895_992156_15905"; // TODO: add schedule block to docmerge blocks.
+	public static final String docmergeJobBuildNumberPropertyId = "_18_5_3_8bf0285_1523292390270_777285_15756";
+	public static final String docmergeJobJobStatusId = "_18_5_3_8bf0285_1523292390270_849219_15757";
+	public static final String docmergeJobLogUrlPropertyId = "_18_5_3_8bf0285_1523292390271_630478_15758";
+	public static final String docmergeJobStartedPropertyId = "_18_5_3_8bf0285_1523292390271_589382_15759";
+	public static final String docmergeJobCompletedPropertyId = "_18_5_3_8bf0285_1523292390271_201090_15760";
+	public static final String docmergeJobAssociatedElementIdPropertyId = "_18_5_3_8bf0285_1523292390271_706973_15761";
+	public static final String docmergeJobRefIdPropertyId = "_18_5_3_8bf0285_1523292390271_448611_15762";
+	public static final String docmergeJobProjectIdPropertyId = "_18_5_3_8bf0285_1523292390272_743959_15763";
+	public static final String docmergeJobFromRefPropertyId =  "_18_5_3_8bf0285_1523292390272_249126_15764";
+
+	public static final String PMAVERSION = "3.3.0"; // TODO: Figure out a way to read in version from pom.xml
 	
 	
 	String alfrescoToken = "";
@@ -85,6 +102,7 @@ public class MMSUtil {
 		packageElement.set("_appliedStereotypeIds", mapper.createArrayNode());
 		packageElement.put("documentation", "");
 		packageElement.put("_isSite", Boolean.FALSE);
+		packageElement.put("_isGroup", Boolean.FALSE);
 		packageElement.put("type", "Package");
 		packageElement.put("id", id);
 		packageElement.set("mdExtensionsIds", mapper.createArrayNode());
@@ -106,7 +124,7 @@ public class MMSUtil {
 		elements.add(packageElement);
 		payload.set("elements",elements);
 		payload.put("source","pma");
-		payload.put("pmaVersion","3.2.0");
+		payload.put("pmaVersion",PMAVERSION);
 		
 		return payload;
 	} 
@@ -468,28 +486,28 @@ public class MMSUtil {
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = buildClassElement(sysmlID,ownerID,name);
 		
-		ObjectNode generalizationNode = buildGeneralizationNode(sysmlID, sysmlID, docgenJobBlockID);
-		ObjectNode typePropertyNode = buildPropertyNode(sysmlID,"type",jobType,typePropertyID,"LiteralString");
+		ObjectNode generalizationNode = buildGeneralizationNode(sysmlID, sysmlID, docgenJobBlockId);
+		ObjectNode typePropertyNode = buildPropertyNode(sysmlID,"type",jobType,docgenJobTypePropertyId,"LiteralString");
 		ObjectNode typePropertyInstanceSpecification = buildInstanceSpecificationNode(typePropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
-		ObjectNode schedulePropertyNode = buildPropertyNode(sysmlID,"schedule",schedule,schedulePropertyID,"LiteralString");
+		ObjectNode schedulePropertyNode = buildPropertyNode(sysmlID,"schedule",schedule,docgenJobSchedulePropertyId,"LiteralString");
 		ObjectNode schedulePropertyInstanceSpecification = buildInstanceSpecificationNode(schedulePropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);	
-		ObjectNode buildNumberPropertyNode = buildPropertyNode(sysmlID,"buildNumber",null,buildNumberPropertyID,"LiteralString");
+		ObjectNode buildNumberPropertyNode = buildPropertyNode(sysmlID,"buildNumber",null,docgenJobBuildNumberPropertyId,"LiteralString");
 		ObjectNode buildNumberPropertyInstanceSpecification = buildInstanceSpecificationNode(buildNumberPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
-		ObjectNode jobStatusPropertyNode = buildPropertyNode(sysmlID,"jobStatus",null,jobStatusID,"LiteralString");
+		ObjectNode jobStatusPropertyNode = buildPropertyNode(sysmlID,"jobStatus",null,docgenJobJobStatusId,"LiteralString");
 		ObjectNode jobStatusPropertyInstanceSpecification = buildInstanceSpecificationNode(jobStatusPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
-		ObjectNode logUrlPropertyNode = buildPropertyNode(sysmlID,"logUrl",null,logUrlPropertyID,"LiteralString");
+		ObjectNode logUrlPropertyNode = buildPropertyNode(sysmlID,"logUrl",null,docgenJobLogUrlPropertyId,"LiteralString");
 		ObjectNode logUrlPropertyInstanceSpecification = buildInstanceSpecificationNode(logUrlPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
-		ObjectNode startedPropertyNode = buildPropertyNode(sysmlID,"started",null,startedPropertyID,"LiteralString");
+		ObjectNode startedPropertyNode = buildPropertyNode(sysmlID,"started",null,docgenJobStartedPropertyId,"LiteralString");
 		ObjectNode startedPropertyInstanceSpecification = buildInstanceSpecificationNode(startedPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
-		ObjectNode completedPropertyNode = buildPropertyNode(sysmlID,"completed",null,completedPropertyID,"LiteralString");
+		ObjectNode completedPropertyNode = buildPropertyNode(sysmlID,"completed",null,docgenJobCompletedPropertyId,"LiteralString");
 		ObjectNode completedPropertyInstanceSpecification = buildInstanceSpecificationNode(completedPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
-		ObjectNode associatedElementIdPropertyNode = buildPropertyNode(sysmlID,"associatedElementId",associatedElementID,associatedElementIdPropertyID,"LiteralString");
+		ObjectNode associatedElementIdPropertyNode = buildPropertyNode(sysmlID,"associatedElementId",associatedElementID,docgenJobAssociatedElementIdPropertyId,"LiteralString");
 		ObjectNode associatedElementIdPropertyInstanceSpecification = buildInstanceSpecificationNode(associatedElementIdPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
-		ObjectNode refIdPropertyNode = buildPropertyNode(sysmlID,"refId",null,refIdPropertyID,"LiteralString");
+		ObjectNode refIdPropertyNode = buildPropertyNode(sysmlID,"refId",null,docgenJobRefIdPropertyId,"LiteralString");
 		ObjectNode refIdPropertyInstanceSpecification = buildInstanceSpecificationNode(refIdPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
-		ObjectNode projectIdPropertyNode = buildPropertyNode(sysmlID,"projectId",projectID,projectIdPropertyID,"LiteralString");
+		ObjectNode projectIdPropertyNode = buildPropertyNode(sysmlID,"projectId",projectID,docgenJobProjectIdPropertyId,"LiteralString");
 		ObjectNode projectIdPropertyInstanceSpecification = buildInstanceSpecificationNode(projectIdPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
-		ObjectNode disabledPropertyNode = buildPropertyNode(sysmlID,"disabled","",projectIdPropertyID,"LiteralBoolean");
+		ObjectNode disabledPropertyNode = buildPropertyNode(sysmlID,"disabled","",docgenJobProjectIdPropertyId,"LiteralBoolean");
 		ObjectNode disabledPropertyInstanceSpecification = buildInstanceSpecificationNode(disabledPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
 
 		
@@ -545,7 +563,7 @@ public class MMSUtil {
 		
 		payload.set("elements",elements);
 		payload.put("source","pma");
-		payload.put("pmaVersion","3.2.0");
+		payload.put("pmaVersion",PMAVERSION);
 		
 		return payload;
 	}
@@ -563,7 +581,7 @@ public class MMSUtil {
 	 * @param jobID
 	 * @return
 	 */
-	public ObjectNode buildDocGenJobInstanceJSON(String id, String ownerID,String name,String buildNumber,String jobStatus,String server, String projectID, String refID,String jobID) 
+	public ObjectNode buildJobInstanceJSON(String id, String ownerID,String name,String buildNumber,String jobStatus,String server, String projectID, String refID,String jobID,String fromRefId) 
 	{
 		
 		ObjectMapper mapper = new ObjectMapper();	
@@ -572,6 +590,7 @@ public class MMSUtil {
 		String type = "";
 		String associatedElementID = "";
 		String jobName = "";
+
 		
 		try {
 			String jobJsonString = getJobElement(server, projectID, refID, jobID).getBody();
@@ -584,22 +603,23 @@ public class MMSUtil {
 					JsonNode job = jobJson.get(0);
 					if (job != null) 
 					{
-						String scheduleValue = job.get("schedule").toString();
-						String typeValue = job.get("command").toString();
-						String associatedElementIDValue = job.get("associatedElementID").toString();
-						String jobValue = job.get("name").toString();
+						JsonNode scheduleValueJson = job.get("schedule");
+						JsonNode typeValueJson = job.get("command");
+						JsonNode associatedElementIDValueJson = job.get("associatedElementID");
+						JsonNode jobValueJson = job.get("name");
 
-						if (scheduleValue != null) {
+						if (scheduleValueJson != null) {
+							String scheduleValue = scheduleValueJson.toString();
 							schedule = scheduleValue.replace("\"", "");
 						}
-						if (typeValue != null) {
-							type = typeValue.replace("\"", "");
+						if (typeValueJson != null) {
+							type = typeValueJson.toString().replace("\"", "");
 						}
-						if (associatedElementIDValue != null) {
-							associatedElementID = associatedElementIDValue.replace("\"", "");
+						if (associatedElementIDValueJson != null) {
+							associatedElementID = associatedElementIDValueJson.toString().replace("\"", "");
 						}
-						if (jobValue != null) {
-							jobName = jobValue.replace("\"", "");
+						if (jobValueJson != null) {
+							jobName = jobValueJson.toString().replace("\"", "");
 						}
 					}
 					else
@@ -635,7 +655,39 @@ public class MMSUtil {
 		}
 		
 		
+		if(type.equals("docmerge"))
+		{
+			return buildDocMergeJobInstanceJSON(id, ownerID, name, buildNumber, jobStatus, server, projectID, refID, jobID, jobName, type, associatedElementID, fromRefId);
+		}
+		else
+		{
+			return buildDocGenJobInstanceJSON(id, ownerID, name, buildNumber, jobStatus, server, projectID, refID, jobID, jobName, type, schedule, associatedElementID);
+		}
 		
+		
+	}
+	
+	/**
+	 * Creating instance specification with slots
+	 * 
+	 * @param id
+	 * @param ownerID
+	 * @param name
+	 * @param buildNumber
+	 * @param jobStatus
+	 * @param server
+	 * @param projectID
+	 * @param refID
+	 * @param jobID
+	 * @param jobName
+	 * @param type
+	 * @param schedule
+	 * @param associatedElementID
+	 * @return docgen job instance json object
+	 */
+	public ObjectNode buildDocGenJobInstanceJSON(String id, String ownerID,String name,String buildNumber,String jobStatus,String server, String projectID, String refID,String jobID,String jobName,String type, String schedule, String associatedElementID) 
+	{
+		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode payload = mapper.createObjectNode();
 		ArrayNode elements = mapper.createArrayNode();
 		ObjectNode instanceSpecificationNode = buildInstanceSpecificationNode(ownerID, jobID,jobName+" - "+name, false);
@@ -675,7 +727,6 @@ public class MMSUtil {
 		String disabledDefiningFeatureId = getDefiningFeatureID(server, projectID, refID, jobID, "disabled");
 		ObjectNode disabledSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",disabledDefiningFeatureId,"LiteralBoolean");
 		
-		
 		/*
 		 * Adding the property id's to the ownedAttributes key in the instance specification JSON
 		 */
@@ -695,7 +746,6 @@ public class MMSUtil {
 		instanceSpecificationNode.set("slotIds",slotIds);
 		
 		elements.add(instanceSpecificationNode);
-		
 		elements.add(typeSlotNode);
 		elements.add(scheduleSlotNode);
 		elements.add(buildNumberSlotNode);
@@ -710,13 +760,207 @@ public class MMSUtil {
 		
 		payload.set("elements",elements);
 		payload.put("source","pma");
-		payload.put("pmaVersion","3.2.0");
-		
-		
+		payload.put("pmaVersion",PMAVERSION);
+
 		return payload;
-		
 	}
 
+	/**
+	 * 
+	 * @param sysmlID Sysml ID of job element
+	 * @param ownerID owner of the job element
+	 * @param name name of the job element
+	 * @param associatedElementID
+	 * @param jobType Type of job ex: docgen
+	 * @param schedule 
+	 * @param refID
+	 * @param projectID 
+	 * @param fromRefId 
+	 * @return
+	 */
+	public ObjectNode buildDocMergeJobElementJSON(String sysmlID, String ownerID,String name, String associatedElementID, String jobType, String refID, String projectID, String fromRefId) 
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode payload = mapper.createObjectNode();
+		ArrayNode elements = buildClassElement(sysmlID,ownerID,name);
+		
+		ObjectNode generalizationNode = buildGeneralizationNode(sysmlID, sysmlID, docmergeJobBlockId);
+		ObjectNode typePropertyNode = buildPropertyNode(sysmlID,"type",jobType,docmergeJobTypePropertyId,"LiteralString");
+		ObjectNode typePropertyInstanceSpecification = buildInstanceSpecificationNode(typePropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		ObjectNode buildNumberPropertyNode = buildPropertyNode(sysmlID,"buildNumber",null,docmergeJobBuildNumberPropertyId,"LiteralString");
+		ObjectNode buildNumberPropertyInstanceSpecification = buildInstanceSpecificationNode(buildNumberPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		ObjectNode jobStatusPropertyNode = buildPropertyNode(sysmlID,"jobStatus",null,docmergeJobJobStatusId,"LiteralString");
+		ObjectNode jobStatusPropertyInstanceSpecification = buildInstanceSpecificationNode(jobStatusPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		ObjectNode logUrlPropertyNode = buildPropertyNode(sysmlID,"logUrl",null,docmergeJobLogUrlPropertyId,"LiteralString");
+		ObjectNode logUrlPropertyInstanceSpecification = buildInstanceSpecificationNode(logUrlPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		ObjectNode startedPropertyNode = buildPropertyNode(sysmlID,"started",null,docmergeJobStartedPropertyId,"LiteralString");
+		ObjectNode startedPropertyInstanceSpecification = buildInstanceSpecificationNode(startedPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		ObjectNode completedPropertyNode = buildPropertyNode(sysmlID,"completed",null,docmergeJobCompletedPropertyId,"LiteralString");
+		ObjectNode completedPropertyInstanceSpecification = buildInstanceSpecificationNode(completedPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		ObjectNode associatedElementIdPropertyNode = buildPropertyNode(sysmlID,"associatedElementId",associatedElementID,docmergeJobAssociatedElementIdPropertyId,"LiteralString");
+		ObjectNode associatedElementIdPropertyInstanceSpecification = buildInstanceSpecificationNode(associatedElementIdPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		ObjectNode refIdPropertyNode = buildPropertyNode(sysmlID,"refId",null,docmergeJobRefIdPropertyId,"LiteralString");
+		ObjectNode refIdPropertyInstanceSpecification = buildInstanceSpecificationNode(refIdPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		ObjectNode projectIdPropertyNode = buildPropertyNode(sysmlID,"projectId",projectID,docmergeJobProjectIdPropertyId,"LiteralString");
+		ObjectNode projectIdPropertyInstanceSpecification = buildInstanceSpecificationNode(projectIdPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		ObjectNode disabledPropertyNode = buildPropertyNode(sysmlID,"disabled","",docmergeJobProjectIdPropertyId,"LiteralBoolean");
+		ObjectNode disabledPropertyInstanceSpecification = buildInstanceSpecificationNode(disabledPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		ObjectNode fromRefIdPropertyNode = buildPropertyNode(sysmlID,"fromRefId",null,docmergeJobFromRefPropertyId,"LiteralString");
+		ObjectNode fromRefIdPropertyInstanceSpecification = buildInstanceSpecificationNode(fromRefIdPropertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
+		
+		elements.add(generalizationNode);
+		elements.add(typePropertyNode);
+		elements.add(typePropertyInstanceSpecification);
+		elements.add(buildNumberPropertyNode);
+		elements.add(buildNumberPropertyInstanceSpecification);
+		elements.add(jobStatusPropertyNode);
+		elements.add(jobStatusPropertyInstanceSpecification);
+		elements.add(logUrlPropertyNode);
+		elements.add(logUrlPropertyInstanceSpecification);	
+		elements.add(startedPropertyNode);
+		elements.add(startedPropertyInstanceSpecification);
+		elements.add(completedPropertyNode);
+		elements.add(completedPropertyInstanceSpecification);
+		elements.add(associatedElementIdPropertyNode);
+		elements.add(associatedElementIdPropertyInstanceSpecification);
+		elements.add(refIdPropertyNode);
+		elements.add(refIdPropertyInstanceSpecification);
+		elements.add(projectIdPropertyNode);
+		elements.add(projectIdPropertyInstanceSpecification);
+		elements.add(disabledPropertyNode);
+		elements.add(disabledPropertyInstanceSpecification);
+		elements.add(fromRefIdPropertyNode);
+		elements.add(fromRefIdPropertyInstanceSpecification);
+		
+		/*
+		 * Adding the property id's to the ownedAttributes key in the job class JSON
+		 * Also adding generalization id to the job class node.
+		 */
+		ObjectNode jobClass = (ObjectNode) elements.get(0);
+		ArrayNode ownedAttributes = mapper.createArrayNode();
+		
+		ownedAttributes.add(typePropertyNode.get("id"));
+		ownedAttributes.add(buildNumberPropertyNode.get("id"));
+		ownedAttributes.add(jobStatusPropertyNode.get("id"));
+		ownedAttributes.add(logUrlPropertyNode.get("id"));
+		ownedAttributes.add(startedPropertyNode.get("id"));
+		ownedAttributes.add(completedPropertyNode.get("id"));
+		ownedAttributes.add(associatedElementIdPropertyNode.get("id"));
+		ownedAttributes.add(refIdPropertyNode.get("id"));
+		ownedAttributes.add(projectIdPropertyNode.get("id"));
+		ownedAttributes.add(disabledPropertyNode.get("id"));
+		ownedAttributes.add(fromRefIdPropertyNode.get("id"));
+				
+		jobClass.set("ownedAttributeIds",ownedAttributes);
+		jobClass.set("generalizationIds",mapper.createArrayNode().add(generalizationNode.get("id")));
+
+		elements.set(0, jobClass);
+		
+		payload.set("elements",elements);
+		payload.put("source","pma");
+		payload.put("pmaVersion",PMAVERSION);
+		
+		return payload;
+	}
+	
+	/**
+	 * Creating instance specification with slots for DocMerge job
+	 * 
+	 * @param id
+	 * @param ownerId
+	 * @param name
+	 * @param buildNumber
+	 * @param jobStatus
+	 * @param server
+	 * @param projectId
+	 * @param refId
+	 * @param jobId
+	 * @param jobName
+	 * @param type
+	 * @param schedule
+	 * @param associatedElementId
+	 * @return docgen job instance json object
+	 */
+	public ObjectNode buildDocMergeJobInstanceJSON(String id, String ownerId,String name,String buildNumber,String jobStatus,String server, String projectId, String refId,String jobId,String jobName,String type, String associatedElementId,String fromRefId) 
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode payload = mapper.createObjectNode();
+		ArrayNode elements = mapper.createArrayNode();
+		ObjectNode instanceSpecificationNode = buildInstanceSpecificationNode(ownerId, jobId,jobName+" - "+name, false);
+		instanceSpecificationNode.put("id",id);
+		
+		String typeDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "type");
+		ObjectNode typeSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), type,typeDefiningFeatureId,"LiteralString");
+	
+		String buildNumberDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "buildNumber");
+		ObjectNode buildNumberSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), buildNumber,buildNumberDefiningFeatureId,"LiteralString");
+		
+		String jobStatusDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "jobStatus");
+		ObjectNode jobStatusSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), jobStatus,jobStatusDefiningFeatureId,"LiteralString");
+		
+		String logUrlDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "logUrl");
+		ObjectNode logUrlSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",logUrlDefiningFeatureId,"LiteralString");
+		
+		String currentTimestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()); //ex. 2017-06-08T13:37:19.483-0700
+		String startedDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "started");
+		ObjectNode startedSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), currentTimestamp,startedDefiningFeatureId,"LiteralString");
+		
+		String completedDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "completed");
+		ObjectNode completedSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",completedDefiningFeatureId,"LiteralString");
+		
+		String associatedElementDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "associatedElementId");
+		ObjectNode associatedElementIDSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), associatedElementId ,associatedElementDefiningFeatureId,"LiteralString");
+		
+		String projectIdDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "projectId");
+		ObjectNode projectIdSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), projectId,projectIdDefiningFeatureId,"LiteralString");
+		
+		String refIdDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "refId");
+		ObjectNode refIdSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), refId,refIdDefiningFeatureId,"LiteralString");
+		
+		String disabledDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "disabled");
+		ObjectNode disabledSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), "",disabledDefiningFeatureId,"LiteralBoolean");
+		
+		String fromRefIdDefiningFeatureId = getDefiningFeatureID(server, projectId, refId, jobId, "fromRefId");
+		ObjectNode fromRefIdSlotNode = buildSlotNode(instanceSpecificationNode.get("id").toString().replace("\"", ""), fromRefId,fromRefIdDefiningFeatureId,"LiteralString");
+		
+		/*
+		 * Adding the property id's to the ownedAttributes key in the instance specification JSON
+		 */
+		ArrayNode slotIds = mapper.createArrayNode();
+		slotIds.add(typeSlotNode.get("id"));
+		
+		slotIds.add(buildNumberSlotNode.get("id"));
+		slotIds.add(jobStatusSlotNode.get("id"));
+		slotIds.add(logUrlSlotNode.get("id"));
+		slotIds.add(startedSlotNode.get("id"));
+		slotIds.add(completedSlotNode.get("id"));
+		slotIds.add(associatedElementIDSlotNode.get("id"));
+		slotIds.add(projectIdSlotNode.get("id"));
+		slotIds.add(refIdSlotNode.get("id"));
+		slotIds.add(disabledSlotNode.get("id"));
+		slotIds.add(fromRefIdSlotNode.get("id"));
+		
+		instanceSpecificationNode.set("slotIds",slotIds);
+		
+		elements.add(instanceSpecificationNode);
+		elements.add(typeSlotNode);
+		elements.add(buildNumberSlotNode);
+		elements.add(jobStatusSlotNode);
+		elements.add(logUrlSlotNode);
+		elements.add(startedSlotNode);
+		elements.add(completedSlotNode);
+		elements.add(associatedElementIDSlotNode);
+		elements.add(projectIdSlotNode);
+		elements.add(refIdSlotNode);
+		elements.add(disabledSlotNode);
+		elements.add(fromRefIdSlotNode);
+		
+		payload.set("elements",elements);
+		payload.put("source","pma");
+		payload.put("pmaVersion",PMAVERSION);
+
+		return payload;
+	}
 	
 	/**
 	 * Used for posting elements to MMS
@@ -1012,11 +1256,12 @@ public class MMSUtil {
 		
 		Map<String,String> jobInstanceInformationMap = null;
 		ObjectMapper mapper = new ObjectMapper();
-		
+		System.out.println("MMS RETURN STRING: "+mmsReturnString);
 		if(isElementJSON(mmsReturnString)) // It will be an error if the json string is not an element JSON.
 		{
 			// looking for job instance element
 			ArrayList<Map<String,String>> jobInstancesmapList = PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId); // map contains slot id's with their values
+			System.out.println("instance map list: "+jobInstancesmapList);
 			for(Map jobInstanceMap:jobInstancesmapList)
 			{
 				if(jobInstanceMap.get("refId").equals(refId))
@@ -1110,7 +1355,7 @@ public class MMSUtil {
 				{
 					newSlotValue = "pending";
 				}
-				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, newSlotValue);
+				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, newSlotValue,null);
 				System.out.println("CREATE JOB INSTANCE RESPONSE: "+createJobInstanceElementResponse);
 				return createJobInstanceElementResponse;
 				
@@ -1146,13 +1391,21 @@ public class MMSUtil {
 //			System.out.println("beforeFor: "+PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId));
 			// looking for job instance element
 			ArrayList<Map<String,String>> jobInstancesmapList = PMAUtil.generateJobInstanceIDMapJSON(mmsReturnString,jobId); // map contains slot id's with their values
-			for(Map jobInstanceMap:jobInstancesmapList)
+			for(Map<String,String> jobInstanceMap:jobInstancesmapList)
 			{
-				if(jobInstanceMap.get("refId").equals(refId))
+				String jobInstanceRefId = jobInstanceMap.get("refId");
+				if(jobInstanceRefId!=null)
 				{
-					jobInstanceInformationMap = jobInstanceMap;
-//					System.out.println("INFOMAP: "+jobInstanceInformationMap);
-					break; // Assuming job instance is the first instance in the jobInstancesmapList
+					if(jobInstanceRefId.equals(refId))
+					{
+						jobInstanceInformationMap = jobInstanceMap;
+	//					System.out.println("INFOMAP: "+jobInstanceInformationMap);
+						break; // Assuming job instance is the first instance in the jobInstancesmapList
+					}
+				}
+				else
+				{
+					return "refId job instance property is null. Error occurerd during retrieval of job instance element.";
 				}
 			}
 	
@@ -1251,7 +1504,8 @@ public class MMSUtil {
 			}
 			else // Instance isn't found, a new one will be created. Happens when a job is ran without being triggered by PMA. EX. (Manual run on Jenkins or a scheduled run.)
 			{
-				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, "pending");
+				String fromRefId = newJobInstanceValues.get("fromRefId");
+				String createJobInstanceElementResponse = createJobInstanceElement(jobId, projectId, refId, server, buildNumber, "pending",fromRefId);
 //				System.out.println("CREATE JOB INSTANCE RESPONSE: "+createJobInstanceElementResponse);
 				return createJobInstanceElementResponse;
 				
@@ -1314,13 +1568,13 @@ public class MMSUtil {
 	 * @param jobStatus
 	 * @return
 	 */
-	public String createJobInstanceElement(String jobId,String projectId,String refId, String server,String buildNumber, String jobStatus)
+	public String createJobInstanceElement(String jobId,String projectId,String refId, String server,String buildNumber, String jobStatus, String fromRefId)
 	{
 		// Creating job instance for the job run because it doesn't currently exist.
 
 		System.out.println("inside job status");
 		String jobInstanceElementID = createId();
-		ObjectNode on = buildDocGenJobInstanceJSON(jobInstanceElementID, "jobs_bin_" + jobId, jobId + "_instance", buildNumber, jobStatus, server, projectId, refId, jobId); // jobs bin will be the owner of the instance element 
+		ObjectNode on = buildJobInstanceJSON(jobInstanceElementID, "jobs_bin_" + jobId, jobId + "_instance", buildNumber, jobStatus, server, projectId, refId, jobId,fromRefId); // jobs bin will be the owner of the instance element 
 			
 		if (on == null) {
 			logger.info("buildDocGenJobInstanceJSON output was null");
@@ -1720,6 +1974,32 @@ public class MMSUtil {
 		
 	}
 	
+
+	/**
+	 * Parses through the job element json from mms to retrieve the job type value.
+	 * @param mmsJsonString This is obtained by doing a mms get call on the job element.
+	 * @return
+	 */
+	public static String getJobType (String mmsJsonString)
+	{
+		ObjectNode jobsJson = PMAUtil.generateJobArrayJsonObject(mmsJsonString);
+
+		JsonNode jobsArray = jobsJson.get("jobs");
+		
+		if(jobsArray!=null&&jobsArray.size()>0)
+		{
+			JsonNode job = jobsArray.get(0);
+			JsonNode command = job.get("command");
+			if(command!=null)
+			{
+				String jobType = command.toString().replace("\"", "");
+				return jobType;
+			}
+			return null;
+		}	
+		return null;
+	}
+	
     public String createId() {
     	String id = "PMA_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString();
     	return id;
@@ -2006,22 +2286,47 @@ public class MMSUtil {
 		return definingFeatureID;
 	 }
 	 
-	 	public static Map getElementIdMap()
+	 	public static Map<String,String> getElementIdMap(String jobType)
 	 	{
-	 		Map elementMap = new HashMap();
-	 		elementMap.put(valuePropertyStereotypeID, "valueProperty");
-	 		elementMap.put(docgenJobBlockID, "docgenJobBlock");
-	 		elementMap.put(typePropertyID, "type");
-	 		elementMap.put(schedulePropertyID, "schedule");
-	 		elementMap.put(buildNumberPropertyID, "buildNumber");
-	 		elementMap.put(jobStatusID, "jobStatus");
-	 		elementMap.put(logUrlPropertyID, "logUrl");
-	 		elementMap.put(startedPropertyID, "started");
-	 		elementMap.put(completedPropertyID, "completed");
-	 		elementMap.put(associatedElementIdPropertyID, "associatedElementId");
-	 		elementMap.put(refIdPropertyID, "refId");
-	 		elementMap.put(projectIdPropertyID, "projectId");	 		
-	 		
+	 		Map<String,String> elementMap = new HashMap<String,String>();
+	 		if(jobType != null)
+	 		{
+				if (jobType.equals("docmerge")) 
+				{
+					elementMap.put(valuePropertyStereotypeID, "valueProperty");
+					elementMap.put(docmergeJobBlockId, "docgenJobBlock");
+					elementMap.put(docmergeJobTypePropertyId, "type");
+					elementMap.put(docmergeJobBuildNumberPropertyId, "buildNumber");
+					elementMap.put(docmergeJobJobStatusId, "jobStatus");
+					elementMap.put(docmergeJobLogUrlPropertyId, "logUrl");
+					elementMap.put(docmergeJobStartedPropertyId, "started");
+					elementMap.put(docmergeJobCompletedPropertyId, "completed");
+					elementMap.put(docmergeJobAssociatedElementIdPropertyId, "associatedElementId");
+					elementMap.put(docmergeJobRefIdPropertyId, "refId");
+					elementMap.put(docmergeJobProjectIdPropertyId, "projectId");
+					elementMap.put(docmergeJobFromRefPropertyId, "fromRefId");
+				} 
+				else 
+				{
+					elementMap.put(valuePropertyStereotypeID, "valueProperty");
+					elementMap.put(docgenJobBlockId, "docgenJobBlock");
+					elementMap.put(docgenJobTypePropertyId, "type");
+					elementMap.put(docgenJobSchedulePropertyId, "schedule");
+					elementMap.put(docgenJobBuildNumberPropertyId, "buildNumber");
+					elementMap.put(docgenJobJobStatusId, "jobStatus");
+					elementMap.put(docgenJobLogUrlPropertyId, "logUrl");
+					elementMap.put(docgenJobStartedPropertyId, "started");
+					elementMap.put(docgenJobCompletedPropertyId, "completed");
+					elementMap.put(docgenJobAssociatedElementIdPropertyId, "associatedElementId");
+					elementMap.put(docgenJobRefIdPropertyId, "refId");
+					elementMap.put(docgenJobProjectIdPropertyId, "projectId");
+				}
+	 		}
+	 		else
+	 		{
+	 			return null;
+	 		}
+
 	 		return elementMap;
 	 	}
 	 	
@@ -2215,7 +2520,7 @@ public class MMSUtil {
 	 	{
 	 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 	 		// create new property
-	 		ObjectNode propertyNode = buildPropertyNode(classId,propertyName,value,projectIdPropertyID,type);
+	 		ObjectNode propertyNode = buildPropertyNode(classId,propertyName,value,docgenJobProjectIdPropertyId,type);
 			
 	 		// create new instance
 	 		ObjectNode propertyInstanceSpecification = buildInstanceSpecificationNode(propertyNode.get("id").toString().replace("\"", ""), valuePropertyStereotypeID,"",true);
@@ -2302,9 +2607,11 @@ public class MMSUtil {
 			if(jobs!=null)
 			{
 				ObjectNode job = (ObjectNode) jobs.get(0);
-				String disabledPropertyValue = job.get("disabled").toString();
-				if(!disabledPropertyValue.equals("null"))
+				JsonNode disabledPropertyNode = job.get("disabled");
+				String disabledPropertyValue = "";
+				if(disabledPropertyNode!=null)
 				{
+					disabledPropertyValue = job.get("disabled").toString();
 					disabledPropertyValue=disabledPropertyValue.replace("\"", "");
 					System.out.println(disabledPropertyValue);
 					if(disabledPropertyValue.equals("false")||disabledPropertyValue.equals("true"))

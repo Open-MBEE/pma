@@ -105,24 +105,24 @@ public class ClientEndpointController {
 	 */
 	@RequestMapping(value = "/projects/{projectID}/refs/{refID}/jobs", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<String> createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromClient jobFromVE) {
+	public ResponseEntity<String> createJob(@PathVariable String projectID, @PathVariable String refID, @RequestBody final JobFromClient jobFromClient) {
 		
 		logger.info("Create Job was called");
 		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Job Name: "
-				+ jobFromVE.getJobName() + "\n" + "Command: " + jobFromVE.getCommand() + "\n" + "Arguments: "
-				+ jobFromVE.getArguments() + "\n" + "Schedule: " + jobFromVE.getSchedule() + "\n"
-				+ "Associated Element ID: " + jobFromVE.getAssociatedElementID() + "\n" + "MMS Server: "
-				+ jobFromVE.getMmsServer() + "\n" + "Alfresco Token: " + jobFromVE.getAlfrescoToken() );
+				+ jobFromClient.getJobName() + "\n" + "Command: " + jobFromClient.getCommand() + "\n" + "From Ref Id: "
+				+ jobFromClient.getFromRefId() + "\n" + "Schedule: " + jobFromClient.getSchedule() + "\n"
+				+ "Associated Element ID: " + jobFromClient.getAssociatedElementID() + "\n" + "MMS Server: "
+				+ jobFromClient.getMmsServer() + "\n" + "Alfresco Token: " + jobFromClient.getAlfrescoToken() );
 		
+		String jobName = jobFromClient.getJobName();
+		String alfrescoToken = jobFromClient.getAlfrescoToken();
+		String mmsServer = jobFromClient.getMmsServer();
+		String associatedElementID = jobFromClient.getAssociatedElementID();
+		String schedule = jobFromClient.getSchedule();
+		String command = jobFromClient.getCommand();
+		String fromRefId = jobFromClient.getFromRefId();
 		
-		String jobName = jobFromVE.getJobName();
-		String alfrescoToken = jobFromVE.getAlfrescoToken();
-		String mmsServer = jobFromVE.getMmsServer();
-		String associatedElementID = jobFromVE.getAssociatedElementID();
-		String schedule = jobFromVE.getSchedule();
-		String command = jobFromVE.getCommand();
-		
-		return PMAPostUtil.createJob(jobName, alfrescoToken, mmsServer, associatedElementID, schedule, command, projectID, refID, logger);
+		return PMAPostUtil.createJob(jobName, alfrescoToken, mmsServer, associatedElementID, schedule, command, projectID, refID, logger, fromRefId);
 	}
 	
 	/**
@@ -141,20 +141,21 @@ public class ClientEndpointController {
 		
 		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Arguments: "
 				+ jobInstance.getArguments() + "\n" + "MMS Server: " + jobInstance.getMmsServer() + "\n"
-				+ "Alfresco Token: " + jobInstance.getAlfrescoToken());
+				+ "Alfresco Token: " + jobInstance.getAlfrescoToken() +"\n"+"fromRefId: "+jobInstance.getFromRefId()
+				+ "comment" + jobInstance.getComment());
 		
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
 		
 		String alfrescoToken = jobInstance.getAlfrescoToken();
 		String mmsServer = jobInstance.getMmsServer();
+		String fromRefId = jobInstance.getFromRefId();
+    	String comment = jobInstance.getComment();
 		
-    	
 		MMSUtil mmsUtil = new MMSUtil(alfrescoToken);
 		String org = mmsUtil.getProjectOrg(mmsServer, projectID);
 		JenkinsEngine je = login(org);
-		
-		
+
 		String isJobDisabled = mmsUtil.isJobDisabled(mmsServer, projectID, refID, jobSysmlID);
 		if(isJobDisabled.equals("true")||isJobDisabled.equals("false"))
 		{
@@ -200,7 +201,7 @@ public class ClientEndpointController {
 	    				return new ResponseEntity<String>(responseJSON.toString(),HttpStatus.METHOD_NOT_ALLOWED);
 	    			}
 
-		    		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
+		    		return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger,fromRefId,comment);
 			        
 		    	}
 		    	else 
@@ -227,22 +228,20 @@ public class ClientEndpointController {
 									JsonNode job = jobJson.get(0);
 									if(job!=null)
 									{
-										String scheduleValue = job.get("schedule").toString();
-										String typeValue = job.get("command").toString();
-										String associatedElementIDValue = job.get("associatedElementID").toString();
-										String jobValue = job.get("name").toString();
+										JsonNode scheduleNode = job.get("schedule");
+										JsonNode typeNode = job.get("command");
+										JsonNode associatedElementIDNode = job.get("associatedElementID");
+										
+										if (scheduleNode != null) {
+											schedule = scheduleNode.toString().replace("\"", "");
+										}
+										if (typeNode != null) {
+											type = typeNode.toString().replace("\"", "");
+										}
+										if (associatedElementIDNode != null) {
+											associatedElementID = associatedElementIDNode.toString().replace("\"", "");
+										}
 
-										if (scheduleValue != null) {
-											schedule = scheduleValue.replace("\"", "");
-										}
-										if (typeValue != null) {
-											type = typeValue.replace("\"", "");
-										}
-										if (associatedElementIDValue != null) {
-											associatedElementID = associatedElementIDValue.replace("\"", "");
-										}
-										if (jobValue != null) {
-										}
 									}
 									else
 									{
@@ -305,7 +304,7 @@ public class ClientEndpointController {
 			    			}
 		    	        	System.out.println("Running Job: "+jobSysmlID);
 		    	        	logger.info("Running Job: "+jobSysmlID);
-		    	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger);
+		    	        	return PMAPostUtil.runJob(jobSysmlID, projectID, refID, alfrescoToken, mmsServer, je, logger,fromRefId,comment);
 		    	        }
 		    	        else
 		    	        {
