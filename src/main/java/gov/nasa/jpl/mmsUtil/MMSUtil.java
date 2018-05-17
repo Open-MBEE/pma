@@ -604,7 +604,7 @@ public class MMSUtil {
 					if (job != null) 
 					{
 						JsonNode scheduleValueJson = job.get("schedule");
-						JsonNode typeValueJson = job.get("command");
+						JsonNode typeValueJson = job.get("type");
 						JsonNode associatedElementIDValueJson = job.get("associatedElementID");
 						JsonNode jobValueJson = job.get("name");
 
@@ -1989,7 +1989,7 @@ public class MMSUtil {
 		if(jobsArray!=null&&jobsArray.size()>0)
 		{
 			JsonNode job = jobsArray.get(0);
-			JsonNode command = job.get("command");
+			JsonNode command = job.get("type");
 			if(command!=null)
 			{
 				String jobType = command.toString().replace("\"", "");
