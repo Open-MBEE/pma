@@ -367,7 +367,7 @@ public class ClientEndpointControllerTests {
         if(docmergeJob!=null)
         {
         	try {                              
-				 command = docmergeJob.getString("command");
+				 command = docmergeJob.getString("type");
 				 id = docmergeJob.getString("id");
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
