@@ -229,7 +229,7 @@ public class ClientEndpointController {
 									if(job!=null)
 									{
 										JsonNode scheduleNode = job.get("schedule");
-										JsonNode typeNode = job.get("command");
+										JsonNode typeNode = job.get("type");
 										JsonNode associatedElementIDNode = job.get("associatedElementID");
 										
 										if (scheduleNode != null) {
