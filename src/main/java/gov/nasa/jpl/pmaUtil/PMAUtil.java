@@ -50,11 +50,7 @@ public class PMAUtil
 			/*
 			 * These two ifs are because I changed my variable names, but I wanted to keep my output the same. 
 			 */
-			if (pair.getKey().toString().equals("type"))
-			{
-				jobElement.put("command",jobMap.get("type"));
-			}
-			else if (pair.getKey().toString().equals("associatedElementId"))
+			if (pair.getKey().toString().equals("associatedElementId"))
 			{
 				jobElement.put("associatedElementID",jobMap.get("associatedElementId"));
 			}
@@ -88,11 +84,7 @@ public class PMAUtil
 			/*
 			 * These ifs are because I changed my variable names, but I wanted to keep my output the same. 
 			 */
-			if (pair.getKey().toString().equals("type"))
-			{
-				jobInstanceElement.put("command",pair.getValue().toString());
-			}
-			else if (pair.getKey().toString().equals("started"))
+			if (pair.getKey().toString().equals("started"))
 			{
 				jobInstanceElement.put("created".toString(),pair.getValue().toString());
 			}
