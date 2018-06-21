@@ -48,15 +48,21 @@ fromRefId='"'$fromRefId'"'
 mmsServer='"'https://$MMS_HOST'"'
 comment='"'$comment'"'
 
-docmergeServiceUrl="https://bwtj0li4ii.execute-api.us-gov-west-1.amazonaws.com/development/mms-merge-doc"
+case "$mmsServer" in
+    *uat* ) docmergeServiceUrl="https://mms-micro-uat.us-gov-west-1.elasticbeanstalk.com/mms-merge-doc";;
+    *int* ) docmergeServiceUrl="https://mms-micro-uat.us-gov-west-1.elasticbeanstalk.com/mms-merge-doc";;
+    *test* ) docmergeServiceUrl="https://mms-micro-uat.us-gov-west-1.elasticbeanstalk.com/mms-merge-doc";;
+    *openmbee* ) docmergeServiceUrl="https://mms-micro-uat.us-gov-west-1.elasticbeanstalk.com/mms-merge-doc";;
+    * ) docmergeServiceUrl="https://mms-micro.us-gov-west-1.elasticbeanstalk.com/mms-merge-doc";;
+esac
 
 jsonBody="{$ticketKey:$ticket,$projectIdKey:$projectId,$docIdKey:$docId,$toRefIdKey:$toRefId,$fromRefIdKey:$fromRefId,$mmsServerKey:$mmsServer,$commentKey:$comment}"
 
-curlResponse=$(curl -H "Content-Type: application/json" -d "$jsonBody" -XPOST $docmergeServiceUrl)
+curlResponse=$(curl -H "Content-Type: application/json" -d "$jsonBody" -k -XPOST $docmergeServiceUrl)
 
 echo $curlResponse > DocMergeLog.txt
 
-if [[ $curlResponse = *"200"* ]];
+if [[ $curlResponse = *'status":"ok'* ]];
 then
 	status=Completed
   exitCode=0
