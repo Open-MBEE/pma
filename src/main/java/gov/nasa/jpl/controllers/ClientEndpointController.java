@@ -109,7 +109,7 @@ public class ClientEndpointController {
 		
 		logger.info("Create Job was called");
 		logger.info("projectID: " + projectID + "\n" + "refID: " + refID + "\n" + "JSON input: " + "\n" + "Job Name: "
-				+ jobFromClient.getJobName() + "\n" + "Command: " + jobFromClient.getCommand() + "\n" + "From Ref Id: "
+				+ jobFromClient.getJobName() + "\n" + "Type: " + jobFromClient.getType() + "\n" + "From Ref Id: "
 				+ jobFromClient.getFromRefId() + "\n" + "Schedule: " + jobFromClient.getSchedule() + "\n"
 				+ "Associated Element ID: " + jobFromClient.getAssociatedElementID() + "\n" + "MMS Server: "
 				+ jobFromClient.getMmsServer() + "\n" + "Alfresco Token: " + jobFromClient.getAlfrescoToken() );
@@ -119,10 +119,10 @@ public class ClientEndpointController {
 		String mmsServer = jobFromClient.getMmsServer();
 		String associatedElementID = jobFromClient.getAssociatedElementID();
 		String schedule = jobFromClient.getSchedule();
-		String command = jobFromClient.getCommand();
+		String type = jobFromClient.getType();
 		String fromRefId = jobFromClient.getFromRefId();
 		
-		return PMAPostUtil.createJob(jobName, alfrescoToken, mmsServer, associatedElementID, schedule, command, projectID, refID, logger, fromRefId);
+		return PMAPostUtil.createJob(jobName, alfrescoToken, mmsServer, associatedElementID, schedule, type, projectID, refID, logger, fromRefId);
 	}
 	
 	/**

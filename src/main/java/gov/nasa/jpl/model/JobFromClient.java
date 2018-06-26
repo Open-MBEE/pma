@@ -21,7 +21,7 @@ public class JobFromClient implements Serializable {
 	private long id;
 	
 	private String jobName;
-	private String command;
+	private String type;
 	private String schedule;
 	private String associatedElementID;
 	private String mmsServer;
@@ -36,12 +36,12 @@ public class JobFromClient implements Serializable {
 		this.jobName = jobName;
 	}
 	
-	public String getCommand() {
-		return command;
+	public String getType() {
+		return type;
 	}
 
-	public void setCommand(String command) {
-		this.command = command;
+	public void setType(String type) {
+		this.type = type;
 	}
 	
 	public String getFromRefId() {
