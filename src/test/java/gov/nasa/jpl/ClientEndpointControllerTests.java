@@ -90,7 +90,7 @@ public class ClientEndpointControllerTests {
         job.setJobName(jobName);
         job.setAlfrescoToken(alfTicket);
         job.setAssociatedElementID(testDocument);
-        job.setCommand("");
+        job.setType("");
         job.setSchedule("");
         isConfigured = true;
 
@@ -357,17 +357,17 @@ public class ClientEndpointControllerTests {
     	
         configVeEndpointController();
         
-        job.setCommand("docmerge");
+        job.setType("docmerge");
         job.setSchedule(null);
         JSONObject docmergeJob = createJobGetJsonObj(testProject, "master");
         
         String id = null;
-        String command = null;
+        String type = null;
         
         if(docmergeJob!=null)
         {
         	try {                              
-				 command = docmergeJob.getString("type");
+				 type = docmergeJob.getString("type");
 				 id = docmergeJob.getString("id");
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
@@ -375,7 +375,7 @@ public class ClientEndpointControllerTests {
 			}
         }
         
-        assert(command.equals("docmerge"));
+        assert(type.equals("docmerge"));
          
         JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
         jobInstanceFromClient.setMmsServer(testServer);
