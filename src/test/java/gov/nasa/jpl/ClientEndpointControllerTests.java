@@ -23,7 +23,7 @@ import javax.persistence.Id;
 import javax.validation.constraints.Null;
 
 /**
- * Created by dank on 5/1/17.
+ * Created by dank on 5/1/17. Updated by hang.
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -89,9 +89,8 @@ public class ClientEndpointControllerTests {
         job.setMmsServer(testServer);
         job.setJobName(jobName);
         job.setAlfrescoToken(alfTicket);
-        job.setArguments(new String[0]);
         job.setAssociatedElementID(testDocument);
-        job.setCommand("");
+        job.setType("");
         job.setSchedule("");
         isConfigured = true;
 
@@ -118,6 +117,25 @@ public class ClientEndpointControllerTests {
         return id;
     }
 
+    private JSONObject createJobGetJsonObj(String projectId, String refId) {
+        String id = null;
+        JSONObject responseBody;
+        
+        JSONObject jobJson = new JSONObject();
+        ResponseEntity<String> response = clientEndpointController.createJob(projectId, refId, job);
+//        assert (response.toString().contains("200 OK"));
+        System.out.println("RESPONSEJSON: "+response.getBody());
+        try {
+            responseBody = new JSONObject(response.getBody());
+            jobJson = responseBody.getJSONArray("jobs").getJSONObject(0);
+        } catch (JSONException e) {
+            System.out.println("[ JSONException ] " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("[ Exception ] " + e.getMessage());
+        }
+        return jobJson;
+    }
+    
     private String deleteJob(String projectId, String refId, String elementId) {
         JSONObject responseBody = null;
         ResponseEntity<String> response = clientEndpointController.deleteJob(projectId, refId, elementId, alfTicket, testServer);
@@ -315,6 +333,61 @@ public class ClientEndpointControllerTests {
 
         
         
+     // checks if the jobs bin owner Id is projectId_pm
+        
+        Boolean jobPackageLocationCheckResponse = mmsUtil.disabledPropertyExists(testServer, testProject, "master",id);
+        
+        System.out.println("Disabled Value Property Exists: "+jobPackageLocationCheckResponse);
+        
+        assert(jobPackageLocationCheckResponse);
+        
+        deleteJob(testProject, "master", id);
+        
+        System.out.println("\n----------------------------------------------------------------------------------------\n");
+      
+    }
+    
+    /**
+	 * Checks if docmerge jobs are created properly.
+	 */
+    @Test
+    public void docmergeJobCreationTest() {
+    	
+    	System.out.println("\n----------------------- [ ClientEndpointController docmergeJob Job Creation Test ] -----------------------\n");
+    	
+        configVeEndpointController();
+        
+        job.setType("docmerge");
+        job.setSchedule(null);
+        JSONObject docmergeJob = createJobGetJsonObj(testProject, "master");
+        
+        String id = null;
+        String type = null;
+        
+        if(docmergeJob!=null)
+        {
+        	try {                              
+				 type = docmergeJob.getString("type");
+				 id = docmergeJob.getString("id");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+        
+        assert(type.equals("docmerge"));
+         
+        JobInstanceFromClient jobInstanceFromClient = new JobInstanceFromClient();
+        jobInstanceFromClient.setMmsServer(testServer);
+        jobInstanceFromClient.setComment("mergeComment");
+        jobInstanceFromClient.setFromRefId("TESTREF");
+        jobInstanceFromClient.setAlfrescoToken(alfTicket);
+        
+        assert (id != null);
+
+        clientEndpointController.runJob(testProject, "master", id, jobInstanceFromClient);
+        
+
      // checks if the jobs bin owner Id is projectId_pm
         
         Boolean jobPackageLocationCheckResponse = mmsUtil.disabledPropertyExists(testServer, testProject, "master",id);

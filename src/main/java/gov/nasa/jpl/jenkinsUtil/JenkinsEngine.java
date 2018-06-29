@@ -15,7 +15,9 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,18 +34,24 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScheme;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.AuthState;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
@@ -140,7 +148,7 @@ public class JenkinsEngine {
 		String username = this.username;
 		String password = this.passwordOrToken;
 		String jenkinsUrl;
-
+		
 		jenkinsUrl = url + jenkinsApiURL + apiCallDepth;
 
 		// Create your httpclient
@@ -354,7 +362,7 @@ public class JenkinsEngine {
 		System.out.println("Execute URL: "+this.executeUrl);
 		try {
 			HttpResponse response = this.jenkinsClient.execute(post, this.context);
-
+			
 			EntityUtils.consume(response.getEntity());
 			// Will throw an error if the execution fails from either incorrect
 			// setup or if the jenkinsClient has not been instantiated.
@@ -706,6 +714,68 @@ public class JenkinsEngine {
 			this.executeUrl = this.url + "/job/PMA/job/"+nestedLocation+ jobName + "/build?token=" + this.jenkinsToken; // Jenkins 2
 			System.out.println("Execute url: "+executeUrl);
 			String response = this.build();
+			return response;
+		} catch (Exception e) {
+			return e.toString();
+		}
+	}
+	
+	/**
+	 * For executing parameterized jenkins jobs. It requires a map because the job needs form data to accept the parameters
+	 * @param jobName
+	 * @param projectID
+	 * @param refID
+	 * @param parameters
+	 * @return
+	 */
+	public String executeNestedParamerterizedJob(String jobName,String projectID, String refID,HashMap<String,String> parameters) 
+	{
+		String nestedLocation = "";
+		
+		if((!projectID.equals(""))&&(!refID.equals("")))
+		{
+			nestedLocation = projectID+"/job/"+refID+"/job/";	
+		}
+		try {
+			this.setJobToken("build");
+			this.executeUrl = this.url + "/job/PMA/job/"+nestedLocation+ jobName + "/buildWithParameters"; // Jenkins 2
+			System.out.println("Execute url: "+executeUrl);
+			
+			CredentialsProvider provider = new BasicCredentialsProvider();
+			UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(this.username, this.passwordOrToken);
+			provider.setCredentials(AuthScope.ANY, credentials);
+			  
+			HttpClient client = HttpClientBuilder.create().setDefaultCredentialsProvider(provider).build();
+			
+			HttpPost httpPost = new HttpPost(this.executeUrl);
+			
+			String encoding = Base64.getEncoder().encodeToString((this.username+":"+this.passwordOrToken).getBytes());
+			httpPost.setHeader("Authorization", "Basic " + encoding);
+			
+			ArrayList<NameValuePair> postParameters;
+
+			postParameters = new ArrayList<NameValuePair>();
+			
+			Iterator it = parameters.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry pair = (Map.Entry) it.next();
+				if(pair.getValue()!=null&&pair.getKey()!=null)
+				{
+					postParameters.add(new BasicNameValuePair(pair.getKey().toString(), pair.getValue().toString()));
+				}
+//				System.out.println(pair.getKey() + " = " + pair.getValue());
+				it.remove(); // avoids a ConcurrentModificationException
+			}
+			
+			httpPost.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
+			HttpResponse postResponse = client.execute(httpPost);
+
+			EntityUtils.consume(postResponse.getEntity());
+			// Will throw an error if the execution fails from either incorrect
+			// setup or if the jenkinsClient has not been instantiated.
+			System.out.println("Response to string: " + postResponse.toString());
+
+			String response = postResponse.getStatusLine().toString();
 			return response;
 		} catch (Exception e) {
 			return e.toString();
@@ -1239,9 +1309,6 @@ public class JenkinsEngine {
 
 		DBUtil dbUtil = new DBUtil();
 		dbUtil.getCredentials(org);
-		System.out.println(dbUtil.getJenkinsUsername());
-		System.out.println(dbUtil.getJenkinsPassword());
-		System.out.println("JenkinsURL: "+dbUtil.getJenkinsURL());
 		
 		this.setUsername(dbUtil.getJenkinsUsername());
 		this.setPassword(dbUtil.getJenkinsPassword());

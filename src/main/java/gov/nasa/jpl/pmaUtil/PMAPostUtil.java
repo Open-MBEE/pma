@@ -44,13 +44,13 @@ public class PMAPostUtil
 	 * @param mmsServer
 	 * @param je
 	 * @param logger
+	 * @param fromRefId
 	 * @return
 	 */
-	public static ResponseEntity<String> runJob(String jobSysmlID,String projectId, String refId, String alfrescoToken, String mmsServer,JenkinsEngine je,Logger logger)
+	public static ResponseEntity<String> runJob(String jobSysmlID,String projectId, String refId, String alfrescoToken, String mmsServer,JenkinsEngine je,Logger logger, String fromRefId,String comment)
 	{
 		ObjectMapper mapper = new ObjectMapper(); // Used to create JSON objects
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Http status to be returned. 
-		
 		
 		String nextBuildNumber = je.getNextBuildNumber(jobSysmlID, projectId, refId); // next build number from Jenkins
 		
@@ -72,17 +72,35 @@ public class PMAPostUtil
 		newJobInstanceValues.put("started", currentTimestamp);
 		newJobInstanceValues.put("buildNumber", nextBuildNumber);
 		
+		if (fromRefId != null) {
+			newJobInstanceValues.put("fromRefId", fromRefId);
+		}
+		
 		String modifyJobInstanceSpecificationResponse =  mmsUtil.modifyBulkInstanceSpecificationValue(mmsServer, projectId, refId, jobSysmlID, nextBuildNumber,newJobInstanceValues);
 		
 		logger.info("modify job instance element response: "+modifyJobInstanceSpecificationResponse);
 		if (modifyJobInstanceSpecificationResponse.contains("Instance Specification Updated.")||modifyJobInstanceSpecificationResponse.contains("HTTP/1.1 200 OK"))
 		{
+			
 			// run job on jenkins
-	        String runResponse = je.executeNestedJob(jobSysmlID, projectId, refId); // job name should be the job sysmlID
+	        String runResponse = null;
 	        
-//			System.out.println("Job run response: "+runResponse);
+	        if (fromRefId != null)  // docmerge job
+	        {
+	        	HashMap<String,String> parameterMap = new HashMap<String,String>();
+	        	parameterMap.put("ticket", alfrescoToken);
+	        	parameterMap.put("fromRefId", fromRefId);
+	        	parameterMap.put("comment", comment);
+	        	runResponse = je.executeNestedParamerterizedJob(jobSysmlID, projectId, refId,parameterMap); // job name should be the job sysmlID
+	        }
+	        else
+	        {
+	        	runResponse = je.executeNestedJob(jobSysmlID, projectId, refId); // job name should be the job sysmlID
+	        }
+	        
+
 			logger.info("Run job Jenkins response: "+runResponse);
-//			System.out.println("JOBRUN: "+runResponse);
+
 			if(runResponse.equals("HTTP/1.1 201 Created"))
 			{
 				status = HttpStatus.OK;
@@ -142,9 +160,10 @@ public class PMAPostUtil
 	 * @param logger
 	 * @param onlyCreateJenkinsJob If it is true, this method will create the Jenkins job without creating the mms element.
 	 * @param jobID SysmlID of job if it needs to be specified.
+	 * @param fromRefId The id of the ref to merge with the current ref.
 	 * @return
 	 */
-	public static ResponseEntity<String> createJob(String jobName, String alfrescoToken,String mmsServer, String associatedElementID,String schedule, String type, String projectID,String refID,Logger logger)
+	public static ResponseEntity<String> createJob(String jobName, String alfrescoToken,String mmsServer, String associatedElementID,String schedule, String type, String projectID,String refID,Logger logger,String fromRefId)
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		
@@ -192,11 +211,17 @@ public class PMAPostUtil
 			logger.info("Package Create Response: "+packageCreateResponse);
 		}
 		
+		// Creating the job element json to send to mms. Job elements should be created in the jobs bin package
 		
-		ObjectNode on = mmsUtil.buildDocgenJobElementJSON(jobElementID, "jobs_bin_"+jobElementID, jobName, associatedElementID, type, schedule, refID, projectID); // Job elements should be created in the jobs bin package
-		
-//		System.out.println("Job class JSON: "+on.toString());
-//		logger.info("Job class JSON: "+on.toString());
+		ObjectNode on;
+		if(type.equals("docmerge"))
+		{
+			on = mmsUtil.buildDocMergeJobElementJSON(jobElementID, "jobs_bin_"+jobElementID, jobName, associatedElementID, type, refID, projectID,fromRefId); 
+		}
+		else
+		{
+			on = mmsUtil.buildDocgenJobElementJSON(jobElementID, "jobs_bin_"+jobElementID, jobName, associatedElementID, type, schedule, refID, projectID); 
+		}
 		
 		String elementCreationResponse = mmsUtil.post(mmsServer, projectID, refID, on);
 		System.out.println("MMS Job element response: "+elementCreationResponse);
@@ -433,10 +458,6 @@ public class PMAPostUtil
 			// do a diff , could probably put into its own method, params(map,jsonNode) returns a map of diff
 			if(jobElement!=null)
 			{
-				Map<String,String> jobElementToJenkinsMapping = new HashMap();
-				jobElementToJenkinsMapping.put("schedule", "schedule");
-				jobElementToJenkinsMapping.put("TARGET_VIEW_ID", "associatedElementID");
-				jobElementToJenkinsMapping.put("disabled", "disabled");
 				
 				Map<String,String> jenkinsEnvironmentVariables = je.getEnvironmentVariablesFromConfigXml(doc);
 				
