@@ -4,8 +4,13 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.catalina.connector.Connector;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
+import org.springframework.boot.context.embedded.tomcat.TomcatConnectorCustomizer;
+import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
+import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class PmaApplication {
@@ -36,4 +41,28 @@ public class PmaApplication {
 		application.setDefaultProperties(map);
 		application.run(args);
 	}
+	
+    /**
+     * This is for specifying the usage of TLSv1.1 and TLSv1.2. 
+     * Without this, TLS1.0 would be used as well, which is a security flaw.
+     * @return
+     */
+	@Bean
+	public EmbeddedServletContainerFactory servletContainerFactory()
+	{
+	    TomcatEmbeddedServletContainerFactory factory = new TomcatEmbeddedServletContainerFactory();
+
+	    factory.addConnectorCustomizers(new TomcatConnectorCustomizer()
+	    {
+	        @Override
+	        public void customize(Connector connector)
+	        {
+	            connector.setAttribute("sslProtocols", "TLSv1.1,TLSv1.2");
+	            connector.setAttribute("sslEnabledProtocols", "TLSv1.1,TLSv1.2");
+	        }
+	    });
+
+	    return factory;
+	}
+    
 }
